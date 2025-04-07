@@ -19,18 +19,27 @@ public enum ErrorCode {
 
     NO_AUTH_ERROR(40101, "无权限"),
 
-    NOT_FOUND_ERROR(40400, "请求数据不存在"),
-
-    FORBIDDEN_ERROR(40300, "禁止访问"),
-
-    SYSTEM_ERROR(50000, "系统内部异常"),
-
     OPERATION_ERROR(50001, "操作失败"),
 
     BUSINESS_ERROR(50002, "业务异常"),
 
+    SYSTEM_ERROR(50003, "系统内部异常"),
 
-    EXIST(60001, "数据已存在");
+
+    ACCOUNT_EXIST(40201, "账号已存在"),
+
+
+    ACCOUNT_NOT_FOUND(40202, "账号不存在"),
+
+    PASSWORD_ERROR(40203, "密码错误"),
+
+
+    ACCOUNT_BANNED(40204, "账号已被禁用"),
+
+
+    EXIST(40205, "数据已存在"),
+
+    NOT_LOGIN(40206, "未登录");
 
     /**
      * 状态码

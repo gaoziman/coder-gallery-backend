@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.leocoder.picture.mapper.UserMapper">
+    <resultMap id="BaseResultMap" type="org.leocoder.picture.domain.pojo.User">
+        <!--@mbg.generated-->
+        <!--@Table t_user-->
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="account" jdbcType="VARCHAR" property="account"/>
+        <result column="username" jdbcType="VARCHAR" property="username"/>
+        <result column="password" jdbcType="VARCHAR" property="password"/>
+        <result column="salt" jdbcType="VARCHAR" property="salt"/>
+        <result column="phone" jdbcType="VARCHAR" property="phone"/>
+        <result column="user_profile" jdbcType="VARCHAR" property="userProfile"/>
+        <result column="avatar" jdbcType="VARCHAR" property="avatar"/>
+        <result column="role" jdbcType="VARCHAR" property="role"/>
+        <result column="status" jdbcType="VARCHAR" property="status"/>
+        <result column="last_login_time" jdbcType="TIMESTAMP" property="lastLoginTime"/>
+        <result column="last_login_ip" jdbcType="VARCHAR" property="lastLoginIp"/>
+        <result column="register_time" jdbcType="TIMESTAMP" property="registerTime"/>
+        <result column="remark" jdbcType="VARCHAR" property="remark"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="create_by" jdbcType="BIGINT" property="createBy"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="update_by" jdbcType="BIGINT" property="updateBy"/>
+        <result column="is_deleted" jdbcType="BOOLEAN" property="isDeleted"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        <!--@mbg.generated-->
+        id,
+        account,
+        username,
+        `password`,
+        salt,
+        phone,
+        avatar,
+        user_profile,
+        `role`,
+        `status`,
+        last_login_time,
+        last_login_ip,
+        register_time,
+        remark,
+        create_time,
+        create_by,
+        update_time,
+        update_by,
+        is_deleted
+    </sql>
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        <!--@mbg.generated-->
+        select
+        <include refid="Base_Column_List"/>
+        from t_user
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        <!--@mbg.generated-->
+        delete
+        from t_user
+        where id = #{id,jdbcType=BIGINT}
+    </delete>
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.User"
+            useGeneratedKeys="true">
+        <!--@mbg.generated-->
+        insert into t_user (account, username, `password`,
+                              salt, phone, avatar, user_profile,
+                              `role`, `status`,
+                              last_login_time, last_login_ip, register_time,
+                              remark, create_time, create_by,
+                              update_time, update_by, is_deleted)
+        values (#{account,jdbcType=VARCHAR}, #{username,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR},
+                #{salt,jdbcType=VARCHAR}, #{phone,jdbcType=VARCHAR}, #{avatar,jdbcType=VARCHAR},
+                #{userProfile,jdbcType=VARCHAR},
+                #{role,jdbcType=VARCHAR}, #{status,jdbcType=VARCHAR},
+                #{lastLoginTime,jdbcType=TIMESTAMP}, #{lastLoginIp,jdbcType=VARCHAR},
+                #{registerTime,jdbcType=TIMESTAMP},
+                #{remark,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{createBy,jdbcType=BIGINT},
+                #{updateTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=BIGINT}, #{isDeleted,jdbcType=BOOLEAN})
+    </insert>
+    <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.User"
+            useGeneratedKeys="true">
+        <!--@mbg.generated-->
+        insert into t_user
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="account != null">
+                account,
+            </if>
+            <if test="username != null">
+                username,
+            </if>
+            <if test="password != null">
+                `password`,
+            </if>
+            <if test="salt != null">
+                salt,
+            </if>
+            <if test="phone != null">
+                phone,
+            </if>
+            <if test="userProfile != null">
+                user_profile,
+            </if>
+            <if test="avatar != null">
+                avatar,
+            </if>
+            <if test="role != null">
+                `role`,
+            </if>
+            <if test="status != null">
+                `status`,
+            </if>
+            <if test="lastLoginTime != null">
+                last_login_time,
+            </if>
+            <if test="lastLoginIp != null">
+                last_login_ip,
+            </if>
+            <if test="registerTime != null">
+                register_time,
+            </if>
+            <if test="remark != null">
+                remark,
+            </if>
+            <if test="createTime != null">
+                create_time,
+            </if>
+            <if test="createBy != null">
+                create_by,
+            </if>
+            <if test="updateTime != null">
+                update_time,
+            </if>
+            <if test="updateBy != null">
+                update_by,
+            </if>
+            <if test="isDeleted != null">
+                is_deleted,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="account != null">
+                #{account,jdbcType=VARCHAR},
+            </if>
+            <if test="username != null">
+                #{username,jdbcType=VARCHAR},
+            </if>
+            <if test="password != null">
+                #{password,jdbcType=VARCHAR},
+            </if>
+            <if test="salt != null">
+                #{salt,jdbcType=VARCHAR},
+            </if>
+            <if test="phone != null">
+                #{phone,jdbcType=VARCHAR},
+            </if>
+            <if test="userProfile != null">
+                #{userProfile,jdbcType=VARCHAR},
+            </if>
+            <if test="avatar != null">
+                #{avatar,jdbcType=VARCHAR},
+            </if>
+            <if test="role != null">
+                #{role,jdbcType=VARCHAR},
+            </if>
+            <if test="status != null">
+                #{status,jdbcType=VARCHAR},
+            </if>
+            <if test="lastLoginTime != null">
+                #{lastLoginTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="lastLoginIp != null">
+                #{lastLoginIp,jdbcType=VARCHAR},
+            </if>
+            <if test="registerTime != null">
+                #{registerTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="remark != null">
+                #{remark,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createBy != null">
+                #{createBy,jdbcType=BIGINT},
+            </if>
+            <if test="updateTime != null">
+                #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateBy != null">
+                #{updateBy,jdbcType=BIGINT},
+            </if>
+            <if test="isDeleted != null">
+                #{isDeleted,jdbcType=BOOLEAN},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="org.leocoder.picture.domain.pojo.User">
+        <!--@mbg.generated-->
+        update t_user
+        set account         = #{account,jdbcType=VARCHAR},
+            username        = #{username,jdbcType=VARCHAR},
+            `password`      = #{password,jdbcType=VARCHAR},
+            salt            = #{salt,jdbcType=VARCHAR},
+            phone           = #{phone,jdbcType=VARCHAR},
+            avatar          = #{avatar,jdbcType=VARCHAR},
+            user_profile    = #{userProfile,jdbcType=VARCHAR},
+            `role`          = #{role,jdbcType=VARCHAR},
+            `status`        = #{status,jdbcType=VARCHAR},
+            last_login_time = #{lastLoginTime,jdbcType=TIMESTAMP},
+            last_login_ip   = #{lastLoginIp,jdbcType=VARCHAR},
+            register_time   = #{registerTime,jdbcType=TIMESTAMP},
+            remark          = #{remark,jdbcType=VARCHAR},
+            create_time     = #{createTime,jdbcType=TIMESTAMP},
+            create_by       = #{createBy,jdbcType=BIGINT},
+            update_time     = #{updateTime,jdbcType=TIMESTAMP},
+            update_by       = #{updateBy,jdbcType=BIGINT},
+            is_deleted      = #{isDeleted,jdbcType=BOOLEAN}
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+    <update id="updateByPrimaryKey" parameterType="org.leocoder.picture.domain.pojo.User">
+        <!--@mbg.generated-->
+        update t_user
+        set account         = #{account,jdbcType=VARCHAR},
+            username        = #{username,jdbcType=VARCHAR},
+            `password`      = #{password,jdbcType=VARCHAR},
+            salt            = #{salt,jdbcType=VARCHAR},
+            phone           = #{phone,jdbcType=VARCHAR},
+            avatar          = #{avatar,jdbcType=VARCHAR},
+            user_profile    = #{userProfile,jdbcType=VARCHAR},
+            `role`          = #{role,jdbcType=VARCHAR},
+            `status`        = #{status,jdbcType=VARCHAR},
+            last_login_time = #{lastLoginTime,jdbcType=TIMESTAMP},
+            last_login_ip   = #{lastLoginIp,jdbcType=VARCHAR},
+            register_time   = #{registerTime,jdbcType=TIMESTAMP},
+            remark          = #{remark,jdbcType=VARCHAR},
+            create_time     = #{createTime,jdbcType=TIMESTAMP},
+            create_by       = #{createBy,jdbcType=BIGINT},
+            update_time     = #{updateTime,jdbcType=TIMESTAMP},
+            update_by       = #{updateBy,jdbcType=BIGINT},
+            is_deleted      = #{isDeleted,jdbcType=BOOLEAN}
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+
+    <!-- 根据账号查询用户 -->
+    <select id="selectByAccount" parameterType="java.lang.String" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_user
+        where account = #{account,jdbcType=VARCHAR}
+          and is_deleted = 0
+    </select>
+
+    <!-- 查询所有用户账号(用于布隆过滤器) -->
+    <select id="selectAllAccounts" resultMap="BaseResultMap">
+        select id, account
+        from t_user
+        where is_deleted = 0
+    </select>
+
+    <update id="updateLoginInfo">
+        update t_user
+        set last_login_time = #{lastLoginTime,jdbcType=TIMESTAMP},
+        last_login_ip = #{lastLoginIp,jdbcType=VARCHAR}
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <!-- 使用指定ID插入用户 -->
+    <insert id="insertWithId" parameterType="org.leocoder.picture.domain.pojo.User">
+        INSERT INTO t_user (
+        id, account, username, password, salt, phone, avatar,
+        user_profile, role, status, last_login_time, last_login_ip,
+        register_time, remark, create_time, create_by,
+        update_time, update_by, is_deleted
+        ) VALUES (
+        #{id}, #{account}, #{username}, #{password}, #{salt}, #{phone}, #{avatar},
+        #{userProfile}, #{role}, #{status}, #{lastLoginTime}, #{lastLoginIp},
+        #{registerTime}, #{remark}, #{createTime}, #{createBy},
+        #{updateTime}, #{updateBy}, #{isDeleted}
+        )
+    </insert>
+</mapper>

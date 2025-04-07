@@ -1,156 +1,271 @@
-# 服务器配置
+# ===================================================================
+# 服务器配置 - 定义应用的基本运行环境
+# ===================================================================
 server:
+  # 应用监听端口
   port: 18888
   servlet:
+    # API请求的基础路径，所有接口都会以/api开头
     context-path: /api
     encoding:
+      # 请求和响应的字符编码
       charset: UTF-8
+      # 强制使用配置的字符编码
       force: true
   tomcat:
+    # Tomcat编码设置
     uri-encoding: UTF-8
+    # Tomcat工作线程最大数量，影响并发处理能力
     max-threads: 200
+    # 连接超时时间(毫秒)，超过此时间未收到请求则关闭连接
     connection-timeout: 5000
 
-# Spring配置
+# ===================================================================
+# Spring配置 - Spring框架及其组件的核心配置
+# ===================================================================
 spring:
   application:
+    # 应用名称
     name: coder-gallery-backend
 
-  # 数据库配置
+  # ===================================================================
+  # 数据库配置 - 关系型数据库连接和连接池设置
+  # ===================================================================
   datasource:
+    # MySQL驱动类
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/coder_gallery?useUnicode=true&useSSL=false&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    # 数据库连接URL，包含字符集、时区和安全配置
+    url: jdbc:mysql://localhost:3306/coder-gallery?useUnicode=true&useSSL=false&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    # 数据库用户名
     username: root
+    # 数据库密码
     password: gzm2001..
+    # 使用Druid作为连接池实现
     type: com.alibaba.druid.pool.DruidDataSource
+    # Druid连接池详细配置
     druid:
+      # 初始连接数
       initial-size: 5
+      # 最小空闲连接数
       min-idle: 5
+      # 最大活跃连接数，影响并发处理能力
       max-active: 20
+      # 获取连接等待超时时间(毫秒)
       max-wait: 60000
+      # 连接检查间隔时间(毫秒)
       time-between-eviction-runs-millis: 60000
+      # 连接在池中最小生存时间(毫秒)
       min-evictable-idle-time-millis: 300000
+      # 用于检测连接是否有效的SQL
       validation-query: SELECT 1
+      # 空闲时是否检测连接有效性
       test-while-idle: true
+      # 获取连接时是否检测有效性
       test-on-borrow: false
+      # 归还连接时是否检测有效性
       test-on-return: false
+      # 是否缓存PreparedStatement，提高SQL执行效率
       pool-prepared-statements: true
+      # 每个连接最大PreparedStatement缓存数
       max-pool-prepared-statement-per-connection-size: 20
+      # 启用的过滤器，stat用于统计，wall用于防SQL注入
       filters: stat,wall
+      # 连接属性配置
       connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
+      # Druid监控页面配置
       stat-view-servlet:
+        # 是否启用监控页面
         enabled: true
+        # 监控页面路径
         url-pattern: /druid/*
+        # 监控页面登录用户名
         login-username: admin
+        # 监控页面登录密码
         login-password: admin
+        # 允许访问的IP，为空则允许所有
         allow: 127.0.0.1
+      # Web请求监控过滤器配置
       web-stat-filter:
+        # 是否启用Web请求监控
         enabled: true
+        # 监控路径
         url-pattern: /*
+        # 不监控的资源类型
         exclusions: "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*"
 
-  # Redis配置
+  # ===================================================================
+  # Redis配置 - 缓存和分布式会话存储
+  # ===================================================================
   redis:
+    # Redis数据库索引，一般一个应用使用一个专用索引
+    database: 10
+    # Redis服务器地址
     host: localhost
+    # Redis服务器端口
     port: 6379
-    database: 9
-    password:
-    timeout: 10000
+    # Redis连接密码，留空表示无密码
+    #password: leocoder
+    # 操作超时时间
+    timeout: 5s
+    # 连接超时时间
+    connect-timeout: 5s
+    # Lettuce客户端连接池配置
     lettuce:
       pool:
-        max-active: 8
-        max-wait: -1
-        max-idle: 8
+        # 连接池最大连接数，建议在高并发环境下调高
+        max-active: 200
+        # 连接池最大阻塞等待时间，-1表示无限制
+        max-wait: -1ms
+        # 连接池中的最小空闲连接
         min-idle: 0
+        # 连接池中的最大空闲连接
+        max-idle: 10
 
-  # 文件上传配置
+  # ===================================================================
+  # 文件上传配置 - 控制文件上传大小和行为
+  # ===================================================================
   servlet:
     multipart:
+      # 是否启用文件上传支持
       enabled: true
+      # 单个文件最大大小限制
       max-file-size: 10MB
+      # 单次请求最大大小限制(包含所有文件)
       max-request-size: 100MB
 
-  # Jackson配置
+  # ===================================================================
+  # Jackson配置 - JSON序列化/反序列化行为
+  # ===================================================================
   jackson:
+    # 日期格式化模式
     date-format: yyyy-MM-dd HH:mm:ss
+    # 时区设置，GMT+8对应中国时区
     time-zone: GMT+8
     serialization:
+      # 是否将日期序列化为时间戳(毫秒数)
       write-dates-as-timestamps: false
 
-# MyBatis配置
+# ===================================================================
+# MyBatis配置 - ORM框架设置
+# ===================================================================
 mybatis:
+  # XML映射文件路径
   mapper-locations: classpath:mapper/**/*.xml
+  # 实体类包路径，用于简化XML中的类型引用
   type-aliases-package: org.leocoder.picture.domain
+  # MyBatis运行时行为配置
   configuration:
+    # 数据库字段下划线命名自动转为Java驼峰命名
     map-underscore-to-camel-case: true
+    # SQL日志实现类，StdOutImpl会打印完整SQL便于调试
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    # 是否启用二级缓存
     cache-enabled: false
+    # 调用setter时是否允许传入null值
     call-setters-on-nulls: true
+    # 查询结果为空时是否返回空实例而非null
     return-instance-for-empty-row: true
 
-# Sa-Token配置
+# ===================================================================
+# Sa-Token配置 - 权限认证框架设置
+# ===================================================================
 sa-token:
+  # token名称，用于在HTTP请求头中识别token
   token-name: Authorization
+  # token有效期(秒)，30天
   timeout: 2592000
+  # token最低活跃频率，-1表示不限制
   active-timeout: -1
+  # 是否允许同一账号多地同时登录
   is-concurrent: true
-  is-share: true
-  token-style: uuid
-  is-log: false
-  is-print: false
+  # 在多人登录同一账号时是否共用一个token
+  is-share: false
+  # token风格，uuid生成无规律token
+  token-style: random-128
+  # 是否从cookie中读取token
+  is-read-cookie: true
+  # 是否记录操作日志
+  is-log: true
+  # 是否在控制台打印操作日志
+  is-print: true
 
-# Knife4j API文档配置
+# ===================================================================
+# Knife4j API文档配置 - 接口文档生成工具设置
+# ===================================================================
 knife4j:
+  # 是否启用Knife4j增强功能
   enable: true
+  # 是否开启生产环境保护，开启后需要验证才能访问
   production: false
+  # 基本认证配置
   basic:
-    enable: true
+    # 是否开启认证
+    enable: false
+    # 认证用户名
     username: admin
+    # 认证密码
     password: admin
+  # UI界面设置
   setting:
+    # 界面语言
     language: zh-CN
+    # 是否显示实体类
     enable-swagger-models: true
+    # 是否开启文档管理
     enable-document-manage: true
+    # 实体类列表名称
     swagger-model-name: 实体类列表
+    # 是否启用版本控制
     enable-version: false
+    # 是否启用参数缓存刷新
     enable-reload-cache-parameter: false
+    # 是否启用接口调试后执行脚本
     enable-after-script: true
+    # 过滤文件上传接口的请求方法类型
     enable-filter-multipart-api-method-type: POST
+    # 是否过滤文件上传接口
     enable-filter-multipart-apis: false
+    # 是否开启请求参数缓存
     enable-request-cache: true
+    # 是否启用Host配置
     enable-host: false
+    # Host配置文本
     enable-host-text: localhost:${server.port}
+    # 是否启用自定义主页
     enable-home-custom: false
+    # 自定义主页路径
     home-custom-path: classpath:markdown/home.md
+    # 是否启用搜索功能
     enable-search: true
-    enable-footer: false
-    enable-footer-custom: true
-    footer-custom-content: Copyright © 2023 Leo Coder
 
-  # 安全配置
+  # ===================================================================
+  # 安全配置 - 应用安全与权限控制
+  # ===================================================================
   security:
-    # 不需要认证的路径
+    # 无需认证即可访问的路径列表
     permit-all:
-      - /auth/login
-      - /auth/register
-      - /file/preview/**
-      - /swagger-ui/**
-      - /swagger-resources/**
-      - /v3/api-docs/**
-      - /webjars/**
-      - /druid/**
-      - /doc.html
+      - /auth/login         # 登录接口
+      - /auth/register      # 注册接口
+      - /file/preview/**    # 文件预览接口
+      - /swagger-ui/**      # Swagger UI资源
+      - /swagger-resources/** # Swagger资源
+      - /v3/api-docs/**     # OpenAPI文档
+      - /webjars/**         # 前端依赖
+      - /druid/**           # Druid监控页面
+      - /doc.html           # Knife4j文档页面
 
-  # 业务配置
+  # ===================================================================
+  # 业务配置 - 应用特定的业务逻辑相关配置
+  # ===================================================================
   business:
-    # 默认头像
+    # 用户默认头像URL
     default-avatar: https://example.com/default-avatar.png
-    # 图片处理相关
+    # 图片处理相关配置
     image:
-      # 最大图片尺寸限制
+      # 图片尺寸限制(像素)
       max-width: 1920
       max-height: 1080
-      # 支持的图片格式
+      # 允许上传的图片格式
       allowed-extensions: jpg,jpeg,png,gif,webp
-      # 图片压缩质量(1-100)
+      # 图片压缩质量(1-100)，影响文件大小和清晰度
       compress-quality: 85
