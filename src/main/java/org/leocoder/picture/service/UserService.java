@@ -1,5 +1,6 @@
 package org.leocoder.picture.service;
 
+import org.leocoder.picture.domain.dto.user.UserUpdateRequest;
 import org.leocoder.picture.domain.pojo.User;
 import org.leocoder.picture.domain.vo.user.LoginUserVO;
 import org.leocoder.picture.domain.vo.user.UserVO;
@@ -51,4 +52,31 @@ public interface UserService {
      * @return 当前登录用户信息
      */
     UserVO getCurrentUser();
+
+
+
+    /**
+     * 用户注销
+     *
+     * @return 是否成功
+     */
+    boolean userLogout();
+
+    /**
+     * 更新用户信息
+     *
+     * @param userUpdateRequest 用户信息更新请求
+     * @return 是否成功
+     */
+    boolean updateUserInfo(UserUpdateRequest userUpdateRequest);
+
+    /**
+     * 更新用户密码
+     *
+     * @param oldPassword    旧密码
+     * @param newPassword    新密码
+     * @param checkPassword  确认密码
+     * @return 是否成功
+     */
+    boolean updateUserPassword(String oldPassword, String newPassword, String checkPassword);
 }

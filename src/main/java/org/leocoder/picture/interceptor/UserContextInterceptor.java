@@ -30,7 +30,7 @@ public class UserContextInterceptor implements HandlerInterceptor {
             // 获取当前登录用户ID
             Long userId = StpUtil.getLoginIdAsLong();
             // 查询用户完整信息
-            User user = userMapper.selectByPrimaryKey(userId);
+            User user = userMapper.selectById(userId);
             // 设置到当前线程上下文
             if (user != null) {
                 UserContext.setUser(user);

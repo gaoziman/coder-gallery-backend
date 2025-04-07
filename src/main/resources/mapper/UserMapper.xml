@@ -46,7 +46,7 @@
         update_by,
         is_deleted
     </sql>
-    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
         <!--@mbg.generated-->
         select
         <include refid="Base_Column_List"/>
@@ -63,11 +63,11 @@
             useGeneratedKeys="true">
         <!--@mbg.generated-->
         insert into t_user (account, username, `password`,
-                              salt, phone, avatar, user_profile,
-                              `role`, `status`,
-                              last_login_time, last_login_ip, register_time,
-                              remark, create_time, create_by,
-                              update_time, update_by, is_deleted)
+                            salt, phone, avatar, user_profile,
+                            `role`, `status`,
+                            last_login_time, last_login_ip, register_time,
+                            remark, create_time, create_by,
+                            update_time, update_by, is_deleted)
         values (#{account,jdbcType=VARCHAR}, #{username,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR},
                 #{salt,jdbcType=VARCHAR}, #{phone,jdbcType=VARCHAR}, #{avatar,jdbcType=VARCHAR},
                 #{userProfile,jdbcType=VARCHAR},
@@ -261,22 +261,53 @@
     <update id="updateLoginInfo">
         update t_user
         set last_login_time = #{lastLoginTime,jdbcType=TIMESTAMP},
-        last_login_ip = #{lastLoginIp,jdbcType=VARCHAR}
+            last_login_ip   = #{lastLoginIp,jdbcType=VARCHAR}
         where id = #{id,jdbcType=BIGINT}
     </update>
 
     <!-- 使用指定ID插入用户 -->
     <insert id="insertWithId" parameterType="org.leocoder.picture.domain.pojo.User">
-        INSERT INTO t_user (
-        id, account, username, password, salt, phone, avatar,
-        user_profile, role, status, last_login_time, last_login_ip,
-        register_time, remark, create_time, create_by,
-        update_time, update_by, is_deleted
-        ) VALUES (
-        #{id}, #{account}, #{username}, #{password}, #{salt}, #{phone}, #{avatar},
-        #{userProfile}, #{role}, #{status}, #{lastLoginTime}, #{lastLoginIp},
-        #{registerTime}, #{remark}, #{createTime}, #{createBy},
-        #{updateTime}, #{updateBy}, #{isDeleted}
-        )
+        INSERT INTO t_user (id, account, username, password, salt, phone, avatar,
+                            user_profile, role, status, last_login_time, last_login_ip,
+                            register_time, remark, create_time, create_by,
+                            update_time, update_by, is_deleted)
+        VALUES (#{id}, #{account}, #{username}, #{password}, #{salt}, #{phone}, #{avatar},
+                #{userProfile}, #{role}, #{status}, #{lastLoginTime}, #{lastLoginIp},
+                #{registerTime}, #{remark}, #{createTime}, #{createBy},
+                #{updateTime}, #{updateBy}, #{isDeleted})
     </insert>
+
+    <!-- 根据ID更新用户信息 -->
+    <update id="updateById" parameterType="org.leocoder.picture.domain.pojo.User">
+        UPDATE t_user
+        <set>
+            <if test="username != null">
+                username = #{username},
+            </if>
+            <if test="phone != null">
+                phone = #{phone},
+            </if>
+            <if test="avatar != null">
+                avatar = #{avatar},
+            </if>
+            <if test="userProfile != null">
+                user_profile = #{userProfile},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime},
+            </if>
+        </set>
+        WHERE id = #{id}
+          AND is_deleted = 0
+    </update>
+
+    <!-- 更新用户密码 -->
+    <update id="updatePassword">
+        UPDATE t_user
+        SET password    = #{password},
+            salt        = #{salt},
+            update_time = #{updateTime}
+        WHERE id = #{userId}
+          AND is_deleted = 0
+    </update>
 </mapper>

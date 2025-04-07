@@ -21,7 +21,7 @@ public interface UserMapper {
 
     int insertSelective(User record);
 
-    User selectByPrimaryKey(Long id);
+    User selectById(Long id);
 
     int updateByPrimaryKeySelective(User record);
 
@@ -62,4 +62,27 @@ public interface UserMapper {
      * @return 影响的行数
      */
     int insertWithId(User user);
+
+
+    /**
+     * 根据ID更新用户信息
+     *
+     * @param user 用户对象
+     * @return 影响行数
+     */
+    int updateById(User user);
+
+    /**
+     * 更新用户密码
+     *
+     * @param userId     用户ID
+     * @param password   加密后的密码
+     * @param salt       新的盐值
+     * @param updateTime 更新时间
+     * @return 影响行数
+     */
+    int updatePassword(@Param("userId") Long userId,
+                       @Param("password") String password,
+                       @Param("salt") String salt,
+                       @Param("updateTime") LocalDateTime updateTime);
 }

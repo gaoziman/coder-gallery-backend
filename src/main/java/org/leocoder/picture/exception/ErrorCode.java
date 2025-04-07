@@ -31,7 +31,7 @@ public enum ErrorCode {
 
     ACCOUNT_NOT_FOUND(40202, "账号不存在"),
 
-    PASSWORD_ERROR(40203, "密码错误"),
+    PASSWORD_ERROR(40203, "用户名或密码错误"),
 
 
     ACCOUNT_BANNED(40204, "账号已被禁用"),

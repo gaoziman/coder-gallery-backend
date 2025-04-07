@@ -8,6 +8,8 @@ import org.leocoder.picture.common.Result;
 import org.leocoder.picture.common.ResultUtils;
 import org.leocoder.picture.domain.dto.user.UserLoginRequest;
 import org.leocoder.picture.domain.dto.user.UserRegisterRequest;
+import org.leocoder.picture.domain.dto.user.UserUpdatePasswordRequest;
+import org.leocoder.picture.domain.dto.user.UserUpdateRequest;
 import org.leocoder.picture.domain.vo.user.LoginUserVO;
 import org.leocoder.picture.domain.vo.user.UserVO;
 import org.leocoder.picture.exception.ErrorCode;
@@ -61,5 +63,32 @@ public class UserController {
     public Result<UserVO> getCurrentUser() {
         UserVO userVO = userService.getCurrentUser();
         return ResultUtils.success(userVO);
+    }
+
+    @ApiOperation(value = "用户注销")
+    @PostMapping("/logout")
+    public Result<Boolean> userLogout() {
+        boolean result = userService.userLogout();
+        return ResultUtils.success(result);
+    }
+
+    @ApiOperation(value = "修改用户信息")
+    @PutMapping("/update")
+    public Result<Boolean> updateUserInfo(@RequestBody UserUpdateRequest requestParam) {
+        ThrowUtils.throwIf(ObjectUtil.isNull(requestParam), ErrorCode.PARAMS_ERROR);
+        boolean result = userService.updateUserInfo(requestParam);
+        return ResultUtils.success(result);
+    }
+
+    @ApiOperation(value = "修改用户密码")
+    @PutMapping("/update/password")
+    public Result<Boolean> updateUserPassword(@RequestBody UserUpdatePasswordRequest requestParam) {
+        ThrowUtils.throwIf(ObjectUtil.isNull(requestParam), ErrorCode.PARAMS_ERROR);
+        boolean result = userService.updateUserPassword(
+                requestParam.getOldPassword(),
+                requestParam.getNewPassword(),
+                requestParam.getCheckPassword()
+        );
+        return ResultUtils.success(result);
     }
 }

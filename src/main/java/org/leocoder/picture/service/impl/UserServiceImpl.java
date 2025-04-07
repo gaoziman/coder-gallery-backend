@@ -8,6 +8,7 @@ import cn.hutool.core.util.StrUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.leocoder.picture.config.BloomFilterConfig;
+import org.leocoder.picture.domain.dto.user.UserUpdateRequest;
 import org.leocoder.picture.domain.pojo.User;
 import org.leocoder.picture.domain.vo.user.LoginUserVO;
 import org.leocoder.picture.domain.vo.user.UserVO;
@@ -167,7 +168,7 @@ public class UserServiceImpl implements UserService {
         // 5. 密码校验
         String encryptPassword = SaSecureUtil.md5BySalt(userPassword, user.getSalt());
         if (!encryptPassword.equals(user.getPassword())) {
-            throw new BusinessException(ErrorCode.PASSWORD_ERROR, "密码错误");
+            throw new BusinessException(ErrorCode.PASSWORD_ERROR);
         }
 
         // 6. 获取登录IP - 使用IP工具类
@@ -252,5 +253,188 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号不能为空");
         }
         return userMapper.selectByAccount(account);
+    }
+
+    /**
+     * 用户注销
+     *
+     * @return 是否成功
+     */
+    @Override
+    public boolean userLogout() {
+        // 1. 检查用户是否已登录
+        if (!StpUtil.isLogin()) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN, "用户未登录");
+        }
+        try {
+            // 2. 执行Sa-Token的注销操作
+            StpUtil.logout();
+
+            // 3. 清除线程上下文中的用户信息
+            UserContext.clear();
+
+            return true;
+        } catch (Exception e) {
+            log.error("用户注销失败", e);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注销失败，请稍后重试");
+        }
+    }
+
+    /**
+     * 更新用户信息
+     *
+     * @param userUpdateRequest 用户信息更新请求
+     * @return 是否成功
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean updateUserInfo(UserUpdateRequest userUpdateRequest) {
+        // 1. 检查用户是否已登录
+        if (!StpUtil.isLogin()) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN, "用户未登录");
+        }
+
+        // 2. 获取当前登录用户ID
+        Long userId = StpUtil.getLoginIdAsLong();
+
+        // 3. 校验请求参数
+        if (userUpdateRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数不能为空");
+        }
+
+        // 4. 从数据库获取最新用户信息
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND, "用户不存在");
+        }
+
+        // 5. 构建更新对象
+        User updateUser = new User();
+        updateUser.setId(userId);
+
+        // 只更新非空字段
+        if (StrUtil.isNotBlank(userUpdateRequest.getUsername())) {
+            updateUser.setUsername(userUpdateRequest.getUsername());
+        }
+
+        if (StrUtil.isNotBlank(userUpdateRequest.getPhone())) {
+            // 可以添加手机号格式校验
+            updateUser.setPhone(userUpdateRequest.getPhone());
+        }
+
+        if (StrUtil.isNotBlank(userUpdateRequest.getAvatar())) {
+            updateUser.setAvatar(userUpdateRequest.getAvatar());
+        }
+
+        if (StrUtil.isNotBlank(userUpdateRequest.getUserProfile())) {
+            updateUser.setUserProfile(userUpdateRequest.getUserProfile());
+        }
+
+        // 设置更新时间
+        updateUser.setUpdateTime(LocalDateTime.now());
+
+        // 6. 执行更新操作
+        int result = userMapper.updateById(updateUser);
+        if (result != 1) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "更新失败，请稍后重试");
+        }
+
+        // 7. 更新线程上下文中的用户信息
+        User contextUser = UserContext.getUser();
+        if (contextUser != null) {
+            if (StrUtil.isNotBlank(userUpdateRequest.getUsername())) {
+                contextUser.setUsername(userUpdateRequest.getUsername());
+            }
+            if (StrUtil.isNotBlank(userUpdateRequest.getPhone())) {
+                contextUser.setPhone(userUpdateRequest.getPhone());
+            }
+            if (StrUtil.isNotBlank(userUpdateRequest.getAvatar())) {
+                contextUser.setAvatar(userUpdateRequest.getAvatar());
+            }
+            if (StrUtil.isNotBlank(userUpdateRequest.getUserProfile())) {
+                contextUser.setUserProfile(userUpdateRequest.getUserProfile());
+            }
+            contextUser.setUpdateTime(LocalDateTime.now());
+            UserContext.setUser(contextUser);
+        }
+
+        return true;
+    }
+
+    /**
+     * 更新用户密码
+     *
+     * @param oldPassword   旧密码
+     * @param newPassword   新密码
+     * @param checkPassword 确认密码
+     * @return 是否成功
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean updateUserPassword(String oldPassword, String newPassword, String checkPassword) {
+        // 1. 检查用户是否已登录
+        if (!StpUtil.isLogin()) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN, "用户未登录");
+        }
+
+        // 2. 参数校验
+        if (StrUtil.hasBlank(oldPassword, newPassword, checkPassword)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数不能为空");
+        }
+
+        // 3. 检查新密码的两次输入是否一致
+        if (!newPassword.equals(checkPassword)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "两次输入的新密码不一致");
+        }
+
+        //  检查新密码不能与旧密码相同
+        if (newPassword.equals(oldPassword)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "新密码不能与旧密码相同");
+        }
+
+        // 4. 校验新密码格式
+        if (!PASSWORD_PATTERN.matcher(newPassword).matches()) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码格式不正确，应为6-16位，必须包含字母和数字");
+        }
+
+        // 6. 获取当前登录用户ID
+        Long userId = StpUtil.getLoginIdAsLong();
+
+        // 7. 从数据库获取用户信息
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND, "用户不存在");
+        }
+
+        // 8. 验证旧密码是否正确
+        String encryptOldPassword = SaSecureUtil.md5BySalt(oldPassword, user.getSalt());
+        if (!encryptOldPassword.equals(user.getPassword())) {
+            throw new BusinessException(ErrorCode.PASSWORD_ERROR, "旧密码错误");
+        }
+
+        // 9. 生成新盐值和加密新密码
+        String newSalt = IdUtil.simpleUUID().substring(0, 8);
+        String encryptNewPassword = SaSecureUtil.md5BySalt(newPassword, newSalt);
+
+        // 10. 更新数据库
+        LocalDateTime now = LocalDateTime.now();
+        int result = userMapper.updatePassword(userId, encryptNewPassword, newSalt, now);
+        if (result != 1) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "密码更新失败，请稍后重试");
+        }
+
+        // 11. 更新线程上下文中的用户信息
+        User contextUser = UserContext.getUser();
+        if (contextUser != null) {
+            contextUser.setPassword(encryptNewPassword);
+            contextUser.setSalt(newSalt);
+            contextUser.setUpdateTime(now);
+            UserContext.setUser(contextUser);
+        }
+
+        // 12. 强制注销当前会话，要求重新登录
+        StpUtil.logout();
+
+        return true;
     }
 }
