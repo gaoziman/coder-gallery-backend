@@ -1,11 +1,14 @@
 package org.leocoder.picture.config;
 
+import cn.dev33.satoken.exception.NotRoleException;
 import cn.dev33.satoken.interceptor.SaInterceptor;
 import cn.dev33.satoken.router.SaRouter;
 import cn.dev33.satoken.stp.StpUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.leocoder.picture.domain.pojo.User;
 import org.leocoder.picture.interceptor.UserContextInterceptor;
+import org.leocoder.picture.mapper.UserMapper;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -22,6 +25,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebMvcConfig implements WebMvcConfigurer {
 
     private final UserContextInterceptor userContextInterceptor;
+
+    private final UserMapper userMapper;
 
     /**
      * 注册拦截器
@@ -45,9 +50,17 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
             // 角色验证 -- 拦截管理员专属接口
             SaRouter.match("/**/admin/**")
-                    .check(r -> StpUtil.checkRole("admin"));
+                    .check(r -> {
+                        // 获取用户ID
+                        Long userId = StpUtil.getLoginIdAsLong();
+                        // 直接从数据库查询用户角色
+                        User user = userMapper.selectById(userId);
+                        // 检查是否为admin角色
+                        if (user == null || !"admin".equals(user.getRole())) {
+                            throw new NotRoleException("admin");
+                        }
+                    });
 
-            // 权限验证 -- 后续根据需要添加
         })).addPathPatterns("/**");
     }
 }

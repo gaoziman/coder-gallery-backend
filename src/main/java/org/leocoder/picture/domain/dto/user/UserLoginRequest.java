@@ -1,5 +1,7 @@
 package org.leocoder.picture.domain.dto.user;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -11,18 +13,15 @@ import java.io.Serializable;
  * @description : 用户登录请求参数
  */
 @Data
+@ApiModel(value = "UserLoginRequest",description = "用户登录请求参数")
 public class UserLoginRequest implements Serializable {
 
     private static final long serialVersionUID = 3191241716373120793L;
 
-    /**
-     * 账号
-     */
+    @ApiModelProperty(value = "用户名", required = true, example = "leocoder")
     private String account;
 
-    /**
-     * 密码
-     */
+    @ApiModelProperty(value = "密码", required = true, example = "123456")
     private String password;
 }
 

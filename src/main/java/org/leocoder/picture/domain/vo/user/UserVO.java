@@ -65,6 +65,12 @@ public class UserVO implements Serializable {
     private String status;
 
     /**
+     * 最后登录IP
+     */
+    private String lastLoginIp;
+
+
+    /**
      * 最后登录时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -75,4 +81,19 @@ public class UserVO implements Serializable {
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime registerTime;
+
+
+    /**
+     * 创建时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createTime;
+
+    /**
+     * 更新时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime updateTime;
+
+    private String remark;
 }

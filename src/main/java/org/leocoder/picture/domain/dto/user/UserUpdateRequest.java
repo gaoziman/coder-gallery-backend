@@ -11,7 +11,7 @@ import lombok.Data;
  * @description : 用户信息更新请求
  */
 @Data
-@ApiModel(description = "用户信息更新请求")
+@ApiModel(value = "UserUpdateRequest",description = "用户信息更新请求")
 public class UserUpdateRequest {
 
     @ApiModelProperty(value = "用户名", example = "图库大师")

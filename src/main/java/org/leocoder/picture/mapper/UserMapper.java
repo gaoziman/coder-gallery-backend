@@ -2,6 +2,7 @@ package org.leocoder.picture.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.leocoder.picture.domain.dto.user.AdminUserQueryRequest;
 import org.leocoder.picture.domain.pojo.User;
 
 import java.time.LocalDateTime;
@@ -85,4 +86,154 @@ public interface UserMapper {
                        @Param("password") String password,
                        @Param("salt") String salt,
                        @Param("updateTime") LocalDateTime updateTime);
+
+
+    /**
+     * 根据条件统计用户数量
+     *
+     * @param queryUser         查询条件
+     * @param registerTimeStart 注册时间开始
+     * @param registerTimeEnd   注册时间结束
+     * @return 用户数量
+     */
+    Long countUsers(@Param("queryUser") AdminUserQueryRequest queryUser,
+                    @Param("registerTimeStart") LocalDateTime registerTimeStart,
+                    @Param("registerTimeEnd") LocalDateTime registerTimeEnd);
+
+    /**
+     * 分页查询用户列表
+     *
+     * @param queryUser         查询条件
+     * @param registerTimeStart 注册时间开始
+     * @param registerTimeEnd   注册时间结束
+     * @param offset            偏移量
+     * @param pageSize          页面大小
+     * @return 用户列表
+     */
+    List<User> listUsersByPage(@Param("queryUser") AdminUserQueryRequest queryUser,
+                               @Param("registerTimeStart") LocalDateTime registerTimeStart,
+                               @Param("registerTimeEnd") LocalDateTime registerTimeEnd,
+                               @Param("offset") Integer offset,
+                               @Param("pageSize") Integer pageSize);
+
+    /**
+     * 逻辑删除用户
+     *
+     * @param id         用户ID
+     * @param updateTime 更新时间
+     * @param updateBy   更新人
+     * @return 影响行数
+     */
+    int logicDeleteUser(@Param("id") Long id,
+                        @Param("updateTime") LocalDateTime updateTime,
+                        @Param("updateBy") Long updateBy);
+
+    /**
+     * 更新用户状态
+     *
+     * @param id         用户ID
+     * @param status     用户状态
+     * @param updateTime 更新时间
+     * @param updateBy   更新人
+     * @return 影响行数
+     */
+    int updateUserStatus(@Param("id") Long id,
+                         @Param("status") String status,
+                         @Param("updateTime") LocalDateTime updateTime,
+                         @Param("updateBy") Long updateBy);
+
+
+    /**
+     * 统计注册用户总数
+     *
+     * @return 用户总数
+     */
+    Long countTotalUsers();
+
+    /**
+     * 统计本月新增用户数
+     *
+     * @return 本月新增用户数
+     */
+    Long countNewUsersThisMonth();
+
+    /**
+     * 根据角色统计用户数
+     *
+     * @param role 用户角色
+     * @return 该角色的用户数
+     */
+    Long countUsersByRole(@Param("role") String role);
+
+    /**
+     * 统计活跃用户数(最近30天有登录记录)
+     *
+     * @return 活跃用户数
+     */
+    Long countActiveUsers();
+
+
+    /**
+     * 统计上月用户总数
+     *
+     * @return 上月用户总数
+     */
+    Long countLastMonthTotalUsers();
+
+    /**
+     * 统计上月新增用户数
+     *
+     * @return 上月新增用户数
+     */
+    Long countNewUsersLastMonth();
+
+    /**
+     * 统计上月VIP用户数
+     *
+     * @param role VIP角色值
+     * @return 上月VIP用户数
+     */
+    Long countLastMonthUsersByRole(@Param("role") String role);
+
+    /**
+     * 统计上月活跃用户比例
+     *
+     * @return 上月活跃用户数
+     */
+    Long countLastMonthActiveUsers();
+
+    /**
+     * 统计今日登录用户数量
+     *
+     * @return 今日登录用户数量
+     */
+    Long countTodayLoginUsers();
+
+    /**
+     * 统计本周新增用户数量
+     *
+     * @return 本周新增用户数量
+     */
+    Long countNewUsersThisWeek();
+
+    /**
+     * 统计被冻结的账户数量
+     *
+     * @param status 被冻结状态值
+     * @return 冻结账户数量
+     */
+    Long countUsersByStatus(@Param("status") String status);
+
+
+    /**
+     * 批量逻辑删除用户
+     *
+     * @param ids        用户ID列表
+     * @param updateTime 更新时间
+     * @param updateBy   更新人
+     * @return 影响行数
+     */
+    int batchLogicDeleteUsers(@Param("ids") List<Long> ids,
+                              @Param("updateTime") LocalDateTime updateTime,
+                              @Param("updateBy") Long updateBy);
 }

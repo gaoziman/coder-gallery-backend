@@ -39,7 +39,9 @@ public enum ErrorCode {
 
     EXIST(40205, "数据已存在"),
 
-    NOT_LOGIN(40206, "未登录");
+    NOT_LOGIN(40206, "未登录"),
+
+    NO_AUTH(40207, "无权限");
 
     /**
      * 状态码

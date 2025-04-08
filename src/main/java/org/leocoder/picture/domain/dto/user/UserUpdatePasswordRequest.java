@@ -11,7 +11,7 @@ import lombok.Data;
  * @description : 用户密码更新请求
  */
 @Data
-@ApiModel(description = "用户密码更新请求")
+@ApiModel(value = "UserUpdatePasswordRequest",description = "用户密码更新请求")
 public class UserUpdatePasswordRequest {
 
     @ApiModelProperty(value = "旧密码", required = true, example = "oldPassword123")

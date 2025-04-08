@@ -46,6 +46,41 @@
         update_by,
         is_deleted
     </sql>
+
+    <!-- 条件查询公共部分 -->
+    <sql id="Query_Where_Clause">
+        <where>
+            is_deleted = 0
+            <if test="queryUser != null">
+                <if test="queryUser.id != null">
+                    AND id = #{queryUser.id}
+                </if>
+                <if test="queryUser.account != null and queryUser.account != ''">
+                    AND account LIKE CONCAT('%', #{queryUser.account}, '%')
+                </if>
+                <if test="queryUser.username != null and queryUser.username != ''">
+                    AND username LIKE CONCAT('%', #{queryUser.username}, '%')
+                </if>
+                <if test="queryUser.phone != null and queryUser.phone != ''">
+                    AND phone LIKE CONCAT('%', #{queryUser.phone}, '%')
+                </if>
+                <if test="queryUser.role != null and queryUser.role != ''">
+                    AND role = #{queryUser.role}
+                </if>
+                <if test="queryUser.status != null and queryUser.status != ''">
+                    AND status = #{queryUser.status}
+                </if>
+            </if>
+            <if test="registerTimeStart != null">
+                AND register_time >= #{registerTimeStart}
+            </if>
+            <if test="registerTimeEnd != null">
+                AND register_time &lt;= #{registerTimeEnd}
+            </if>
+        </where>
+    </sql>
+
+    <!-- 根据ID查询用户 -->
     <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
         <!--@mbg.generated-->
         select
@@ -53,12 +88,16 @@
         from t_user
         where id = #{id,jdbcType=BIGINT}
     </select>
+
+    <!-- 根据ID删除用户 -->
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
         <!--@mbg.generated-->
         delete
         from t_user
         where id = #{id,jdbcType=BIGINT}
     </delete>
+
+    <!-- 插入用户 -->
     <insert id="insert" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.User"
             useGeneratedKeys="true">
         <!--@mbg.generated-->
@@ -77,6 +116,8 @@
                 #{remark,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{createBy,jdbcType=BIGINT},
                 #{updateTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=BIGINT}, #{isDeleted,jdbcType=BOOLEAN})
     </insert>
+
+    <!-- 动态条件插入用户 -->
     <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.User"
             useGeneratedKeys="true">
         <!--@mbg.generated-->
@@ -194,29 +235,72 @@
             </if>
         </trim>
     </insert>
+
+    <!-- 动态修改用户（只更新非空字段） -->
     <update id="updateByPrimaryKeySelective" parameterType="org.leocoder.picture.domain.pojo.User">
         <!--@mbg.generated-->
         update t_user
-        set account         = #{account,jdbcType=VARCHAR},
-            username        = #{username,jdbcType=VARCHAR},
-            `password`      = #{password,jdbcType=VARCHAR},
-            salt            = #{salt,jdbcType=VARCHAR},
-            phone           = #{phone,jdbcType=VARCHAR},
-            avatar          = #{avatar,jdbcType=VARCHAR},
-            user_profile    = #{userProfile,jdbcType=VARCHAR},
-            `role`          = #{role,jdbcType=VARCHAR},
-            `status`        = #{status,jdbcType=VARCHAR},
-            last_login_time = #{lastLoginTime,jdbcType=TIMESTAMP},
-            last_login_ip   = #{lastLoginIp,jdbcType=VARCHAR},
-            register_time   = #{registerTime,jdbcType=TIMESTAMP},
-            remark          = #{remark,jdbcType=VARCHAR},
-            create_time     = #{createTime,jdbcType=TIMESTAMP},
-            create_by       = #{createBy,jdbcType=BIGINT},
-            update_time     = #{updateTime,jdbcType=TIMESTAMP},
-            update_by       = #{updateBy,jdbcType=BIGINT},
-            is_deleted      = #{isDeleted,jdbcType=BOOLEAN}
+        <set>
+            <if test="account != null">
+                account = #{account,jdbcType=VARCHAR},
+            </if>
+            <if test="username != null">
+                username = #{username,jdbcType=VARCHAR},
+            </if>
+            <if test="password != null">
+                `password` = #{password,jdbcType=VARCHAR},
+            </if>
+            <if test="salt != null">
+                salt = #{salt,jdbcType=VARCHAR},
+            </if>
+            <if test="phone != null">
+                phone = #{phone,jdbcType=VARCHAR},
+            </if>
+            <if test="avatar != null">
+                avatar = #{avatar,jdbcType=VARCHAR},
+            </if>
+            <if test="userProfile != null">
+                user_profile = #{userProfile,jdbcType=VARCHAR},
+            </if>
+            <if test="role != null">
+                `role` = #{role,jdbcType=VARCHAR},
+            </if>
+            <if test="status != null">
+                `status` = #{status,jdbcType=VARCHAR},
+            </if>
+            <if test="lastLoginTime != null">
+                last_login_time = #{lastLoginTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="lastLoginIp != null">
+                last_login_ip = #{lastLoginIp,jdbcType=VARCHAR},
+            </if>
+            <if test="registerTime != null">
+                register_time = #{registerTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="remark != null">
+                remark = #{remark,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createBy != null">
+                create_by = #{createBy,jdbcType=BIGINT},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateBy != null">
+                update_by = #{updateBy,jdbcType=BIGINT},
+            </if>
+            <if test="isDeleted != null">
+                is_deleted = #{isDeleted,jdbcType=BOOLEAN},
+            </if>
+        </set>
         where id = #{id,jdbcType=BIGINT}
     </update>
+
+
+    <!-- 根据ID修改用户 -->
     <update id="updateByPrimaryKey" parameterType="org.leocoder.picture.domain.pojo.User">
         <!--@mbg.generated-->
         update t_user
@@ -309,5 +393,149 @@
             update_time = #{updateTime}
         WHERE id = #{userId}
           AND is_deleted = 0
+    </update>
+
+    <!-- 根据条件查询用户数量 -->
+    <select id="countUsers" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user
+        <include refid="Query_Where_Clause"/>
+    </select>
+
+    <!-- 分页查询用户列表 -->
+    <select id="listUsersByPage" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM t_user
+        <include refid="Query_Where_Clause"/>
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 逻辑删除用户 -->
+    <update id="logicDeleteUser">
+        UPDATE t_user
+        SET is_deleted  = 1,
+            update_time = #{updateTime},
+            update_by   = #{updateBy}
+        WHERE id = #{id}
+          AND is_deleted = 0
+    </update>
+
+    <!-- 更新用户状态 -->
+    <update id="updateUserStatus">
+        UPDATE t_user
+        SET status      = #{status},
+            update_time = #{updateTime},
+            update_by   = #{updateBy}
+        WHERE id = #{id}
+          AND is_deleted = 0
+    </update>
+
+    <!-- 统计注册用户总数 -->
+    <select id="countTotalUsers" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user
+        WHERE is_deleted = 0
+    </select>
+
+    <!-- 统计本月新增用户数 -->
+    <select id="countNewUsersThisMonth" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user
+        WHERE is_deleted = 0
+          AND YEAR(register_time) = YEAR(CURRENT_DATE)
+          AND MONTH(register_time) = MONTH(CURRENT_DATE)
+    </select>
+
+    <!-- 根据角色统计用户数 -->
+    <select id="countUsersByRole" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user
+        WHERE is_deleted = 0
+          AND role = #{role}
+    </select>
+
+    <!-- 统计活跃用户数(最近30天有登录记录) -->
+    <select id="countActiveUsers" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user
+        WHERE is_deleted = 0
+          AND last_login_time >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 30 DAY)
+    </select>
+
+
+    <!-- 统计上月用户总数 -->
+    <select id="countLastMonthTotalUsers" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user
+        WHERE is_deleted = 0
+          AND register_time &lt; DATE_FORMAT(DATE_SUB(CURRENT_DATE, INTERVAL DAY(CURRENT_DATE) DAY), '%Y-%m-%d')
+    </select>
+
+    <!-- 统计上月新增用户数 -->
+    <select id="countNewUsersLastMonth" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user
+        WHERE is_deleted = 0
+          AND YEAR(register_time) = YEAR(DATE_SUB(CURRENT_DATE, INTERVAL 1 MONTH))
+          AND MONTH(register_time) = MONTH(DATE_SUB(CURRENT_DATE, INTERVAL 1 MONTH))
+    </select>
+
+    <!-- 统计上月VIP用户数 -->
+    <select id="countLastMonthUsersByRole" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user
+        WHERE is_deleted = 0
+        AND role = #{role}
+        AND register_time &lt; DATE_FORMAT(DATE_SUB(CURRENT_DATE, INTERVAL DAY(CURRENT_DATE) DAY), '%Y-%m-%d')
+    </select>
+
+    <!-- 统计上月活跃用户数 -->
+    <select id="countLastMonthActiveUsers" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user
+        WHERE is_deleted = 0
+          AND last_login_time BETWEEN
+            DATE_SUB(DATE_FORMAT(DATE_SUB(CURRENT_DATE, INTERVAL DAY(CURRENT_DATE) DAY), '%Y-%m-%d'), INTERVAL 30 DAY)
+            AND DATE_FORMAT(DATE_SUB(CURRENT_DATE, INTERVAL DAY(CURRENT_DATE) DAY), '%Y-%m-%d')
+    </select>
+
+    <!-- 统计今日登录用户数量 -->
+    <select id="countTodayLoginUsers" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user
+        WHERE is_deleted = 0
+          AND DATE(last_login_time) = CURRENT_DATE
+    </select>
+
+    <!-- 统计本周新增用户数量 -->
+    <select id="countNewUsersThisWeek" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user
+        WHERE is_deleted = 0
+          AND register_time >= DATE_SUB(CURRENT_DATE, INTERVAL WEEKDAY(CURRENT_DATE) DAY)
+          AND register_time &lt; DATE_ADD(DATE_SUB(CURRENT_DATE, INTERVAL WEEKDAY(CURRENT_DATE) DAY), INTERVAL 7 DAY)
+    </select>
+
+    <!-- 统计被冻结的账户数量 -->
+    <select id="countUsersByStatus" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user
+        WHERE is_deleted = 0
+        AND status = #{status}
+    </select>
+
+    <!-- 批量逻辑删除用户 -->
+    <update id="batchLogicDeleteUsers">
+        UPDATE t_user
+        SET is_deleted  = 1,
+            update_time = #{updateTime},
+            update_by   = #{updateBy}
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND is_deleted = 0
     </update>
 </mapper>
