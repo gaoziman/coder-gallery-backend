@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.leocoder.picture.mapper.CategoryRelationMapper">
+  <resultMap id="BaseResultMap" type="org.leocoder.picture.domain.pojo.CategoryRelation">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="category_id" jdbcType="BIGINT" property="categoryId" />
+    <result column="content_type" jdbcType="VARCHAR" property="contentType" />
+    <result column="content_id" jdbcType="BIGINT" property="contentId" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="create_user" jdbcType="BIGINT" property="createUser" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="update_user" jdbcType="BIGINT" property="updateUser" />
+    <result column="is_deleted" jdbcType="BOOLEAN" property="isDeleted" />
+  </resultMap>
+
+  <resultMap id="RelatedItemResultMap" type="org.leocoder.picture.domain.vo.category.RelatedItemVO">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="content_id" jdbcType="BIGINT" property="contentId" />
+    <result column="content_type" jdbcType="VARCHAR" property="contentType" />
+    <result column="title" jdbcType="VARCHAR" property="title" />
+    <result column="description" jdbcType="VARCHAR" property="description" />
+    <result column="thumbnail" jdbcType="VARCHAR" property="thumbnail" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="create_user" jdbcType="BIGINT" property="createUser" />
+    <result column="create_username" jdbcType="VARCHAR" property="createUsername" />
+    <result column="status" jdbcType="VARCHAR" property="status" />
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    id, category_id, content_type, content_id, create_time, create_user, update_time,
+    update_user, is_deleted
+  </sql>
+
+  <!-- 根据ID查询分类关系 -->
+  <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from t_category_relation
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+
+  <!-- 查询分类关系 -->
+  <select id="selectByCondition" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from t_category_relation
+    where category_id = #{categoryId,jdbcType=BIGINT}
+    and content_type = #{contentType,jdbcType=VARCHAR}
+    and content_id = #{contentId,jdbcType=BIGINT}
+    and is_deleted = 0
+    limit 1
+  </select>
+
+  <!-- 根据内容查询关联的分类ID列表 -->
+  <select id="selectCategoryIdsByContent" resultType="java.lang.Long">
+    select category_id
+    from t_category_relation
+    where content_type = #{contentType,jdbcType=VARCHAR}
+    and content_id = #{contentId,jdbcType=BIGINT}
+    and is_deleted = 0
+  </select>
+
+  <!-- 统计分类下内容数量 -->
+  <select id="countContentsByCategory" resultType="java.lang.Integer">
+    select count(*)
+    from t_category_relation
+    where category_id = #{categoryId,jdbcType=BIGINT}
+    <if test="contentType != null and contentType != ''">
+      and content_type = #{contentType,jdbcType=VARCHAR}
+    </if>
+    and is_deleted = 0
+  </select>
+
+  <!-- 统计分类关联的内容数量 -->
+  <select id="countCategoryRelatedItems" resultType="java.lang.Long">
+    select count(*)
+    from t_category_relation cr
+    where cr.category_id = #{categoryId,jdbcType=BIGINT}
+    <if test="contentType != null and contentType != ''">
+      and cr.content_type = #{contentType,jdbcType=VARCHAR}
+    </if>
+    and cr.is_deleted = 0
+  </select>
+
+  <!-- 分页查询分类关联的内容 -->
+  <select id="selectCategoryRelatedItems" resultMap="RelatedItemResultMap">
+    SELECT
+    cr.id,
+    cr.content_id,
+    cr.content_type,
+    c.title,
+    c.description,
+    c.thumbnail,
+    c.create_time,
+    c.create_user,
+    u.username as create_username,
+    c.status
+    FROM
+    t_category_relation cr
+    LEFT JOIN
+    t_content c ON cr.content_id = c.id AND cr.content_type = 'content'
+    LEFT JOIN
+    t_user u ON c.create_user = u.id
+    WHERE
+    cr.category_id = #{categoryId,jdbcType=BIGINT}
+    AND cr.is_deleted = 0
+    <if test="contentType != null and contentType != ''">
+      AND cr.content_type = #{contentType,jdbcType=VARCHAR}
+    </if>
+    ORDER BY
+    c.create_time DESC
+    LIMIT #{offset}, #{pageSize}
+  </select>
+
+  <!-- 根据ID删除分类关系 -->
+  <delete id="deleteById" parameterType="java.lang.Long">
+    delete from t_category_relation
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+
+  <!-- 根据内容删除所有分类关系 -->
+  <delete id="deleteByContent">
+    delete from t_category_relation
+    where content_type = #{contentType,jdbcType=VARCHAR}
+    and content_id = #{contentId,jdbcType=BIGINT}
+  </delete>
+
+  <!-- 根据分类ID删除分类关系 -->
+  <delete id="deleteByCategory">
+    delete from t_category_relation
+    where category_id = #{categoryId,jdbcType=BIGINT}
+  </delete>
+
+  <!-- 批量删除指定分类的所有关系 -->
+  <delete id="batchDeleteByCategories">
+    delete from t_category_relation
+    where category_id in
+    <foreach collection="list" item="categoryId" open="(" separator="," close=")">
+      #{categoryId}
+    </foreach>
+  </delete>
+
+  <!-- 插入分类关系 -->
+  <insert id="insert" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.CategoryRelation" useGeneratedKeys="true">
+    insert into t_category_relation (id, category_id, content_type, content_id,
+    create_time, create_user, update_time,
+    update_user, is_deleted)
+    values (#{id,jdbcType=BIGINT}, #{categoryId,jdbcType=BIGINT}, #{contentType,jdbcType=VARCHAR}, #{contentId,jdbcType=BIGINT},
+    #{createTime,jdbcType=TIMESTAMP}, #{createUser,jdbcType=BIGINT}, #{updateTime,jdbcType=TIMESTAMP},
+    #{updateUser,jdbcType=BIGINT}, #{isDeleted,jdbcType=BOOLEAN})
+  </insert>
+
+  <!-- 批量插入分类关系 -->
+  <insert id="batchInsert" parameterType="java.util.List">
+    insert into t_category_relation (id, category_id, content_type, content_id,
+    create_time, create_user, update_time,
+    update_user, is_deleted)
+    values
+    <foreach collection="list" item="item" separator=",">
+      (#{item.id,jdbcType=BIGINT}, #{item.categoryId,jdbcType=BIGINT}, #{item.contentType,jdbcType=VARCHAR}, #{item.contentId,jdbcType=BIGINT},
+      #{item.createTime,jdbcType=TIMESTAMP}, #{item.createUser,jdbcType=BIGINT}, #{item.updateTime,jdbcType=TIMESTAMP},
+      #{item.updateUser,jdbcType=BIGINT}, #{item.isDeleted,jdbcType=BOOLEAN})
+    </foreach>
+  </insert>
+
+  <!-- 选择性插入分类关系 -->
+  <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.CategoryRelation" useGeneratedKeys="true">
+    insert into t_category_relation
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="categoryId != null">
+        category_id,
+      </if>
+      <if test="contentType != null">
+        content_type,
+      </if>
+      <if test="contentId != null">
+        content_id,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="createUser != null">
+        create_user,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+      <if test="updateUser != null">
+        update_user,
+      </if>
+      <if test="isDeleted != null">
+        is_deleted,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="categoryId != null">
+        #{categoryId,jdbcType=BIGINT},
+      </if>
+      <if test="contentType != null">
+        #{contentType,jdbcType=VARCHAR},
+      </if>
+      <if test="contentId != null">
+        #{contentId,jdbcType=BIGINT},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createUser != null">
+        #{createUser,jdbcType=BIGINT},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateUser != null">
+        #{updateUser,jdbcType=BIGINT},
+      </if>
+      <if test="isDeleted != null">
+        #{isDeleted,jdbcType=BOOLEAN},
+      </if>
+    </trim>
+  </insert>
+
+  <!-- 选择性更新分类关系 -->
+  <!-- 选择性更新分类关系 -->
+  <update id="updateByPrimaryKeySelective" parameterType="org.leocoder.picture.domain.pojo.CategoryRelation">
+    update t_category_relation
+    <set>
+      <if test="categoryId != null">
+        category_id = #{categoryId,jdbcType=BIGINT},
+      </if>
+      <if test="contentType != null">
+        content_type = #{contentType,jdbcType=VARCHAR},
+      </if>
+      <if test="contentId != null">
+        content_id = #{contentId,jdbcType=BIGINT},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createUser != null">
+        create_user = #{createUser,jdbcType=BIGINT},
+      </if>
+      <if test="updateTime != null">
+        update_time = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateUser != null">
+        update_user = #{updateUser,jdbcType=BIGINT},
+      </if>
+      <if test="isDeleted != null">
+        is_deleted = #{isDeleted,jdbcType=BOOLEAN},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+
+  <!-- 更新分类关系 -->
+  <update id="updateById" parameterType="org.leocoder.picture.domain.pojo.CategoryRelation">
+    update t_category_relation
+    set category_id = #{categoryId,jdbcType=BIGINT},
+    content_type = #{contentType,jdbcType=VARCHAR},
+    content_id = #{contentId,jdbcType=BIGINT},
+    create_time = #{createTime,jdbcType=TIMESTAMP},
+    create_user = #{createUser,jdbcType=BIGINT},
+    update_time = #{updateTime,jdbcType=TIMESTAMP},
+    update_user = #{updateUser,jdbcType=BIGINT},
+    is_deleted = #{isDeleted,jdbcType=BOOLEAN}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+
+  <!-- 逻辑删除分类关系 -->
+  <update id="logicDeleteRelation">
+    update t_category_relation
+    set is_deleted = 1,
+    update_time = #{updateTime,jdbcType=TIMESTAMP},
+    update_user = #{updateUser,jdbcType=BIGINT}
+    where id = #{id,jdbcType=BIGINT}
+    and is_deleted = 0
+  </update>
+</mapper>
