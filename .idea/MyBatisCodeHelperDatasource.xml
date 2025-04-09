@@ -54,6 +54,32 @@
                 </TableGenerateConfig>
               </value>
             </entry>
+            <entry key="coder-gallery:t_category">
+              <value>
+                <TableGenerateConfig>
+                  <option name="generatedKey" value="id" />
+                  <option name="javaModelName" value="Category" />
+                  <option name="moduleName" value="coder-gallery-backend" />
+                  <option name="mybatisplusIdType" value="AUTO" />
+                  <option name="sequenceColumn" value="" />
+                  <option name="sequenceId" value="" />
+                  <option name="useActualColumnName" value="false" />
+                </TableGenerateConfig>
+              </value>
+            </entry>
+            <entry key="coder-gallery:t_category_relation">
+              <value>
+                <TableGenerateConfig>
+                  <option name="generatedKey" value="id" />
+                  <option name="javaModelName" value="CategoryRelation" />
+                  <option name="moduleName" value="coder-gallery-backend" />
+                  <option name="mybatisplusIdType" value="AUTO" />
+                  <option name="sequenceColumn" value="" />
+                  <option name="sequenceId" value="" />
+                  <option name="useActualColumnName" value="false" />
+                </TableGenerateConfig>
+              </value>
+            </entry>
           </map>
         </option>
         <option name="xmlMapperPackage" value="mapper" />

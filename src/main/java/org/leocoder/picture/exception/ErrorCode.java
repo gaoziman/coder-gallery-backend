@@ -6,7 +6,7 @@ import lombok.Getter;
  * @author : 程序员Leo
  * @version 1.0
  * @date 2025-04-07 13:36
- * @description :
+ * @description : 系统错误码
  */
 @Getter
 public enum ErrorCode {
@@ -37,11 +37,38 @@ public enum ErrorCode {
     ACCOUNT_BANNED(40204, "账号已被禁用"),
 
 
-    EXIST(40205, "数据已存在"),
-
     NOT_LOGIN(40206, "未登录"),
 
-    NO_AUTH(40207, "无权限");
+    NO_AUTH(40207, "无权限"),
+
+    // 数据相关错误码
+    DATA_EXIST(40301, "数据已存在"),
+
+    DATA_NOT_FOUND(40302, "数据不存在"),
+
+    DATA_USED(40303, "数据已被使用"),
+
+    // 分类相关错误码
+    CATEGORY_NAME_EXIST(40401, "分类名称已存在"),
+
+    CATEGORY_NOT_FOUND(40402, "分类不存在"),
+
+    CATEGORY_HAS_CHILDREN(40403, "分类下有子分类"),
+
+    CATEGORY_HAS_CONTENT(40404, "分类下有关联内容"),
+
+    CATEGORY_CANNOT_MOVE(40405, "分类无法移动到目标位置"),
+
+    CATEGORY_PATH_ERROR(40406, "分类路径错误"),
+
+    // 文件相关错误码
+    FILE_UPLOAD_ERROR(40501, "文件上传失败"),
+
+    FILE_DOWNLOAD_ERROR(40502, "文件下载失败"),
+
+    FILE_TYPE_ERROR(40503, "文件类型错误"),
+
+    FILE_SIZE_ERROR(40504, "文件大小超出限制");
 
     /**
      * 状态码
