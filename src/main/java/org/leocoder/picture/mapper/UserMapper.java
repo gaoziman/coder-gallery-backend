@@ -239,10 +239,10 @@ public interface UserMapper {
 
 
     /**
-     * 根据id获取用户名
+     * 根据id获取用户
      *
      * @param createUser 创建人ID
-     * @return 用户名
+     * @return 用户
      */
-    String getUsernameById(Long createUser);
+    User getUsernameById(Long createUser);
 }

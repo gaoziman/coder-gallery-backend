@@ -1040,13 +1040,13 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * 根据用户ID获取用户名
+     * 根据用户ID获取用户
      *
      * @param createUser 用户ID
-     * @return 用户名
+     * @return 用户
      */
     @Override
-    public String getUsernameById(Long createUser) {
+    public User getUsernameById(Long createUser) {
         return userMapper.getUsernameById(createUser);
     }
 }

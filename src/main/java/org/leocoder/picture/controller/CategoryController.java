@@ -7,6 +7,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
+import org.leocoder.picture.annotation.Log;
 import org.leocoder.picture.common.PageResult;
 import org.leocoder.picture.common.Result;
 import org.leocoder.picture.common.ResultUtils;
@@ -37,6 +38,7 @@ public class CategoryController {
 
     @ApiOperation("创建分类")
     @PostMapping("/admin/category/create")
+    @Log(module = "分类管理", action = "创建分类")
     public Result<Long> createCategory(@RequestBody CategoryCreateRequest categoryCreateRequest) {
         // 参数校验
         if (ObjectUtil.isEmpty(categoryCreateRequest)) {
@@ -97,6 +99,7 @@ public class CategoryController {
 
     @ApiOperation("更新分类")
     @PutMapping("/admin/category/update")
+    @Log(module = "分类管理", action = "更新分类")
     public Result<Boolean> updateCategory(@RequestBody CategoryUpdateRequest categoryUpdateRequest) {
         // 参数校验
         if (ObjectUtil.isEmpty(categoryUpdateRequest)) {
@@ -148,6 +151,7 @@ public class CategoryController {
 
     @ApiOperation("删除分类")
     @DeleteMapping("/admin/category/delete")
+    @Log(module = "分类管理", action = "删除分类")
     public Result<Boolean> deleteCategory(@ApiParam("分类ID") @RequestParam Long id) {
         // 参数校验
         if (ObjectUtil.isEmpty(id)) {
@@ -162,6 +166,7 @@ public class CategoryController {
 
     @ApiOperation("批量删除分类")
     @DeleteMapping("/admin/category/batch/delete")
+    @Log(module = "分类管理", action = "批量删除分类")
     public Result<Boolean> batchDeleteCategories(@RequestBody BatchCategoryDeleteRequest batchDeleteRequest) {
         // 参数校验
         if (ObjectUtil.isEmpty(batchDeleteRequest) || ObjectUtil.isEmpty(batchDeleteRequest.getIds())) {
@@ -186,6 +191,7 @@ public class CategoryController {
 
     @ApiOperation("获取分类详情")
     @GetMapping("/admin/category/get")
+    @Log(module = "分类管理", action = "获取分类详情")
     public Result<CategoryVO> getCategoryById(@ApiParam("分类ID") @RequestParam Long id) {
         // 参数校验
         if (ObjectUtil.isEmpty(id)) {
@@ -200,6 +206,7 @@ public class CategoryController {
 
     @ApiOperation("分页获取分类列表")
     @GetMapping("/admin/category/list/page")
+    @Log(module = "分类管理", action = "分页获取分类列表")
     public Result<PageResult<CategoryVO>> listCategoryByPage(CategoryQueryRequest categoryQueryRequest) {
         // 参数校验
         if (ObjectUtil.isEmpty(categoryQueryRequest)) {
@@ -230,6 +237,7 @@ public class CategoryController {
 
     @ApiOperation("获取分类树形结构")
     @GetMapping("/admin/category/tree")
+    @Log(module = "分类管理", action = "获取分类树形结构")
     public Result<List<CategoryTreeVO>> getCategoryTree(@ApiParam("分类类型") @RequestParam(required = false) String type) {
         // 参数校验
         if (StrUtil.isNotBlank(type) && type.length() > 20) {
@@ -242,6 +250,7 @@ public class CategoryController {
 
     @ApiOperation("移动分类")
     @PostMapping("/admin/category/move")
+    @Log(module = "分类管理", action = "移动分类")
     public Result<Boolean> moveCategory(@RequestBody CategoryMoveRequest categoryMoveRequest) {
         // 参数校验
         if (ObjectUtil.isEmpty(categoryMoveRequest)) {
@@ -277,6 +286,7 @@ public class CategoryController {
 
     @ApiOperation("批量移动分类")
     @PostMapping("/admin/category/batch/move")
+    @Log(module = "分类管理", action = "批量移动分类")
     public Result<Boolean> batchMoveCategories(@RequestBody BatchCategoryMoveRequest batchCategoryMoveRequest) {
         // 参数校验
         if (ObjectUtil.isEmpty(batchCategoryMoveRequest)) {
@@ -315,6 +325,7 @@ public class CategoryController {
 
     @ApiOperation("获取分类统计信息")
     @GetMapping("/admin/category/statistics")
+    @Log(module = "分类管理", action = "获取分类统计信息")
     public Result<CategoryStatisticsVO> getCategoryStatistics() {
         CategoryStatisticsVO statisticsVO = categoryService.getCategoryStatistics();
         return ResultUtils.success(statisticsVO);
@@ -322,6 +333,7 @@ public class CategoryController {
 
     @ApiOperation("获取分类关联的内容列表")
     @GetMapping("/admin/category/related/items")
+    @Log(module = "分类管理", action = "获取分类关联的内容列表")
     public Result<PageResult<RelatedItemVO>> getCategoryRelatedItems(
             @ApiParam("分类ID") @RequestParam Long categoryId,
             @ApiParam("内容类型") @RequestParam(required = false) String contentType,
@@ -355,6 +367,7 @@ public class CategoryController {
 
     @ApiOperation("导出分类数据")
     @PostMapping("/admin/category/export")
+    @Log(module = "分类管理", action = "导出分类数据")
     public Result<String> exportCategories(@RequestBody CategoryExportRequest categoryExportRequest) {
         // 参数校验
         if (ObjectUtil.isEmpty(categoryExportRequest)) {
@@ -397,6 +410,7 @@ public class CategoryController {
 
     @ApiOperation("获取分类列表(不分页)")
     @GetMapping("/category/list")
+    @Log(module = "分类管理", action = "获取分类列表(不分页)")
     public Result<List<CategoryVO>> listCategoriesByType(@ApiParam("分类类型") @RequestParam(required = false) String type) {
         // 参数校验
         if (StrUtil.isNotBlank(type) && type.length() > 20) {
@@ -409,6 +423,7 @@ public class CategoryController {
 
     @ApiOperation("获取分类树形结构(前台)")
     @GetMapping("/category/frontend-tree")
+    @Log(module = "分类管理", action = "获取分类树形结构(前台)")
     public Result<List<CategoryTreeVO>> getCategoryTreeForFrontend(@ApiParam("分类类型") @RequestParam(required = false) String type) {
         // 参数校验
         if (StrUtil.isNotBlank(type) && type.length() > 20) {

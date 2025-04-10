@@ -12,6 +12,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
@@ -26,6 +27,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @MapperScan("org.leocoder.picture.mapper")
 @EnableAspectJAutoProxy(exposeProxy = true)
 @EnableScheduling // 开启定时任务支持
+@EnableAsync // 开启异步支持
 public class PictureApplication implements ApplicationRunner {
     private final ServerProperties serverProperties;
 

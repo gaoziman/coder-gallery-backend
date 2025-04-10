@@ -7,6 +7,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
+import org.leocoder.picture.annotation.Log;
 import org.leocoder.picture.common.Result;
 import org.leocoder.picture.common.ResultUtils;
 import org.leocoder.picture.exception.BusinessException;
@@ -32,6 +33,7 @@ public class CategoryRelationController {
 
     @ApiOperation("创建分类关系")
     @PostMapping("/create")
+    @Log(module = "分类关联管理", action = "创建分类关系")
     public Result<Boolean> createCategoryRelation(
             @ApiParam("分类ID") @RequestParam Long categoryId,
             @ApiParam("内容类型") @RequestParam String contentType,
@@ -65,6 +67,7 @@ public class CategoryRelationController {
 
     @ApiOperation("批量创建分类关系")
     @PostMapping("/batch/create")
+    @Log(module = "分类关联管理", action = "批量创建分类关系")
     public Result<Boolean> batchCreateCategoryRelations(
             @ApiParam("分类ID列表") @RequestParam List<Long> categoryIds,
             @ApiParam("内容类型") @RequestParam String contentType,
@@ -101,6 +104,7 @@ public class CategoryRelationController {
 
     @ApiOperation("删除分类关系")
     @DeleteMapping("/delete")
+    @Log(module = "分类关联管理", action = "删除分类关系")
     public Result<Boolean> deleteCategoryRelation(
             @ApiParam("分类ID") @RequestParam Long categoryId,
             @ApiParam("内容类型") @RequestParam String contentType,
@@ -134,6 +138,7 @@ public class CategoryRelationController {
 
     @ApiOperation("删除指定内容的所有分类关系")
     @DeleteMapping("/delete/by-content")
+    @Log(module = "分类关联管理", action = "删除指定内容的所有分类关系")
     public Result<Boolean> deleteAllRelationsByContent(
             @ApiParam("内容类型") @RequestParam String contentType,
             @ApiParam("内容ID") @RequestParam Long contentId) {
@@ -159,6 +164,7 @@ public class CategoryRelationController {
 
     @ApiOperation("更新内容的分类关系")
     @PutMapping("/update")
+    @Log(module = "分类关联管理", action = "更新内容的分类关系")
     public Result<Boolean> updateContentCategories(
             @ApiParam("分类ID列表") @RequestParam List<Long> categoryIds,
             @ApiParam("内容类型") @RequestParam String contentType,
@@ -196,6 +202,7 @@ public class CategoryRelationController {
 
     @ApiOperation("获取内容关联的分类ID列表")
     @GetMapping("/get-category-ids")
+    @Log(module = "分类关联管理", action = "获取内容关联的分类ID列表")
     public Result<List<Long>> getCategoryIdsByContent(
             @ApiParam("内容类型") @RequestParam String contentType,
             @ApiParam("内容ID") @RequestParam Long contentId) {
@@ -221,6 +228,7 @@ public class CategoryRelationController {
 
     @ApiOperation("查询分类下有多少内容")
     @GetMapping("/count")
+    @Log(module = "分类关联管理", action = "查询分类下有多少内容")
     public Result<Integer> countContentsByCategory(
             @ApiParam("分类ID") @RequestParam Long categoryId,
             @ApiParam("内容类型") @RequestParam(required = false) String contentType) {

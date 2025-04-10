@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.leocoder.picture.common.PageResult;
 import org.leocoder.picture.domain.dto.tag.*;
 import org.leocoder.picture.domain.pojo.Tag;
+import org.leocoder.picture.domain.pojo.User;
 import org.leocoder.picture.domain.vo.tag.TagRelatedItemVO;
 import org.leocoder.picture.domain.vo.tag.TagStatisticsVO;
 import org.leocoder.picture.domain.vo.tag.TagUsageTrendVO;
@@ -481,8 +482,8 @@ public class TagServiceImpl implements TagService {
         // 设置创建人信息
         if (tag.getCreateUser() != null) {
             try {
-                String creatorName = userService.getUsernameById(tag.getCreateUser());
-                vo.setCreator(creatorName);
+                User user = userService.getUsernameById(tag.getCreateUser());
+                vo.setCreator(user.getUsername());
             } catch (Exception e) {
                 log.warn("获取用户名失败: {}", tag.getCreateUser(), e);
                 vo.setCreator("未知用户");

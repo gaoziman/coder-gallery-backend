@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
+import org.leocoder.picture.annotation.Log;
 import org.leocoder.picture.common.DeleteRequest;
 import org.leocoder.picture.common.PageResult;
 import org.leocoder.picture.common.Result;
@@ -95,6 +96,7 @@ public class AdminUserController {
     }
 
     @GetMapping("/get")
+    @Log(module = "用户管理", action = "根据ID获取用户详情")
     @ApiOperation(value = "根据ID获取用户详情", notes = "获取用户完整信息，仅管理员可用")
     public Result<UserVO> getUserById(@RequestParam("id") Long id) {
         // 参数校验
@@ -110,6 +112,7 @@ public class AdminUserController {
 
     @GetMapping("/get/vo")
     @ApiOperation(value = "根据ID获取脱敏用户信息", notes = "获取脱敏后的用户信息")
+    @Log(module = "用户管理", action = "根据ID获取脱敏用户信息")
     public Result<UserVO> getUserVOById(@RequestParam("id") Long id) {
         // 参数校验
         if (ObjectUtil.isEmpty(id)) {
@@ -124,6 +127,7 @@ public class AdminUserController {
 
     @DeleteMapping("/delete")
     @ApiOperation(value = "删除用户", notes = "根据ID删除用户，仅管理员可用")
+    @Log(module = "用户管理", action = "删除用户")
     public Result<Boolean> deleteUser(DeleteRequest requestParam) {
         if (ObjectUtil.isEmpty(requestParam)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户ID不能为空");
@@ -139,6 +143,7 @@ public class AdminUserController {
 
     @PutMapping("/update")
     @ApiOperation(value = "更新用户信息", notes = "管理员更新用户信息，仅管理员可用")
+    @Log(module = "用户管理", action = "更新用户信息")
     public Result<Boolean> updateUser(@RequestBody AdminUserUpdateRequest requestParam) {
         // 参数校验
         if (ObjectUtil.isEmpty(requestParam)) {
@@ -173,6 +178,7 @@ public class AdminUserController {
 
     @GetMapping("/list/page")
     @ApiOperation(value = "分页获取用户列表", notes = "分页获取用户列表，支持条件查询，仅管理员可用")
+    @Log(module = "用户管理", action = "分页获取用户列表")
     public Result<PageResult<UserVO>> listUserByPage(AdminUserQueryRequest userQueryRequest) {
         // 参数校验
         if (ObjectUtil.isEmpty(userQueryRequest)) {
@@ -195,6 +201,7 @@ public class AdminUserController {
 
     @PostMapping("/ban")
     @ApiOperation(value = "禁用用户", notes = "禁用指定用户，仅管理员可用")
+    @Log(module = "用户管理", action = "禁用用户")
     public Result<Boolean> banUser(@RequestParam("id") Long id) {
         // 参数校验
         if (ObjectUtil.isEmpty(id)) {
@@ -209,6 +216,7 @@ public class AdminUserController {
 
     @PostMapping("/unban")
     @ApiOperation(value = "解禁用户", notes = "解除用户禁用状态，仅管理员可用")
+    @Log(module = "用户管理", action = "解禁用户")
     public Result<Boolean> unbanUser(@RequestParam("id") Long id) {
         // 参数校验
         if (ObjectUtil.isEmpty(id)) {
@@ -222,6 +230,7 @@ public class AdminUserController {
     }
 
     @GetMapping("/statistics")
+    @Log(module = "用户管理", action = "获取用户统计信息")
     @ApiOperation(value = "获取用户统计信息", notes = "统计注册用户总数、本月新增用户、VIP用户数以及活跃用户比例")
     public Result<UserStatisticsVO> getUserStatistics() {
         UserStatisticsVO statistics = userService.getUserStatistics();
@@ -230,6 +239,7 @@ public class AdminUserController {
 
     @PostMapping("/reset/password")
     @ApiOperation(value = "重置用户密码", notes = "重置指定用户的密码，仅管理员可用")
+    @Log(module = "用户管理", action = "重置用户密码")
     public Result<Boolean> resetUserPassword(@RequestBody AdminResetPasswordRequest requestParam) {
         // 参数校验
         if (ObjectUtil.isEmpty(requestParam)) {
@@ -258,6 +268,7 @@ public class AdminUserController {
 
     @DeleteMapping("/batch/delete")
     @ApiOperation(value = "批量删除用户", notes = "根据ID列表批量删除用户，仅管理员可用")
+    @Log(module = "用户管理", action = "批量删除用户")
     public Result<Boolean> batchDeleteUsers(@RequestBody BatchDeleteRequest requestParam) {
         // 参数校验
         if (ObjectUtil.isEmpty(requestParam) || ObjectUtil.isEmpty(requestParam.getIds())) {
