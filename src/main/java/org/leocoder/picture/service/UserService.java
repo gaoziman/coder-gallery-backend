@@ -159,8 +159,8 @@ public interface UserService {
     /**
      * 管理员重置用户密码
      *
-     * @param userId 用户ID
-     * @param newPassword 新密码
+     * @param userId        用户ID
+     * @param newPassword   新密码
      * @param checkPassword 确认密码
      * @return 是否成功
      */
@@ -173,4 +173,13 @@ public interface UserService {
      * @return 是否成功
      */
     Boolean batchDeleteUsers(List<Long> ids);
+
+
+    /**
+     * 根据用户ID获取用户名
+     *
+     * @param createUser 用户ID
+     * @return 用户名
+     */
+    String getUsernameById(Long createUser);
 }

@@ -538,4 +538,9 @@
         </foreach>
         AND is_deleted = 0
     </update>
+
+    <!-- 根据ID查询用户名 -->
+    <select id="getUsernameById" resultType="java.lang.String">
+        SELECT username FROM t_user WHERE id = #{id}
+    </select>
 </mapper>

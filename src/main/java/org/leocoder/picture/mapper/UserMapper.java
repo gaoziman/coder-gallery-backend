@@ -236,4 +236,13 @@ public interface UserMapper {
     int batchLogicDeleteUsers(@Param("ids") List<Long> ids,
                               @Param("updateTime") LocalDateTime updateTime,
                               @Param("updateBy") Long updateBy);
+
+
+    /**
+     * 根据id获取用户名
+     *
+     * @param createUser 创建人ID
+     * @return 用户名
+     */
+    String getUsernameById(Long createUser);
 }
