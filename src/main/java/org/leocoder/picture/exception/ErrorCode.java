@@ -68,7 +68,20 @@ public enum ErrorCode {
 
     FILE_TYPE_ERROR(40503, "文件类型错误"),
 
-    FILE_SIZE_ERROR(40504, "文件大小超出限制");
+    FILE_SIZE_ERROR(40504, "文件大小超出限制"),
+
+    // 标签相关错误码
+    TAG_NAME_EXIST( 40601, "标签名称已存在" ),
+
+    TAG_NOT_FOUND( 40602, "标签不存在" ),
+
+    TAG_HAS_CONTENT( 40603, "标签下有关联内容" ),
+
+    TAG_CANNOT_MOVE( 40604, "标签无法移动到目标位置" ),
+
+    TAG_PATH_ERROR( 40605, "标签路径错误" ),
+
+    TAG_NAME_ALREADY_EXISTS( 40606, "标签名称已存在" );
 
     /**
      * 状态码

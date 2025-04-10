@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.leocoder.picture.mapper.TagMapper">
+    <resultMap id="BaseResultMap" type="org.leocoder.picture.domain.pojo.Tag">
+        <!--@mbg.generated-->
+        <!--@Table t_tag-->
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="name" jdbcType="VARCHAR" property="name"/>
+        <result column="color" jdbcType="VARCHAR" property="color"/>
+        <result column="description" jdbcType="VARCHAR" property="description"/>
+        <result column="status" jdbcType="VARCHAR" property="status"/>
+        <result column="reference_count" jdbcType="INTEGER" property="referenceCount"/>
+        <result column="sort_order" jdbcType="INTEGER" property="sortOrder"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="create_user" jdbcType="BIGINT" property="createUser"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="update_user" jdbcType="BIGINT" property="updateUser"/>
+        <result column="is_deleted" jdbcType="BOOLEAN" property="isDeleted"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        <!--@mbg.generated-->
+        id,
+        `name`,
+        color,
+        description,
+        `status`,
+        reference_count,
+        sort_order,
+        create_time,
+        create_user,
+        update_time,
+        update_user,
+        is_deleted
+    </sql>
+    <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        <!--@mbg.generated-->
+        select
+        <include refid="Base_Column_List"/>
+        from t_tag
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+    <delete id="deleteById" parameterType="java.lang.Long">
+        <!--@mbg.generated-->
+        delete
+        from t_tag
+        where id = #{id,jdbcType=BIGINT}
+    </delete>
+
+    <!-- 使用指定id插入标签 -->
+    <insert id="insertTagWithId" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.Tag">
+        <!--@mbg.generated-->
+        insert into t_tag (id, `name`, color, description,
+                           `status`, reference_count,
+                           sort_order, create_time, create_user,
+                           update_time, update_user, is_deleted)
+        values (#{id,jdbcType=BIGINT}, #{name,jdbcType=VARCHAR}, #{color,jdbcType=VARCHAR},
+                #{description,jdbcType=VARCHAR},
+                #{status,jdbcType=VARCHAR}, #{referenceCount,jdbcType=INTEGER},
+                #{sortOrder,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP}, #{createUser,jdbcType=BIGINT},
+                #{updateTime,jdbcType=TIMESTAMP}, #{updateUser,jdbcType=BIGINT}, #{isDeleted,jdbcType=BOOLEAN})
+    </insert>
+
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.Tag">
+        <!--@mbg.generated-->
+        insert into t_tag (`name`, color, description,
+                           `status`, reference_count,
+                           sort_order, create_time, create_user,
+                           update_time, update_user, is_deleted)
+        values (#{name,jdbcType=VARCHAR}, #{color,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR},
+                #{status,jdbcType=VARCHAR}, #{referenceCount,jdbcType=INTEGER},
+                #{sortOrder,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP}, #{createUser,jdbcType=BIGINT},
+                #{updateTime,jdbcType=TIMESTAMP}, #{updateUser,jdbcType=BIGINT}, #{isDeleted,jdbcType=BOOLEAN})
+    </insert>
+    <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.Tag">
+        <!--@mbg.generated-->
+        insert into t_tag
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null">
+                `name`,
+            </if>
+            <if test="color != null">
+                color,
+            </if>
+            <if test="description != null">
+                description,
+            </if>
+            <if test="status != null">
+                `status`,
+            </if>
+            <if test="referenceCount != null">
+                reference_count,
+            </if>
+            <if test="sortOrder != null">
+                sort_order,
+            </if>
+            <if test="createTime != null">
+                create_time,
+            </if>
+            <if test="createUser != null">
+                create_user,
+            </if>
+            <if test="updateTime != null">
+                update_time,
+            </if>
+            <if test="updateUser != null">
+                update_user,
+            </if>
+            <if test="isDeleted != null">
+                is_deleted,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null">
+                #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="color != null">
+                #{color,jdbcType=VARCHAR},
+            </if>
+            <if test="description != null">
+                #{description,jdbcType=VARCHAR},
+            </if>
+            <if test="status != null">
+                #{status,jdbcType=VARCHAR},
+            </if>
+            <if test="referenceCount != null">
+                #{referenceCount,jdbcType=INTEGER},
+            </if>
+            <if test="sortOrder != null">
+                #{sortOrder,jdbcType=INTEGER},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createUser != null">
+                #{createUser,jdbcType=BIGINT},
+            </if>
+            <if test="updateTime != null">
+                #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateUser != null">
+                #{updateUser,jdbcType=BIGINT},
+            </if>
+            <if test="isDeleted != null">
+                #{isDeleted,jdbcType=BOOLEAN},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="org.leocoder.picture.domain.pojo.Tag">
+        <!--@mbg.generated-->
+        update t_tag
+        <set>
+            <if test="name != null">
+                `name` = #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="color != null">
+                color = #{color,jdbcType=VARCHAR},
+            </if>
+            <if test="description != null">
+                description = #{description,jdbcType=VARCHAR},
+            </if>
+            <if test="status != null">
+                `status` = #{status,jdbcType=VARCHAR},
+            </if>
+            <if test="referenceCount != null">
+                reference_count = #{referenceCount,jdbcType=INTEGER},
+            </if>
+            <if test="sortOrder != null">
+                sort_order = #{sortOrder,jdbcType=INTEGER},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createUser != null">
+                create_user = #{createUser,jdbcType=BIGINT},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateUser != null">
+                update_user = #{updateUser,jdbcType=BIGINT},
+            </if>
+            <if test="isDeleted != null">
+                is_deleted = #{isDeleted,jdbcType=BOOLEAN},
+            </if>
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+    <update id="updateById" parameterType="org.leocoder.picture.domain.pojo.Tag">
+        <!--@mbg.generated-->
+        update t_tag
+        set `name`          = #{name,jdbcType=VARCHAR},
+            color           = #{color,jdbcType=VARCHAR},
+            description     = #{description,jdbcType=VARCHAR},
+            `status`        = #{status,jdbcType=VARCHAR},
+            reference_count = #{referenceCount,jdbcType=INTEGER},
+            sort_order      = #{sortOrder,jdbcType=INTEGER},
+            create_time     = #{createTime,jdbcType=TIMESTAMP},
+            create_user     = #{createUser,jdbcType=BIGINT},
+            update_time     = #{updateTime,jdbcType=TIMESTAMP},
+            update_user     = #{updateUser,jdbcType=BIGINT},
+            is_deleted      = #{isDeleted,jdbcType=BOOLEAN}
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <!-- 根据名称查询标签 -->
+    <select id="selectByName" parameterType="java.lang.String" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_tag
+        where name = #{name,jdbcType=VARCHAR}
+          and is_deleted = 0
+    </select>
+
+    <!-- 根据条件分页查询标签 -->
+    <select id="selectByCondition" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_tag
+        where is_deleted = 0
+        <if test="name != null and name != ''">
+            and name like concat('%', #{name}, '%')
+        </if>
+        <if test="status != null and status != ''">
+            and status = #{status}
+        </if>
+        <if test="createTimeStart != null and createTimeStart != ''">
+            and create_time >= #{createTimeStart}
+        </if>
+        <if test="createTimeEnd != null and createTimeEnd != ''">
+            and create_time &lt;= #{createTimeEnd}
+        </if>
+        order by sort_order asc, create_time desc
+    </select>
+
+    <!-- 更新标签引用次数 -->
+    <update id="updateReferenceCount">
+        update t_tag
+        set reference_count = reference_count + #{increment},
+            update_time     = now()
+        where id = #{id}
+          and is_deleted = 0
+    </update>
+
+    <!-- 批量更新标签状态 -->
+    <update id="batchUpdateStatus">
+        update t_tag
+        set status      = #{status},
+            update_time = now()
+        where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        and is_deleted = 0
+    </update>
+
+    <!-- 逻辑删除标签 -->
+    <update id="logicalDelete" parameterType="java.lang.Long">
+        update t_tag
+        set is_deleted  = 1,
+            update_time = now()
+        where id = #{id}
+          and is_deleted = 0
+    </update>
+
+    <!-- 批量逻辑删除标签 -->
+    <update id="batchLogicalDelete">
+        update t_tag
+        set is_deleted  = 1,
+            update_time = now()
+        where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        and is_deleted = 0
+    </update>
+
+    <!-- 统计标签总数 -->
+    <select id="countTags" resultType="java.lang.Integer">
+        select count(*)
+        from t_tag
+        where is_deleted = 0
+        <if test="status != null and status != ''">
+            and status = #{status}
+        </if>
+    </select>
+
+    <!-- 统计今日创建的标签数量 -->
+    <select id="countTodayTags" resultType="java.lang.Integer">
+        select count(*)
+        from t_tag
+        where is_deleted = 0
+          and DATE(create_time) = CURDATE()
+    </select>
+
+    <!-- 统计本周新增的标签数量 -->
+    <select id="countWeekTags" resultType="java.lang.Integer">
+        select count(*)
+        from t_tag
+        where is_deleted = 0
+          and YEARWEEK(date_format(create_time,'%Y-%m-%d'), 1) = YEARWEEK(CURDATE(), 1)
+    </select>
+
+    <!-- 统计本月新增的标签数量 -->
+    <select id="countMonthTags" resultType="java.lang.Integer">
+        select count(*)
+        from t_tag
+        where is_deleted = 0
+          and DATE_FORMAT(create_time, '%Y%m') = DATE_FORMAT(CURDATE(), '%Y%m')
+    </select>
+
+    <!-- 统计未使用的标签数量（引用计数为0） -->
+    <select id="countUnusedTags" resultType="java.lang.Integer">
+        select count(*)
+        from t_tag
+        where is_deleted = 0
+          and reference_count = 0
+    </select>
+
+    <!-- 计算所有标签的引用总数 -->
+    <select id="sumTagReferenceCount" resultType="java.lang.Integer">
+        select IFNULL(sum(reference_count), 0)
+        from t_tag
+        where is_deleted = 0
+    </select>
+</mapper>

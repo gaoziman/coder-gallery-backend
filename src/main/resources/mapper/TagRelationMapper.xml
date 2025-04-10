@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.leocoder.picture.mapper.TagRelationMapper">
+  <resultMap id="BaseResultMap" type="org.leocoder.picture.domain.pojo.TagRelation">
+    <!--@mbg.generated-->
+    <!--@Table t_tag_relation-->
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="tag_id" jdbcType="BIGINT" property="tagId" />
+    <result column="content_type" jdbcType="VARCHAR" property="contentType" />
+    <result column="content_id" jdbcType="BIGINT" property="contentId" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="create_user" jdbcType="BIGINT" property="createUser" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="update_user" jdbcType="BIGINT" property="updateUser" />
+    <result column="is_deleted" jdbcType="BOOLEAN" property="isDeleted" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    id, tag_id, content_type, content_id, create_time, create_user, update_time, update_user,
+    is_deleted
+  </sql>
+  <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    <!--@mbg.generated-->
+    select
+    <include refid="Base_Column_List" />
+    from t_tag_relation
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <delete id="deleteById" parameterType="java.lang.Long">
+    <!--@mbg.generated-->
+    delete from t_tag_relation
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.TagRelation" useGeneratedKeys="true">
+    <!--@mbg.generated-->
+    insert into t_tag_relation (tag_id, content_type, content_id,
+      create_time, create_user, update_time,
+      update_user, is_deleted)
+    values (#{tagId,jdbcType=BIGINT}, #{contentType,jdbcType=VARCHAR}, #{contentId,jdbcType=BIGINT},
+      #{createTime,jdbcType=TIMESTAMP}, #{createUser,jdbcType=BIGINT}, #{updateTime,jdbcType=TIMESTAMP},
+      #{updateUser,jdbcType=BIGINT}, #{isDeleted,jdbcType=BOOLEAN})
+  </insert>
+  <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.TagRelation" useGeneratedKeys="true">
+    <!--@mbg.generated-->
+    insert into t_tag_relation
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="tagId != null">
+        tag_id,
+      </if>
+      <if test="contentType != null">
+        content_type,
+      </if>
+      <if test="contentId != null">
+        content_id,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="createUser != null">
+        create_user,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+      <if test="updateUser != null">
+        update_user,
+      </if>
+      <if test="isDeleted != null">
+        is_deleted,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="tagId != null">
+        #{tagId,jdbcType=BIGINT},
+      </if>
+      <if test="contentType != null">
+        #{contentType,jdbcType=VARCHAR},
+      </if>
+      <if test="contentId != null">
+        #{contentId,jdbcType=BIGINT},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createUser != null">
+        #{createUser,jdbcType=BIGINT},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateUser != null">
+        #{updateUser,jdbcType=BIGINT},
+      </if>
+      <if test="isDeleted != null">
+        #{isDeleted,jdbcType=BOOLEAN},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="org.leocoder.picture.domain.pojo.TagRelation">
+    <!--@mbg.generated-->
+    update t_tag_relation
+    <set>
+      <if test="tagId != null">
+        tag_id = #{tagId,jdbcType=BIGINT},
+      </if>
+      <if test="contentType != null">
+        content_type = #{contentType,jdbcType=VARCHAR},
+      </if>
+      <if test="contentId != null">
+        content_id = #{contentId,jdbcType=BIGINT},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createUser != null">
+        create_user = #{createUser,jdbcType=BIGINT},
+      </if>
+      <if test="updateTime != null">
+        update_time = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateUser != null">
+        update_user = #{updateUser,jdbcType=BIGINT},
+      </if>
+      <if test="isDeleted != null">
+        is_deleted = #{isDeleted,jdbcType=BOOLEAN},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateById" parameterType="org.leocoder.picture.domain.pojo.TagRelation">
+    <!--@mbg.generated-->
+    update t_tag_relation
+    set tag_id = #{tagId,jdbcType=BIGINT},
+      content_type = #{contentType,jdbcType=VARCHAR},
+      content_id = #{contentId,jdbcType=BIGINT},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      create_user = #{createUser,jdbcType=BIGINT},
+      update_time = #{updateTime,jdbcType=TIMESTAMP},
+      update_user = #{updateUser,jdbcType=BIGINT},
+      is_deleted = #{isDeleted,jdbcType=BOOLEAN}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+
+  <!-- 根据标签ID和内容信息查询关系 -->
+  <select id="selectByTagAndContent" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from t_tag_relation
+    where tag_id = #{tagId}
+    and content_type = #{contentType}
+    and content_id = #{contentId}
+    and is_deleted = 0
+  </select>
+
+  <!-- 根据内容信息查询关联的标签ID列表 -->
+  <select id="selectTagIdsByContent" resultType="java.lang.Long">
+    select tag_id
+    from t_tag_relation
+    where content_type = #{contentType}
+    and content_id = #{contentId}
+    and is_deleted = 0
+  </select>
+
+  <!-- 根据内容信息删除所有标签关系 -->
+  <update id="deleteByContent">
+    update t_tag_relation
+    set is_deleted = 1,
+    update_time = now()
+    where content_type = #{contentType}
+    and content_id = #{contentId}
+    and is_deleted = 0
+  </update>
+
+  <!-- 根据标签ID删除所有关系 -->
+  <update id="deleteByTagId" parameterType="java.lang.Long">
+    update t_tag_relation
+    set is_deleted = 1,
+    update_time = now()
+    where tag_id = #{tagId}
+    and is_deleted = 0
+  </update>
+
+  <!-- 批量删除标签关系 -->
+  <update id="batchDeleteByTagIds">
+    update t_tag_relation
+    set is_deleted = 1,
+    update_time = now()
+    where tag_id in
+    <foreach collection="tagIds" item="tagId" open="(" separator="," close=")">
+      #{tagId}
+    </foreach>
+    and is_deleted = 0
+  </update>
+
+  <!-- 统计标签关联的内容数量 -->
+  <select id="countByTagId" resultType="java.lang.Integer">
+    select count(*)
+    from t_tag_relation
+    where tag_id = #{tagId}
+    and is_deleted = 0
+    <if test="contentType != null and contentType != ''">
+      and content_type = #{contentType}
+    </if>
+  </select>
+
+  <!-- 获取标签关联的内容列表 -->
+  <select id="selectContentIdsByTag" resultType="java.lang.Long">
+    select content_id
+    from t_tag_relation
+    where tag_id = #{tagId}
+    and is_deleted = 0
+    <if test="contentType != null and contentType != ''">
+      and content_type = #{contentType}
+    </if>
+  </select>
+
+  <!-- 查询标签使用趋势 -->
+  <select id="selectUsageTrend" resultType="java.util.Map">
+    select
+    DATE_FORMAT(create_time, '%Y-%m-%d') as date,
+    count(*) as count
+    from t_tag_relation
+    where tag_id = #{tagId}
+    and is_deleted = 0
+    and create_time between #{startDate} and #{endDate}
+    group by DATE_FORMAT(create_time, '%Y-%m-%d')
+    order by date asc
+  </select>
+</mapper>
