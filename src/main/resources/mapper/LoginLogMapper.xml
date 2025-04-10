@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.leocoder.picture.mapper.LoginLogMapper">
+    <resultMap id="BaseResultMap" type="org.leocoder.picture.domain.pojo.LoginLog">
+        <!--@mbg.generated-->
+        <!--@Table t_user_login_log-->
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="user_id" jdbcType="BIGINT" property="userId"/>
+        <result column="login_time" jdbcType="TIMESTAMP" property="loginTime"/>
+        <result column="logout_time" jdbcType="TIMESTAMP" property="logoutTime"/>
+        <result column="ip" jdbcType="VARCHAR" property="ip"/>
+        <result column="location" jdbcType="VARCHAR" property="location"/>
+        <result column="device" jdbcType="VARCHAR" property="device"/>
+        <result column="browser" jdbcType="VARCHAR" property="browser"/>
+        <result column="os" jdbcType="VARCHAR" property="os"/>
+        <result column="status" jdbcType="INTEGER" property="status"/>
+        <result column="message" jdbcType="VARCHAR" property="message"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="create_by" jdbcType="BIGINT" property="createBy"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="update_by" jdbcType="BIGINT" property="updateBy"/>
+        <result column="is_deleted" jdbcType="BOOLEAN" property="isDeleted"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        <!--@mbg.generated-->
+        id,
+        user_id,
+        login_time,
+        logout_time,
+        ip,
+        `location`,
+        device,
+        browser,
+        os,
+        `status`,
+        message,
+        create_time,
+        create_by,
+        update_time,
+        update_by,
+        is_deleted
+    </sql>
+    <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        <!--@mbg.generated-->
+        select
+        <include refid="Base_Column_List"/>
+        from t_user_login_log
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+    <delete id="deleteById" parameterType="java.lang.Long">
+        <!--@mbg.generated-->
+        delete
+        from t_user_login_log
+        where id = #{id,jdbcType=BIGINT}
+    </delete>
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.LoginLog"
+            useGeneratedKeys="true">
+        <!--@mbg.generated-->
+        insert into t_user_login_log (user_id, login_time, logout_time,
+                                      ip, `location`, device,
+                                      browser, os, `status`,
+                                      message, create_time, create_by,
+                                      update_time, update_by, is_deleted)
+        values (#{userId,jdbcType=BIGINT}, #{loginTime,jdbcType=TIMESTAMP}, #{logoutTime,jdbcType=TIMESTAMP},
+                #{ip,jdbcType=VARCHAR}, #{location,jdbcType=VARCHAR}, #{device,jdbcType=VARCHAR},
+                #{browser,jdbcType=VARCHAR}, #{os,jdbcType=VARCHAR}, #{status,jdbcType=INTEGER},
+                #{message,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{createBy,jdbcType=BIGINT},
+                #{updateTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=BIGINT}, #{isDeleted,jdbcType=BOOLEAN})
+    </insert>
+
+    <insert id="insertWithId" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.LoginLog">
+        <!--@mbg.generated-->
+        insert into t_user_login_log (id, user_id, login_time, logout_time,
+                                      ip, `location`, device,
+                                      browser, os, `status`,
+                                      message, create_time, create_by,
+                                      update_time, update_by, is_deleted)
+        values (#{id,jdbcType=BIGINT}, #{userId,jdbcType=BIGINT}, #{loginTime,jdbcType=TIMESTAMP},
+                #{logoutTime,jdbcType=TIMESTAMP},
+                #{ip,jdbcType=VARCHAR}, #{location,jdbcType=VARCHAR}, #{device,jdbcType=VARCHAR},
+                #{browser,jdbcType=VARCHAR}, #{os,jdbcType=VARCHAR}, #{status,jdbcType=INTEGER},
+                #{message,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{createBy,jdbcType=BIGINT},
+                #{updateTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=BIGINT}, #{isDeleted,jdbcType=BOOLEAN})
+    </insert>
+
+
+    <insert id="insertSelective" keyColumn="id" keyProperty="id"
+            parameterType="org.leocoder.picture.domain.pojo.LoginLog" useGeneratedKeys="true">
+        <!--@mbg.generated-->
+        insert into t_user_login_log
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">
+                user_id,
+            </if>
+            <if test="loginTime != null">
+                login_time,
+            </if>
+            <if test="logoutTime != null">
+                logout_time,
+            </if>
+            <if test="ip != null">
+                ip,
+            </if>
+            <if test="location != null">
+                `location`,
+            </if>
+            <if test="device != null">
+                device,
+            </if>
+            <if test="browser != null">
+                browser,
+            </if>
+            <if test="os != null">
+                os,
+            </if>
+            <if test="status != null">
+                `status`,
+            </if>
+            <if test="message != null">
+                message,
+            </if>
+            <if test="createTime != null">
+                create_time,
+            </if>
+            <if test="createBy != null">
+                create_by,
+            </if>
+            <if test="updateTime != null">
+                update_time,
+            </if>
+            <if test="updateBy != null">
+                update_by,
+            </if>
+            <if test="isDeleted != null">
+                is_deleted,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">
+                #{userId,jdbcType=BIGINT},
+            </if>
+            <if test="loginTime != null">
+                #{loginTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="logoutTime != null">
+                #{logoutTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="ip != null">
+                #{ip,jdbcType=VARCHAR},
+            </if>
+            <if test="location != null">
+                #{location,jdbcType=VARCHAR},
+            </if>
+            <if test="device != null">
+                #{device,jdbcType=VARCHAR},
+            </if>
+            <if test="browser != null">
+                #{browser,jdbcType=VARCHAR},
+            </if>
+            <if test="os != null">
+                #{os,jdbcType=VARCHAR},
+            </if>
+            <if test="status != null">
+                #{status,jdbcType=INTEGER},
+            </if>
+            <if test="message != null">
+                #{message,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createBy != null">
+                #{createBy,jdbcType=BIGINT},
+            </if>
+            <if test="updateTime != null">
+                #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateBy != null">
+                #{updateBy,jdbcType=BIGINT},
+            </if>
+            <if test="isDeleted != null">
+                #{isDeleted,jdbcType=BOOLEAN},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="org.leocoder.picture.domain.pojo.LoginLog">
+        <!--@mbg.generated-->
+        update t_user_login_log
+        <set>
+            <if test="userId != null">
+                user_id = #{userId,jdbcType=BIGINT},
+            </if>
+            <if test="loginTime != null">
+                login_time = #{loginTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="logoutTime != null">
+                logout_time = #{logoutTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="ip != null">
+                ip = #{ip,jdbcType=VARCHAR},
+            </if>
+            <if test="location != null">
+                `location` = #{location,jdbcType=VARCHAR},
+            </if>
+            <if test="device != null">
+                device = #{device,jdbcType=VARCHAR},
+            </if>
+            <if test="browser != null">
+                browser = #{browser,jdbcType=VARCHAR},
+            </if>
+            <if test="os != null">
+                os = #{os,jdbcType=VARCHAR},
+            </if>
+            <if test="status != null">
+                `status` = #{status,jdbcType=INTEGER},
+            </if>
+            <if test="message != null">
+                message = #{message,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createBy != null">
+                create_by = #{createBy,jdbcType=BIGINT},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateBy != null">
+                update_by = #{updateBy,jdbcType=BIGINT},
+            </if>
+            <if test="isDeleted != null">
+                is_deleted = #{isDeleted,jdbcType=BOOLEAN},
+            </if>
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+    <update id="updateById" parameterType="org.leocoder.picture.domain.pojo.LoginLog">
+        <!--@mbg.generated-->
+        update t_user_login_log
+        set user_id     = #{userId,jdbcType=BIGINT},
+            login_time  = #{loginTime,jdbcType=TIMESTAMP},
+            logout_time = #{logoutTime,jdbcType=TIMESTAMP},
+            ip          = #{ip,jdbcType=VARCHAR},
+            `location`  = #{location,jdbcType=VARCHAR},
+            device      = #{device,jdbcType=VARCHAR},
+            browser     = #{browser,jdbcType=VARCHAR},
+            os          = #{os,jdbcType=VARCHAR},
+            `status`    = #{status,jdbcType=INTEGER},
+            message     = #{message,jdbcType=VARCHAR},
+            create_time = #{createTime,jdbcType=TIMESTAMP},
+            create_by   = #{createBy,jdbcType=BIGINT},
+            update_time = #{updateTime,jdbcType=TIMESTAMP},
+            update_by   = #{updateBy,jdbcType=BIGINT},
+            is_deleted  = #{isDeleted,jdbcType=BOOLEAN}
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <!-- 查询条件公共部分 -->
+    <sql id="Query_Where_Clause">
+        <where>
+            is_deleted = 0
+            <if test="queryRequest != null">
+                <if test="queryRequest.status != null">
+                    AND status = #{queryRequest.status}
+                </if>
+                <if test="queryRequest.createTimeStart != null and queryRequest.createTimeStart != ''">
+                    AND login_time >= #{queryRequest.createTimeStart}
+                </if>
+                <if test="queryRequest.createTimeEnd != null and queryRequest.createTimeEnd != ''">
+                    AND login_time &lt;= #{queryRequest.createTimeEnd}
+                </if>
+                <if test="queryRequest.os != null and queryRequest.os != ''">
+                    AND os = #{queryRequest.os}
+                </if>
+                <if test="queryRequest.browser != null and queryRequest.browser != ''">
+                    AND browser = #{queryRequest.os}
+                </if>
+                <if test="queryRequest.searchContent != null and queryRequest.searchContent != ''">
+                    AND (
+                        ip LIKE CONCAT('%', #{queryRequest.searchContent}, '%') OR
+                        location LIKE CONCAT('%', #{queryRequest.searchContent}, '%') OR
+                        device LIKE CONCAT('%', #{queryRequest.searchContent}, '%')
+                        )
+                </if>
+            </if>
+        </where>
+    </sql>
+
+    <!-- 根据条件查询登录日志总数 -->
+    <select id="countLoginLogs" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user_login_log
+        <include refid="Query_Where_Clause"/>
+    </select>
+
+    <!-- 分页查询登录日志 -->
+    <select id="listLoginLogsByPage" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM t_user_login_log
+        <include refid="Query_Where_Clause"/>
+        ORDER BY login_time DESC
+        <if test="offset != null and pageSize != null">
+            LIMIT #{offset}, #{pageSize}
+        </if>
+    </select>
+
+    <!-- 查询所有登录日志（导出用） -->
+    <select id="listAllLoginLogs" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM t_user_login_log
+        <include refid="Query_Where_Clause"/>
+        ORDER BY login_time DESC
+    </select>
+
+    <!-- 批量逻辑删除登录日志 -->
+    <update id="batchLogicDelete">
+        UPDATE t_user_login_log
+        SET is_deleted  = 1,
+            update_time = #{updateTime},
+            update_by   = #{updateBy}
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND is_deleted = 0
+    </update>
+
+    <!-- 清空所有登录日志（逻辑删除） -->
+    <update id="clearAllLogs">
+        UPDATE t_user_login_log
+        SET is_deleted  = 1,
+            update_time = #{updateTime},
+            update_by   = #{updateBy}
+        WHERE is_deleted = 0
+    </update>
+
+    <!-- 统计今日登录次数 -->
+    <select id="countTodayLogins" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user_login_log
+        WHERE is_deleted = 0
+          AND DATE(login_time) = CURDATE()
+    </select>
+
+    <!-- 统计今日登录用户数 -->
+    <select id="countTodayLoginUsers" resultType="java.lang.Long">
+        SELECT COUNT(DISTINCT user_id)
+        FROM t_user_login_log
+        WHERE is_deleted = 0
+          AND DATE(login_time) = CURDATE()
+    </select>
+
+    <!-- 统计本周登录次数 -->
+    <select id="countWeekLogins" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user_login_log
+        WHERE is_deleted = 0
+          AND YEARWEEK(login_time) = YEARWEEK(NOW())
+    </select>
+
+    <!-- 统计本月登录次数 -->
+    <select id="countMonthLogins" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user_login_log
+        WHERE is_deleted = 0
+          AND YEAR(login_time) = YEAR(NOW())
+          AND MONTH(login_time) = MONTH(NOW())
+    </select>
+
+    <!-- 统计今日登录失败次数 -->
+    <select id="countTodayFailLogins" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user_login_log
+        WHERE is_deleted = 0
+          AND DATE(login_time) = CURDATE()
+          AND status = 0
+    </select>
+
+    <!-- 根据IP查找最近的登录记录 -->
+    <select id="findLatestLoginByIp" resultType="org.leocoder.picture.domain.pojo.LoginLog">
+        SELECT *
+        FROM t_user_login_log
+        WHERE ip = #{ip}
+        AND is_deleted = 0
+        ORDER BY login_time DESC
+        LIMIT 1
+    </select>
+
+    <!-- 查找用户最近一次未登出的记录 -->
+    <select id="findLatestLoginWithoutLogout" resultType="org.leocoder.picture.domain.pojo.LoginLog">
+        SELECT *
+        FROM t_user_login_log
+        WHERE user_id = #{userId}
+        AND logout_time IS NULL
+        AND is_deleted = 0
+        ORDER BY login_time DESC
+        LIMIT 1
+    </select>
+
+    <!-- 统计总登录次数 -->
+    <select id="countTotalLogins" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user_login_log
+        WHERE is_deleted = 0
+    </select>
+
+    <!-- 统计活跃用户数（过去30天有登录记录的用户） -->
+    <select id="countActiveUsers" resultType="java.lang.Long">
+        SELECT COUNT(DISTINCT user_id)
+        FROM t_user_login_log
+        WHERE is_deleted = 0
+          AND login_time >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+    </select>
+
+    <!-- 统计登录成功率 -->
+    <select id="calculateSuccessRate" resultType="java.lang.Double">
+        SELECT IFNULL(
+                       (SELECT COUNT(*) FROM t_user_login_log WHERE is_deleted = 0 AND status = 1) /
+                       NULLIF((SELECT COUNT(*) FROM t_user_login_log WHERE is_deleted = 0), 0) * 100,
+                       0
+               ) AS success_rate
+    </select>
+
+
+    <!-- 统计异常登录次数 -->
+    <select id="countAbnormalLogins" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user_login_log
+        WHERE is_deleted = 0
+          AND (
+            (HOUR(login_time) >= 23 OR HOUR(login_time) &lt;= 5)
+                OR status = 0
+            )
+    </select>
+
+    <!-- 统计昨日登录次数 -->
+    <select id="countYesterdayLogins" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user_login_log
+        WHERE is_deleted = 0
+          AND DATE(login_time) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+    </select>
+</mapper>

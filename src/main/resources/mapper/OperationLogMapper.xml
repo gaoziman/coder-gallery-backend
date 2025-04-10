@@ -1,0 +1,463 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.leocoder.picture.mapper.OperationLogMapper">
+    <resultMap id="BaseResultMap" type="org.leocoder.picture.domain.pojo.OperationLog">
+        <!--@mbg.generated-->
+        <!--@Table t_user_operation_log-->
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="user_id" jdbcType="BIGINT" property="userId"/>
+        <result column="module" jdbcType="VARCHAR" property="module"/>
+        <result column="action" jdbcType="VARCHAR" property="action"/>
+        <result column="method" jdbcType="VARCHAR" property="method"/>
+        <result column="params" jdbcType="LONGVARCHAR" property="params"/>
+        <result column="time" jdbcType="BIGINT" property="time"/>
+        <result column="ip" jdbcType="VARCHAR" property="ip"/>
+        <result column="operation_time" jdbcType="TIMESTAMP" property="operationTime"/>
+        <result column="status" jdbcType="INTEGER" property="status"/>
+        <result column="error_msg" jdbcType="LONGVARCHAR" property="errorMsg"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="create_by" jdbcType="BIGINT" property="createBy"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="update_by" jdbcType="BIGINT" property="updateBy"/>
+        <result column="is_deleted" jdbcType="BOOLEAN" property="isDeleted"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        <!--@mbg.generated-->
+        id,
+        user_id,
+        `module`,
+        `action`,
+        `method`,
+        params,
+        `time`,
+        ip,
+        operation_time,
+        `status`,
+        error_msg,
+        create_time,
+        create_by,
+        update_time,
+        update_by,
+        is_deleted
+    </sql>
+    <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        <!--@mbg.generated-->
+        select
+        <include refid="Base_Column_List"/>
+        from t_user_operation_log
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+    <delete id="deleteById" parameterType="java.lang.Long">
+        <!--@mbg.generated-->
+        delete
+        from t_user_operation_log
+        where id = #{id,jdbcType=BIGINT}
+    </delete>
+    <insert id="insert" keyColumn="id" keyProperty="id"
+            parameterType="org.leocoder.picture.domain.pojo.OperationLog" useGeneratedKeys="true">
+        <!--@mbg.generated-->
+        insert into t_user_operation_log (user_id, `module`, `action`,
+                                          `method`, params, `time`,
+                                          ip, operation_time, `status`,
+                                          error_msg, create_time, create_by,
+                                          update_time, update_by, is_deleted)
+        values (#{userId,jdbcType=BIGINT}, #{module,jdbcType=VARCHAR}, #{action,jdbcType=VARCHAR},
+                #{method,jdbcType=VARCHAR}, #{params,jdbcType=LONGVARCHAR}, #{time,jdbcType=BIGINT},
+                #{ip,jdbcType=VARCHAR}, #{operationTime,jdbcType=TIMESTAMP}, #{status,jdbcType=INTEGER},
+                #{errorMsg,jdbcType=LONGVARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{createBy,jdbcType=BIGINT},
+                #{updateTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=BIGINT}, #{isDeleted,jdbcType=BOOLEAN})
+    </insert>
+
+
+    <insert id="insertWithId" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.LoginLog">
+        <!--@mbg.generated-->
+        insert into t_user_operation_log (id, user_id, `module`, `action`,
+                                          `method`, params, `time`,
+                                          ip, operation_time, `status`,
+                                          error_msg, create_time, create_by,
+                                          update_time, update_by, is_deleted)
+        values (#{id,jdbcType=BIGINT}, #{userId,jdbcType=BIGINT}, #{module,jdbcType=VARCHAR},
+                #{action,jdbcType=VARCHAR},
+                #{method,jdbcType=VARCHAR}, #{params,jdbcType=LONGVARCHAR}, #{time,jdbcType=BIGINT},
+                #{ip,jdbcType=VARCHAR}, #{operationTime,jdbcType=TIMESTAMP}, #{status,jdbcType=INTEGER},
+                #{errorMsg,jdbcType=LONGVARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{createBy,jdbcType=BIGINT},
+                #{updateTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=BIGINT}, #{isDeleted,jdbcType=BOOLEAN})
+    </insert>
+
+
+    <insert id="insertSelective" keyColumn="id" keyProperty="id"
+            parameterType="org.leocoder.picture.domain.pojo.OperationLog" useGeneratedKeys="true">
+        <!--@mbg.generated-->
+        insert into t_user_operation_log
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">
+                user_id,
+            </if>
+            <if test="module != null">
+                `module`,
+            </if>
+            <if test="action != null">
+                `action`,
+            </if>
+            <if test="method != null">
+                `method`,
+            </if>
+            <if test="params != null">
+                params,
+            </if>
+            <if test="time != null">
+                `time`,
+            </if>
+            <if test="ip != null">
+                ip,
+            </if>
+            <if test="operationTime != null">
+                operation_time,
+            </if>
+            <if test="status != null">
+                `status`,
+            </if>
+            <if test="errorMsg != null">
+                error_msg,
+            </if>
+            <if test="createTime != null">
+                create_time,
+            </if>
+            <if test="createBy != null">
+                create_by,
+            </if>
+            <if test="updateTime != null">
+                update_time,
+            </if>
+            <if test="updateBy != null">
+                update_by,
+            </if>
+            <if test="isDeleted != null">
+                is_deleted,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">
+                #{userId,jdbcType=BIGINT},
+            </if>
+            <if test="module != null">
+                #{module,jdbcType=VARCHAR},
+            </if>
+            <if test="action != null">
+                #{action,jdbcType=VARCHAR},
+            </if>
+            <if test="method != null">
+                #{method,jdbcType=VARCHAR},
+            </if>
+            <if test="params != null">
+                #{params,jdbcType=LONGVARCHAR},
+            </if>
+            <if test="time != null">
+                #{time,jdbcType=BIGINT},
+            </if>
+            <if test="ip != null">
+                #{ip,jdbcType=VARCHAR},
+            </if>
+            <if test="operationTime != null">
+                #{operationTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="status != null">
+                #{status,jdbcType=INTEGER},
+            </if>
+            <if test="errorMsg != null">
+                #{errorMsg,jdbcType=LONGVARCHAR},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createBy != null">
+                #{createBy,jdbcType=BIGINT},
+            </if>
+            <if test="updateTime != null">
+                #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateBy != null">
+                #{updateBy,jdbcType=BIGINT},
+            </if>
+            <if test="isDeleted != null">
+                #{isDeleted,jdbcType=BOOLEAN},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="org.leocoder.picture.domain.pojo.OperationLog">
+        <!--@mbg.generated-->
+        update t_user_operation_log
+        <set>
+            <if test="userId != null">
+                user_id = #{userId,jdbcType=BIGINT},
+            </if>
+            <if test="module != null">
+                `module` = #{module,jdbcType=VARCHAR},
+            </if>
+            <if test="action != null">
+                `action` = #{action,jdbcType=VARCHAR},
+            </if>
+            <if test="method != null">
+                `method` = #{method,jdbcType=VARCHAR},
+            </if>
+            <if test="params != null">
+                params = #{params,jdbcType=LONGVARCHAR},
+            </if>
+            <if test="time != null">
+                `time` = #{time,jdbcType=BIGINT},
+            </if>
+            <if test="ip != null">
+                ip = #{ip,jdbcType=VARCHAR},
+            </if>
+            <if test="operationTime != null">
+                operation_time = #{operationTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="status != null">
+                `status` = #{status,jdbcType=INTEGER},
+            </if>
+            <if test="errorMsg != null">
+                error_msg = #{errorMsg,jdbcType=LONGVARCHAR},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createBy != null">
+                create_by = #{createBy,jdbcType=BIGINT},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateBy != null">
+                update_by = #{updateBy,jdbcType=BIGINT},
+            </if>
+            <if test="isDeleted != null">
+                is_deleted = #{isDeleted,jdbcType=BOOLEAN},
+            </if>
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+    <update id="updateById" parameterType="org.leocoder.picture.domain.pojo.OperationLog">
+        <!--@mbg.generated-->
+        update t_user_operation_log
+        set user_id        = #{userId,jdbcType=BIGINT},
+            `module`       = #{module,jdbcType=VARCHAR},
+            `action`       = #{action,jdbcType=VARCHAR},
+            `method`       = #{method,jdbcType=VARCHAR},
+            params         = #{params,jdbcType=LONGVARCHAR},
+            `time`         = #{time,jdbcType=BIGINT},
+            ip             = #{ip,jdbcType=VARCHAR},
+            operation_time = #{operationTime,jdbcType=TIMESTAMP},
+            `status`       = #{status,jdbcType=INTEGER},
+            error_msg      = #{errorMsg,jdbcType=LONGVARCHAR},
+            create_time    = #{createTime,jdbcType=TIMESTAMP},
+            create_by      = #{createBy,jdbcType=BIGINT},
+            update_time    = #{updateTime,jdbcType=TIMESTAMP},
+            update_by      = #{updateBy,jdbcType=BIGINT},
+            is_deleted     = #{isDeleted,jdbcType=BOOLEAN}
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <!-- 查询条件公共部分 -->
+    <sql id="Query_Where_Clause">
+        <where>
+            is_deleted = 0
+            <if test="queryRequest != null">
+                <if test="queryRequest.module != null and queryRequest.module != ''">
+                    AND module LIKE CONCAT('%', #{queryRequest.module}, '%')
+                </if>
+                <if test="queryRequest.action != null and queryRequest.action != ''">
+                    AND action LIKE CONCAT('%', #{queryRequest.action}, '%')
+                </if>
+                <if test="queryRequest.status != null">
+                    AND status = #{queryRequest.status}
+                </if>
+                <if test="queryRequest.createTimeStart != null and queryRequest.createTimeStart != ''">
+                    AND operation_time >= #{queryRequest.createTimeStart}
+                </if>
+                <if test="queryRequest.createTimeEnd != null and queryRequest.createTimeEnd != ''">
+                    AND operation_time &lt;= #{queryRequest.createTimeEnd}
+                </if>
+                <if test="queryRequest.searchContent != null and queryRequest.searchContent != ''">
+                    AND (
+                        module LIKE CONCAT('%', #{queryRequest.searchContent}, '%') OR
+                        action LIKE CONCAT('%', #{queryRequest.searchContent}, '%') OR
+                        method LIKE CONCAT('%', #{queryRequest.searchContent}, '%') OR
+                        ip LIKE CONCAT('%', #{queryRequest.searchContent}, '%')
+                        )
+                </if>
+            </if>
+        </where>
+    </sql>
+
+    <!-- 根据条件查询操作日志总数 -->
+    <select id="countOperationLogs" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user_operation_log
+        <include refid="Query_Where_Clause"/>
+    </select>
+
+    <!-- 分页查询操作日志 -->
+    <select id="listOperationLogsByPage" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM t_user_operation_log
+        <include refid="Query_Where_Clause"/>
+        ORDER BY operation_time DESC
+        <if test="offset != null and pageSize != null">
+            LIMIT #{offset}, #{pageSize}
+        </if>
+    </select>
+
+    <!-- 查询所有操作日志（导出用） -->
+    <select id="listAllOperationLogs" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM t_user_operation_log
+        <include refid="Query_Where_Clause"/>
+        ORDER BY operation_time DESC
+    </select>
+
+    <!-- 批量逻辑删除操作日志 -->
+    <update id="batchLogicDelete">
+        UPDATE t_user_operation_log
+        SET is_deleted  = 1,
+            update_time = #{updateTime},
+            update_by   = #{updateBy}
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND is_deleted = 0
+    </update>
+
+    <!-- 清空所有操作日志（逻辑删除） -->
+    <update id="clearAllLogs">
+        UPDATE t_user_operation_log
+        SET is_deleted  = 1,
+            update_time = #{updateTime},
+            update_by   = #{updateBy}
+        WHERE is_deleted = 0
+    </update>
+
+    <!-- 获取总操作次数 -->
+    <select id="countTotalOperations" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM t_user_operation_log WHERE is_deleted = 0
+    </select>
+
+    <!-- 获取上一年同期的总操作次数 -->
+    <select id="countTotalOperationsLastYear" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user_operation_log
+        WHERE is_deleted = 0
+          AND operation_time BETWEEN DATE_SUB(DATE_FORMAT(CURDATE(), '%Y-01-01'), INTERVAL 1 YEAR)
+            AND DATE_SUB(CURDATE(), INTERVAL 1 YEAR)
+    </select>
+
+    <!-- 获取本月操作量 -->
+    <select id="countMonthlyOperations" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user_operation_log
+        WHERE is_deleted = 0
+          AND operation_time BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND NOW()
+    </select>
+
+    <!-- 获取上月操作量 -->
+    <select id="countLastMonthOperations" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user_operation_log
+        WHERE is_deleted = 0
+          AND operation_time BETWEEN DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH), '%Y-%m-01')
+            AND LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+    </select>
+
+    <!-- 获取成功操作数量 -->
+    <select id="countSuccessOperations" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user_operation_log
+        WHERE is_deleted = 0
+          AND status = 1
+          AND operation_time BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND NOW()
+    </select>
+
+    <!-- 获取上月成功操作数量 -->
+    <select id="countLastMonthSuccessOperations" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user_operation_log
+        WHERE is_deleted = 0
+          AND status = 1
+          AND operation_time BETWEEN DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH), '%Y-%m-01')
+            AND LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+    </select>
+
+    <!-- 获取本月总操作数（用于计算成功率） -->
+    <select id="countAllOperationsForSuccessRate" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user_operation_log
+        WHERE is_deleted = 0
+          AND operation_time BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND NOW()
+    </select>
+
+    <!-- 获取上月总操作数（用于计算上月成功率） -->
+    <select id="countLastMonthAllOperationsForSuccessRate" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user_operation_log
+        WHERE is_deleted = 0
+          AND operation_time BETWEEN DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH), '%Y-%m-01')
+            AND LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+    </select>
+
+    <!-- 获取异常操作数量 -->
+    <select id="countExceptionOperations" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user_operation_log
+        WHERE is_deleted = 0
+          AND status = 0
+          AND operation_time BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND NOW()
+    </select>
+
+    <!-- 获取上月异常操作数量 -->
+    <select id="countLastMonthExceptionOperations" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user_operation_log
+        WHERE is_deleted = 0
+          AND status = 0
+          AND operation_time BETWEEN DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH), '%Y-%m-01')
+            AND LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+    </select>
+
+    <!-- 获取今日操作量 -->
+    <select id="countTodayOperations" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user_operation_log
+        WHERE is_deleted = 0
+          AND operation_time BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-%d 00:00:00') AND NOW()
+    </select>
+
+    <!-- 获取昨日操作量 -->
+    <select id="countYesterdayOperations" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_user_operation_log
+        WHERE is_deleted = 0
+          AND operation_time BETWEEN DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '%Y-%m-%d 00:00:00')
+            AND DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '%Y-%m-%d 23:59:59')
+    </select>
+
+    <!-- 获取本月活跃用户数（去重） -->
+    <select id="countActiveUsers" resultType="java.lang.Long">
+        SELECT COUNT(DISTINCT user_id)
+        FROM t_user_operation_log
+        WHERE is_deleted = 0
+          AND user_id IS NOT NULL
+          AND operation_time BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND NOW()
+    </select>
+
+    <!-- 获取上月活跃用户数（去重） -->
+    <select id="countLastMonthActiveUsers" resultType="java.lang.Long">
+        SELECT COUNT(DISTINCT user_id)
+        FROM t_user_operation_log
+        WHERE is_deleted = 0
+          AND user_id IS NOT NULL
+          AND operation_time BETWEEN DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH), '%Y-%m-01')
+            AND LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+    </select>
+</mapper>
