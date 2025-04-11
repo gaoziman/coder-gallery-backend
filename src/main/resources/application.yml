@@ -27,6 +27,8 @@ spring:
   application:
     # 应用名称
     name: coder-gallery-backend
+  profiles:
+    active: local
 
   # ===================================================================
   # 数据库配置 - 关系型数据库连接和连接池设置
@@ -132,6 +134,12 @@ spring:
       max-file-size: 10MB
       # 单次请求最大大小限制(包含所有文件)
       max-request-size: 100MB
+
+upload:
+  # 业务限制的最大文件大小 (6MB)
+  max-size: 6291456
+  # 允许的文件扩展名列表
+  allowed-extensions: jpeg,jpg,png,webp,heic
 
   # ===================================================================
   # Jackson配置 - JSON序列化/反序列化行为
