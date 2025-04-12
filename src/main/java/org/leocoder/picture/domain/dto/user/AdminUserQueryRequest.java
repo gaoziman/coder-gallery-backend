@@ -3,9 +3,7 @@ package org.leocoder.picture.domain.dto.user;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-
-import java.io.Serializable;
-import java.time.LocalDateTime;
+import org.leocoder.picture.common.PageRequest;
 
 /**
  * @author : 程序员Leo
@@ -15,9 +13,8 @@ import java.time.LocalDateTime;
  */
 @Data
 @ApiModel(value = "AdminUserQueryRequest", description = "管理员用户查询请求参数")
-public class AdminUserQueryRequest implements Serializable {
+public class AdminUserQueryRequest extends PageRequest{
 
-    private static final long serialVersionUID = 1L;
 
     @ApiModelProperty(value = "用户ID")
     private Long id;
@@ -38,14 +35,8 @@ public class AdminUserQueryRequest implements Serializable {
     private String status;
 
     @ApiModelProperty(value = "注册时间范围-开始")
-    private LocalDateTime registerTimeStart;
+    private String registerTimeStart;
 
     @ApiModelProperty(value = "注册时间范围-结束")
-    private LocalDateTime registerTimeEnd;
-
-    @ApiModelProperty(value = "当前页码", example = "1")
-    private Integer pageNum = 1;
-
-    @ApiModelProperty(value = "每页记录数", example = "10")
-    private Integer pageSize = 10;
+    private String registerTimeEnd;
 }

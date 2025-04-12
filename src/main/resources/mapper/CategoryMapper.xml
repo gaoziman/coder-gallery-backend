@@ -113,7 +113,6 @@
     from t_category
     <include refid="Query_Where_Clause" />
     order by sort_order asc, create_time desc
-    limit #{offset}, #{pageSize}
   </select>
 
   <!-- 插入分类 -->

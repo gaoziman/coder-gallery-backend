@@ -78,10 +78,10 @@ public class LoginLogAspect {
 
             if ("login".equals(type)) {
                 // 处理登录操作
-                handleLoginLog(joinPoint, result, true, null);
+                handleLoginLog(joinPoint, result, 0, null);
             } else if ("logout".equals(type)) {
                 // 处理登出操作
-                handleLogoutLog(joinPoint, result, true, null);
+                handleLogoutLog(joinPoint, result, 0, null);
             }
         } catch (Exception e) {
             // 记录日志过程中的异常不应影响业务
@@ -110,10 +110,10 @@ public class LoginLogAspect {
 
             if ("login".equals(type)) {
                 // 处理登录失败
-                handleLoginLog(joinPoint, null, false, e.getMessage());
+                handleLoginLog(joinPoint, null, 1, e.getMessage());
             } else if ("logout".equals(type)) {
                 // 处理登出失败
-                handleLogoutLog(joinPoint, null, false, e.getMessage());
+                handleLogoutLog(joinPoint, null, 1, e.getMessage());
             }
         } catch (Exception ex) {
             // 记录日志过程中的异常不应影响业务
@@ -131,7 +131,7 @@ public class LoginLogAspect {
      * @param errorMsg  错误信息
      */
     @Async
-    protected void handleLoginLog(JoinPoint joinPoint, Object result, boolean status, String errorMsg) {
+    protected void handleLoginLog(JoinPoint joinPoint, Object result, Integer status, String errorMsg) {
         try {
             // 获取请求参数
             Object[] args = joinPoint.getArgs();
@@ -168,7 +168,7 @@ public class LoginLogAspect {
             loginLog.setIsDeleted(0);
 
             // 处理状态和消息
-            if (status) {
+            if (status == 0) {
                 // 登录成功的情况
                 if (result instanceof Result<?>) {
                     Object data = ((Result<?>) result).getData();
@@ -228,7 +228,7 @@ public class LoginLogAspect {
      * @param errorMsg  错误信息
      */
     @Async
-    protected void handleLogoutLog(JoinPoint joinPoint, Object result, boolean status, String errorMsg) {
+    protected void handleLogoutLog(JoinPoint joinPoint, Object result, Integer status, String errorMsg) {
         try {
             // 获取用户ID（在切面处理时，如果是成功操作，用户已登出，需要先获取）
             Long userId = null;
@@ -312,7 +312,7 @@ public class LoginLogAspect {
             logoutLog.setBrowser(UserAgentUtils.getBrowserInfo(request));
             logoutLog.setOs(UserAgentUtils.getOsInfo(request));
             logoutLog.setStatus(status);
-            logoutLog.setMessage(status ? "注销成功" : (StrUtil.isBlank(errorMsg) ? "注销失败" : errorMsg));
+            logoutLog.setMessage(status == 0 ? "注销成功" : (StrUtil.isBlank(errorMsg) ? "注销失败" : errorMsg));
 
             // 设置基础字段
             logoutLog.setCreateTime(LocalDateTime.now());

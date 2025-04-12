@@ -99,19 +99,15 @@ public interface CategoryMapper {
     /**
      * 分页查询分类列表
      *
-     * @param queryRequest 查询条件
      * @param createTimeStart 创建开始时间
      * @param createTimeEnd 创建结束时间
-     * @param offset 偏移量
-     * @param pageSize 每页大小
      * @return 分类列表
      */
-    List<Category> listCategoriesByPage(@Param("queryRequest") CategoryQueryRequest queryRequest,
-                                        @Param("createTimeStart") LocalDateTime createTimeStart,
-                                        @Param("createTimeEnd") LocalDateTime createTimeEnd,
-                                        @Param("offset") Integer offset,
-                                        @Param("pageSize") Integer pageSize);
-
+    List<Category> listCategoriesByPage(
+            @Param("queryRequest") CategoryQueryRequest requestParam,
+            @Param("createTimeStart") LocalDateTime createTimeStart,
+            @Param("createTimeEnd") LocalDateTime createTimeEnd
+    );
     /**
      * 根据类型查询分类列表
      *

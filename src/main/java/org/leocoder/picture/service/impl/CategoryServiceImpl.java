@@ -7,7 +7,9 @@ import cn.hutool.core.util.StrUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.leocoder.picture.common.PageResult;
+import org.leocoder.picture.common.PageUtils;
 import org.leocoder.picture.domain.dto.category.*;
+import org.leocoder.picture.domain.mapstruct.CategoryConvert;
 import org.leocoder.picture.domain.pojo.Category;
 import org.leocoder.picture.domain.vo.category.CategoryStatisticsVO;
 import org.leocoder.picture.domain.vo.category.CategoryTreeVO;
@@ -468,11 +470,6 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     public PageResult<CategoryVO> listCategoryByPage(CategoryQueryRequest requestParam) {
-        // 1. 参数处理与默认值设置
-        if (ObjectUtil.isNull(requestParam)) {
-            requestParam = new CategoryQueryRequest();
-        }
-
         // 解析日期参数
         LocalDateTime createTimeStart = null;
         if (StrUtil.isNotBlank(requestParam.getCreateTimeStart())) {
@@ -494,122 +491,50 @@ public class CategoryServiceImpl implements CategoryService {
             }
         }
 
-        // 设置分页参数
-        Integer pageNum = requestParam.getPageNum();
-        Integer pageSize = requestParam.getPageSize();
+        // 使用 createTimeStart 和 createTimeEnd 的最终值
+        final LocalDateTime finalCreateTimeStart = createTimeStart;
+        final LocalDateTime finalCreateTimeEnd = createTimeEnd;
+        // 使用 PageUtils 和 MapStruct 进行分页查询
+        return PageUtils.doPage(
+                requestParam,
+                () -> categoryMapper.listCategoriesByPage(
+                        requestParam, finalCreateTimeStart, finalCreateTimeEnd),
+                category -> {
+                    // 基本属性转换
+                    CategoryVO vo = CategoryConvert.INSTANCE.toCategoryVO(category);
 
-        if (ObjectUtil.isNull(pageNum) || pageNum < 1) {
-            pageNum = 1;
-        }
+                    // 设置父分类名称
+                    if (category.getParentId() != null && category.getParentId() > 0) {
+                        try {
+                            Category parentCategory = categoryMapper.selectById(category.getParentId());
+                            if (parentCategory != null) {
+                                vo.setParentName(parentCategory.getName());
+                            }
+                        } catch (Exception e) {
+                            log.error("获取父分类信息失败, parentId={}", category.getParentId(), e);
+                        }
+                    }
 
-        if (ObjectUtil.isNull(pageSize) || pageSize < 1 || pageSize > 100) {
-            pageSize = 10;
-        }
+                    // 设置创建人和更新人信息
+                    if (category.getCreateUser() != null) {
+                        try {
+                            vo.setCreateUsername(userService.getUserVOById(category.getCreateUser()).getUsername());
+                        } catch (Exception e) {
+                            log.error("获取创建者信息失败, userId={}", category.getCreateUser(), e);
+                        }
+                    }
 
-        // 计算分页起始位置
-        int offset = (pageNum - 1) * pageSize;
+                    if (category.getUpdateUser() != null) {
+                        try {
+                            vo.setUpdateUsername(userService.getUserVOById(category.getUpdateUser()).getUsername());
+                        } catch (Exception e) {
+                            log.error("获取更新者信息失败, userId={}", category.getUpdateUser(), e);
+                        }
+                    }
 
-        // 2. 查询总数
-        Long total = categoryMapper.countCategories(requestParam, createTimeStart, createTimeEnd);
-
-        // 如果没有数据，直接返回空结果
-        if (total == 0) {
-            return PageResult.build(0L, Collections.emptyList(), pageNum, pageSize);
-        }
-
-        // 3. 查询分页数据
-        List<Category> categoryList = categoryMapper.listCategoriesByPage(
-                requestParam, createTimeStart, createTimeEnd, offset, pageSize);
-
-        // 4. 查询父分类名称和创建/更新用户名
-        List<CategoryVO> categoryVOList = new ArrayList<>();
-
-        // 收集需要查询的父分类ID和用户ID
-        Set<Long> parentIds = new HashSet<>();
-        Set<Long> userIds = new HashSet<>();
-
-        for (Category category : categoryList) {
-            if (category.getParentId() != null && category.getParentId() > 0) {
-                parentIds.add(category.getParentId());
-            }
-
-            if (category.getCreateUser() != null) {
-                userIds.add(category.getCreateUser());
-            }
-
-            if (category.getUpdateUser() != null) {
-                userIds.add(category.getUpdateUser());
-            }
-        }
-
-        // 批量查询父分类
-        Map<Long, String> parentNameMap = new HashMap<>();
-        if (!parentIds.isEmpty()) {
-            for (Long parentId : parentIds) {
-                Category parentCategory = categoryMapper.selectById(parentId);
-                if (ObjectUtil.isNotNull(parentCategory) && !Boolean.TRUE.equals(parentCategory.getIsDeleted())) {
-                    parentNameMap.put(parentId, parentCategory.getName());
+                    return vo;
                 }
-            }
-        }
-
-        // 批量查询用户名
-        Map<Long, String> usernameMap = new HashMap<>();
-        if (!userIds.isEmpty()) {
-            for (Long userId : userIds) {
-                try {
-                    String username = userService.getUserVOById(userId).getUsername();
-                    usernameMap.put(userId, username);
-                } catch (Exception e) {
-                    log.error("获取用户信息失败, userId={}", userId, e);
-                }
-            }
-        }
-
-        // 5. 构建VO列表
-        for (Category category : categoryList) {
-            String parentName = "";
-            if (category.getParentId() != null && category.getParentId() > 0) {
-                parentName = parentNameMap.getOrDefault(category.getParentId(), "");
-            }
-
-            String createUsername = "";
-            if (category.getCreateUser() != null) {
-                createUsername = usernameMap.getOrDefault(category.getCreateUser(), "");
-            }
-
-            String updateUsername = "";
-            if (category.getUpdateUser() != null) {
-                updateUsername = usernameMap.getOrDefault(category.getUpdateUser(), "");
-            }
-
-            CategoryVO categoryVO = CategoryVO.builder()
-                    .id(category.getId())
-                    .name(category.getName())
-                    .parentId(category.getParentId())
-                    .parentName(parentName)
-                    .type(category.getType())
-                    .level(category.getLevel())
-                    .path(category.getPath())
-                    .description(category.getDescription())
-                    .icon(category.getIcon())
-                    .urlName(category.getUrlName())
-                    .sortOrder(category.getSortOrder())
-                    .contentCount(category.getContentCount())
-                    .status(category.getStatus())
-                    .createTime(category.getCreateTime())
-                    .createUser(category.getCreateUser())
-                    .createUsername(createUsername)
-                    .updateTime(category.getUpdateTime())
-                    .updateUser(category.getUpdateUser())
-                    .updateUsername(updateUsername)
-                    .build();
-
-            categoryVOList.add(categoryVO);
-        }
-
-        // 6. 返回分页结果
-        return PageResult.build(total, categoryVOList, pageNum, pageSize);
+        );
     }
 
     /**

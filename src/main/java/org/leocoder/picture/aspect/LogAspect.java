@@ -27,7 +27,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 /**
  * @author : 程序员Leo
@@ -121,7 +120,7 @@ public class LogAspect {
             operationLog.setAction(actionName);
             operationLog.setMethod(signature.getDeclaringTypeName() + "." + signature.getName());
             operationLog.setTime(time);
-            operationLog.setOperationTime(new Date());
+            operationLog.setOperationTime(LocalDateTime.now());
             
             // 获取请求信息
             ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
@@ -152,10 +151,10 @@ public class LogAspect {
             
             // 处理异常信息
             if (e != null) {
-                operationLog.setStatus(false);
+                operationLog.setStatus(0);
                 operationLog.setErrorMsg(StrUtil.sub(e.getMessage(), 0, 2000));
             } else {
-                operationLog.setStatus(true);
+                operationLog.setStatus(0);
             }
             
             // 设置基础字段

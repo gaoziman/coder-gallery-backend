@@ -543,4 +543,14 @@
     <select id="getUsernameById" resultType="User">
         SELECT * FROM t_user WHERE id = #{id}
     </select>
+
+
+    <!-- 查询用户列表（PageHelper 分页） -->
+    <select id="listUsers" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM t_user
+        <include refid="Query_Where_Clause"/>
+        ORDER BY create_time DESC
+    </select>
 </mapper>

@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 /**
  * @author : 程序员Leo
@@ -62,12 +61,12 @@ public class OperationLog {
     /**
     * 操作时间
     */
-    private Date operationTime;
+    private LocalDateTime operationTime;
 
     /**
     * 操作状态(0-失败,1-成功)
     */
-    private Boolean status;
+    private Integer status;
 
     /**
     * 错误消息

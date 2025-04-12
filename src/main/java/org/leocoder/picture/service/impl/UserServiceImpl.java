@@ -9,11 +9,13 @@ import cn.hutool.core.util.StrUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.leocoder.picture.common.PageResult;
+import org.leocoder.picture.common.PageUtils;
 import org.leocoder.picture.config.BloomFilterConfig;
 import org.leocoder.picture.domain.dto.user.AdminUserAddRequest;
 import org.leocoder.picture.domain.dto.user.AdminUserQueryRequest;
 import org.leocoder.picture.domain.dto.user.AdminUserUpdateRequest;
 import org.leocoder.picture.domain.dto.user.UserUpdateRequest;
+import org.leocoder.picture.domain.mapstruct.UserConvert;
 import org.leocoder.picture.domain.pojo.User;
 import org.leocoder.picture.domain.vo.user.LoginUserVO;
 import org.leocoder.picture.domain.vo.user.UserStatisticsVO;
@@ -35,10 +37,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * @author : 程序员Leo
@@ -714,6 +714,7 @@ public class UserServiceImpl implements UserService {
         return true;
     }
 
+
     /**
      * 分页获取用户列表
      *
@@ -722,62 +723,18 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public PageResult<UserVO> listUserByPage(AdminUserQueryRequest userQueryRequest) {
-        // 1. 参数校验与默认值处理
-        if (ObjectUtil.isNull(userQueryRequest)) {
-            userQueryRequest = new AdminUserQueryRequest();
-        }
-
-        Integer pageNum = userQueryRequest.getPageNum();
-        Integer pageSize = userQueryRequest.getPageSize();
-
-        // 设置默认值
-        if (ObjectUtil.isNull(pageNum) || pageNum < 1) {
-            pageNum = 1;
-        }
-        if (ObjectUtil.isNull(pageSize) || pageSize < 1 || pageSize > 100) {
-            pageSize = 10;
-        }
-
-        // 计算分页起始位置
-        int offset = (pageNum - 1) * pageSize;
-
-        // 2. 查询总数
-        Long total = userMapper.countUsers(userQueryRequest,
-                userQueryRequest.getRegisterTimeStart(),
-                userQueryRequest.getRegisterTimeEnd());
-
-        // 如果没有数据，直接返回空结果
-        if (total == 0) {
-            return PageResult.build(0L, Collections.emptyList(), pageNum, pageSize);
-        }
-
-        // 3. 查询分页数据
-        List<User> userList = userMapper.listUsersByPage(userQueryRequest,
-                userQueryRequest.getRegisterTimeStart(),
-                userQueryRequest.getRegisterTimeEnd(),
-                offset,
-                pageSize);
-
-        // 4. 将实体列表转换为VO列表
-        List<UserVO> userVOList = userList.stream().map(user -> UserVO.builder()
-                .id(user.getId())
-                .account(user.getAccount())
-                .username(user.getUsername())
-                .phone(user.getPhone())
-                .avatar(user.getAvatar())
-                .userProfile(user.getUserProfile())
-                .role(user.getRole())
-                .status(user.getStatus())
-                .lastLoginTime(user.getLastLoginTime())
-                .lastLoginIp(user.getLastLoginIp())
-                .registerTime(user.getRegisterTime())
-                .createTime(user.getCreateTime())
-                .updateTime(user.getUpdateTime())
-                .build()).collect(Collectors.toList());
-
-        // 5. 封装并返回分页结果
-        return PageResult.build(total, userVOList, pageNum, pageSize);
+        return PageUtils.doPage(
+                userQueryRequest,
+                () -> userMapper.listUsers(
+                        userQueryRequest,
+                        userQueryRequest.getRegisterTimeStart(),
+                        userQueryRequest.getRegisterTimeEnd()
+                ),
+                // 使用MapStruct转换
+                UserConvert.INSTANCE::toUserVO
+        );
     }
+
 
     /**
      * 禁用用户

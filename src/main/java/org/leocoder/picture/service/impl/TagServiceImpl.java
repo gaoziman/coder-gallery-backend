@@ -5,7 +5,9 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.leocoder.picture.common.PageResult;
+import org.leocoder.picture.common.PageUtils;
 import org.leocoder.picture.domain.dto.tag.*;
+import org.leocoder.picture.domain.mapstruct.TagConvert;
 import org.leocoder.picture.domain.pojo.Tag;
 import org.leocoder.picture.domain.vo.tag.TagRelatedItemVO;
 import org.leocoder.picture.domain.vo.tag.TagStatisticsVO;
@@ -27,7 +29,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author : 程序员Leo
@@ -219,31 +220,34 @@ public class TagServiceImpl implements TagService {
      */
     @Override
     public PageResult<TagVO> listTagByPage(TagQueryRequest requestParam) {
-        // 查询标签列表
-        List<Tag> tags = tagMapper.selectByCondition(
-                requestParam.getName(),
-                requestParam.getStatus(),
-                requestParam.getCreateTimeStart(),
-                requestParam.getCreateTimeEnd()
+        // 使用 PageUtils 和 MapStruct 进行分页查询和对象转换
+        return PageUtils.doPage(
+                requestParam,
+                () -> tagMapper.selectByCondition(
+                        requestParam.getName(),
+                        requestParam.getStatus(),
+                        requestParam.getCreateTimeStart(),
+                        requestParam.getCreateTimeEnd()
+                ),
+                tag -> {
+                    // 使用 MapStruct 转换基本属性
+                    TagVO tagVO = TagConvert.INSTANCE.toTagVO(tag);
+
+                    // // 设置创建人信息
+                    // if (tag.getCreateUser() != null) {
+                    //     try {
+                    //         User user = userService.getUsernameById(tag.getCreateUser());
+                    //         if (user != null) {
+                    //             tagVO.setCreateUser(user.getId());
+                    //         }
+                    //     } catch (Exception e) {
+                    //         log.warn("获取用户名失败: {}", tag.getCreateUser(), e);
+                    //     }
+                    // }
+
+                    return tagVO;
+                }
         );
-
-        // 计算总数
-        long total = tags.size();
-
-        // 手动分页
-        int startIndex = (requestParam.getPageNum() - 1) * requestParam.getPageSize();
-        int endIndex = Math.min(startIndex + requestParam.getPageSize(), tags.size());
-        List<Tag> pageData = (startIndex < tags.size())
-                ? tags.subList(startIndex, endIndex)
-                : new ArrayList<>();
-
-        // 转换为VO
-        List<TagVO> voList = pageData.stream()
-                .map(this::convertToVO)
-                .collect(Collectors.toList());
-
-        // 构建分页结果
-        return PageResult.build(total, voList, requestParam.getPageNum(), requestParam.getPageSize());
     }
 
 

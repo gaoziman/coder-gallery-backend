@@ -67,7 +67,7 @@ public class LoginLog {
     /**
      * 登录状态(1-失败,0-成功)
      */
-    private Boolean status;
+    private Integer status;
 
     /**
      * 登录消息

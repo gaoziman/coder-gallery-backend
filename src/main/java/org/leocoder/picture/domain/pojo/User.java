@@ -1,15 +1,12 @@
 package org.leocoder.picture.domain.pojo;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.util.Date;
-
-import cn.hutool.core.date.DateTime;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 /**
  * @author : 程序员Leo
@@ -21,9 +18,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class User implements Serializable {
+public class User {
 
-    private static final long serialVersionUID = 1L;
 
     /**
      * 用户ID

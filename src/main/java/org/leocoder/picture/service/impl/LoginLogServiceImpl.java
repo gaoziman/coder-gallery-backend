@@ -9,7 +9,9 @@ import cn.hutool.poi.excel.ExcelWriter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.leocoder.picture.common.PageResult;
+import org.leocoder.picture.common.PageUtils;
 import org.leocoder.picture.domain.dto.log.LoginLogQueryRequest;
+import org.leocoder.picture.domain.mapstruct.LoginLogConvert;
 import org.leocoder.picture.domain.pojo.LoginLog;
 import org.leocoder.picture.domain.pojo.User;
 import org.leocoder.picture.domain.vo.log.LoginLogVO;
@@ -27,9 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author : 程序员Leo
@@ -55,54 +55,30 @@ public class LoginLogServiceImpl implements LoginLogService {
      */
     @Override
     public PageResult<LoginLogVO> listLoginLogs(LoginLogQueryRequest queryRequest) {
-        // 参数检查
-        if (ObjectUtil.isNull(queryRequest)) {
-            queryRequest = new LoginLogQueryRequest();
-        }
+        return PageUtils.doPage(
+                queryRequest,
+                () -> loginLogMapper.listLoginLogsByPage(queryRequest, null, null),
+                log -> {
+                    // 基本属性转换
+                    LoginLogVO vo = LoginLogConvert.INSTANCE.toLoginLogVO(log);
 
-        Integer pageNum = queryRequest.getPageNum();
-        Integer pageSize = queryRequest.getPageSize();
+                    // 获取用户信息
+                    if (log.getUserId() != null) {
+                        try {
+                            User user = userService.getUsernameById(log.getUserId());
+                            if (user != null) {
+                                vo.setUsername(user.getUsername());
+                                vo.setAvatar(user.getAvatar());
+                                vo.setRole(user.getRole());
+                            }
+                        } catch (Exception e) {
+                            LoginLogServiceImpl.log.error("获取用户信息失败, userId={}", log.getUserId(), e);
+                        }
+                    }
 
-        // 设置默认值
-        if (ObjectUtil.isNull(pageNum) || pageNum < 1) {
-            pageNum = 1;
-        }
-        if (ObjectUtil.isNull(pageSize) || pageSize < 1 || pageSize > 100) {
-            pageSize = 10;
-        }
-
-        // 计算分页起始位置
-        int offset = (pageNum - 1) * pageSize;
-
-        // 查询总数
-        Long total = loginLogMapper.countLoginLogs(queryRequest);
-
-        // 如果没有数据，直接返回空结果
-        if (total == 0) {
-            return PageResult.build(0L, Collections.emptyList(), pageNum, pageSize);
-        }
-
-        // 查询分页数据
-        List<LoginLog> logList = loginLogMapper.listLoginLogsByPage(queryRequest, offset, pageSize);
-
-        // 转换为VO对象
-        List<LoginLogVO> logVOList = logList.stream().map(log -> {
-            LoginLogVO vo = new LoginLogVO();
-            BeanUtil.copyProperties(log, vo);
-
-            // 获取用户信息
-            if (log.getUserId() != null) {
-                User user = userService.getUsernameById(log.getUserId());
-                vo.setUsername(user.getUsername());
-                vo.setAvatar(user.getAvatar());
-                vo.setRole(user.getRole());
-            }
-
-            return vo;
-        }).collect(Collectors.toList());
-
-        // 封装并返回分页结果
-        return PageResult.build(total, logVOList, pageNum, pageSize);
+                    return vo;
+                }
+        );
     }
 
 

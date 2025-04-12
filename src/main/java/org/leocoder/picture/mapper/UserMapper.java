@@ -245,4 +245,16 @@ public interface UserMapper {
      * @return 用户
      */
     User getUsernameById(Long createUser);
+
+    /**
+     * 查询用户列表（分页由 PageHelper 处理）
+     *
+     * @param queryUser 查询条件
+     * @param registerTimeStart 注册时间开始
+     * @param registerTimeEnd 注册时间结束
+     * @return 用户列表
+     */
+    List<User> listUsers(@Param("queryUser") AdminUserQueryRequest queryUser,
+                         @Param("registerTimeStart") String registerTimeStart,
+                         @Param("registerTimeEnd") String registerTimeEnd);;
 }
