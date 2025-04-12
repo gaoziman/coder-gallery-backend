@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.leocoder.picture.mapper.PictureHashMapper">
+    <resultMap id="BaseResultMap" type="org.leocoder.picture.domain.pojo.PictureHash">
+        <!--@mbg.generated-->
+        <!--@Table t_picture_hash-->
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="picture_id" jdbcType="BIGINT" property="pictureId"/>
+        <result column="url_hash" jdbcType="VARCHAR" property="urlHash"/>
+        <result column="url" jdbcType="LONGVARCHAR" property="url"/>
+        <result column="search_text" jdbcType="VARCHAR" property="searchText"/>
+        <result column="source" jdbcType="VARCHAR" property="source"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="create_user" jdbcType="BIGINT" property="createUser"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="update_user" jdbcType="BIGINT" property="updateUser"/>
+        <result column="is_deleted" jdbcType="BOOLEAN" property="isDeleted"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        <!--@mbg.generated-->
+        id,
+        picture_id,
+        url_hash,
+        url,
+        search_text,
+        `source`,
+        create_time,
+        create_user,
+        update_time,
+        update_user,
+        is_deleted
+    </sql>
+    <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        <!--@mbg.generated-->
+        select
+        <include refid="Base_Column_List"/>
+        from t_picture_hash
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+    <delete id="deleteById" parameterType="java.lang.Long">
+        <!--@mbg.generated-->
+        delete
+        from t_picture_hash
+        where id = #{id,jdbcType=BIGINT}
+    </delete>
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.PictureHash"
+            useGeneratedKeys="true">
+        <!--@mbg.generated-->
+        insert into t_picture_hash (picture_id, url_hash, url,
+                                    search_text, `source`, create_time,
+                                    create_user, update_time, update_user,
+                                    is_deleted)
+        values (#{pictureId,jdbcType=BIGINT}, #{urlHash,jdbcType=VARCHAR}, #{url,jdbcType=LONGVARCHAR},
+                #{searchText,jdbcType=VARCHAR}, #{source,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP},
+                #{createUser,jdbcType=BIGINT}, #{updateTime,jdbcType=TIMESTAMP}, #{updateUser,jdbcType=BIGINT},
+                #{isDeleted,jdbcType=BOOLEAN})
+    </insert>
+    <insert id="insertSelective" keyColumn="id" keyProperty="id"
+            parameterType="org.leocoder.picture.domain.pojo.PictureHash" useGeneratedKeys="true">
+        <!--@mbg.generated-->
+        insert into t_picture_hash
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="pictureId != null">
+                picture_id,
+            </if>
+            <if test="urlHash != null">
+                url_hash,
+            </if>
+            <if test="url != null">
+                url,
+            </if>
+            <if test="searchText != null">
+                search_text,
+            </if>
+            <if test="source != null">
+                `source`,
+            </if>
+            <if test="createTime != null">
+                create_time,
+            </if>
+            <if test="createUser != null">
+                create_user,
+            </if>
+            <if test="updateTime != null">
+                update_time,
+            </if>
+            <if test="updateUser != null">
+                update_user,
+            </if>
+            <if test="isDeleted != null">
+                is_deleted,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="pictureId != null">
+                #{pictureId,jdbcType=BIGINT},
+            </if>
+            <if test="urlHash != null">
+                #{urlHash,jdbcType=VARCHAR},
+            </if>
+            <if test="url != null">
+                #{url,jdbcType=LONGVARCHAR},
+            </if>
+            <if test="searchText != null">
+                #{searchText,jdbcType=VARCHAR},
+            </if>
+            <if test="source != null">
+                #{source,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createUser != null">
+                #{createUser,jdbcType=BIGINT},
+            </if>
+            <if test="updateTime != null">
+                #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateUser != null">
+                #{updateUser,jdbcType=BIGINT},
+            </if>
+            <if test="isDeleted != null">
+                #{isDeleted,jdbcType=BOOLEAN},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="org.leocoder.picture.domain.pojo.PictureHash">
+        <!--@mbg.generated-->
+        update t_picture_hash
+        <set>
+            <if test="pictureId != null">
+                picture_id = #{pictureId,jdbcType=BIGINT},
+            </if>
+            <if test="urlHash != null">
+                url_hash = #{urlHash,jdbcType=VARCHAR},
+            </if>
+            <if test="url != null">
+                url = #{url,jdbcType=LONGVARCHAR},
+            </if>
+            <if test="searchText != null">
+                search_text = #{searchText,jdbcType=VARCHAR},
+            </if>
+            <if test="source != null">
+                `source` = #{source,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createUser != null">
+                create_user = #{createUser,jdbcType=BIGINT},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateUser != null">
+                update_user = #{updateUser,jdbcType=BIGINT},
+            </if>
+            <if test="isDeleted != null">
+                is_deleted = #{isDeleted,jdbcType=BOOLEAN},
+            </if>
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+    <update id="updateById" parameterType="org.leocoder.picture.domain.pojo.PictureHash">
+        <!--@mbg.generated-->
+        update t_picture_hash
+        set picture_id  = #{pictureId,jdbcType=BIGINT},
+            url_hash    = #{urlHash,jdbcType=VARCHAR},
+            url         = #{url,jdbcType=LONGVARCHAR},
+            search_text = #{searchText,jdbcType=VARCHAR},
+            `source`    = #{source,jdbcType=VARCHAR},
+            create_time = #{createTime,jdbcType=TIMESTAMP},
+            create_user = #{createUser,jdbcType=BIGINT},
+            update_time = #{updateTime,jdbcType=TIMESTAMP},
+            update_user = #{updateUser,jdbcType=BIGINT},
+            is_deleted  = #{isDeleted,jdbcType=BOOLEAN}
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+
+    <!-- 获取指定搜索词和抓取源下已存在的URL哈希集合 -->
+    <select id="getExistingUrlHashes" resultType="java.lang.String">
+        SELECT url_hash
+        FROM t_picture_hash
+        WHERE search_text = #{searchText}
+          AND source = #{source}
+          AND is_deleted = 0
+    </select>
+
+    <!-- 批量插入哈希记录 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO t_picture_hash (picture_id, url_hash, url, search_text, `source`,
+                                    create_time, create_user, is_deleted) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.pictureId}, #{item.urlHash}, #{item.url},
+             #{item.searchText}, #{item.source}, #{item.createTime},
+             #{item.createUser}, #{item.isDeleted})
+        </foreach>
+    </insert>
+</mapper>

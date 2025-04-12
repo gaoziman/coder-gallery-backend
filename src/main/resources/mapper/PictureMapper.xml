@@ -1,0 +1,614 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.leocoder.picture.mapper.PictureMapper">
+    <resultMap id="BaseResultMap" type="org.leocoder.picture.domain.pojo.Picture">
+        <!--@mbg.generated-->
+        <!--@Table t_picture-->
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="name" jdbcType="VARCHAR" property="name"/>
+        <result column="url" jdbcType="VARCHAR" property="url"/>
+        <result column="thumbnail_url" jdbcType="VARCHAR" property="thumbnailUrl"/>
+        <result column="original_name" jdbcType="VARCHAR" property="originalName"/>
+        <result column="description" jdbcType="VARCHAR" property="description"/>
+        <result column="format" jdbcType="VARCHAR" property="format"/>
+        <result column="pic_width" jdbcType="INTEGER" property="picWidth"/>
+        <result column="pic_height" jdbcType="INTEGER" property="picHeight"/>
+        <result column="pic_scale" jdbcType="INTEGER" property="picScale"/>
+        <result column="size" jdbcType="BIGINT" property="size"/>
+        <result column="main_color" jdbcType="VARCHAR" property="mainColor"/>
+        <result column="space_id" jdbcType="BIGINT" property="spaceId"/>
+        <result column="view_count" jdbcType="BIGINT" property="viewCount"/>
+        <result column="like_count" jdbcType="INTEGER" property="likeCount"/>
+        <result column="collection_count" jdbcType="INTEGER" property="collectionCount"/>
+        <result column="review_status" jdbcType="VARCHAR" property="reviewStatus"/>
+        <result column="review_message" jdbcType="VARCHAR" property="reviewMessage"/>
+        <result column="review_user_id" jdbcType="BIGINT" property="reviewUserId"/>
+        <result column="review_time" jdbcType="TIMESTAMP" property="reviewTime"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="create_user" jdbcType="BIGINT" property="createUser"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="update_user" jdbcType="BIGINT" property="updateUser"/>
+        <result column="is_deleted" jdbcType="BOOLEAN" property="isDeleted"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        <!--@mbg.generated-->
+        id,
+        `name`,
+        url,
+        thumbnail_url,
+        original_name,
+        description,
+        format,
+        pic_width,
+        pic_height,
+        pic_scale,
+        `size`,
+        main_color,
+        space_id,
+        view_count,
+        like_count,
+        collection_count,
+        review_status,
+        review_message,
+        review_user_id,
+        review_time,
+        create_time,
+        create_user,
+        update_time,
+        update_user,
+        is_deleted
+    </sql>
+
+    <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        <!--@mbg.generated-->
+        select
+        <include refid="Base_Column_List"/>
+        from t_picture
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+
+    <delete id="deleteById" parameterType="java.lang.Long">
+        <!--@mbg.generated-->
+        delete
+        from t_picture
+        where id = #{id,jdbcType=BIGINT}
+    </delete>
+
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.Picture"
+            useGeneratedKeys="true">
+        <!--@mbg.generated-->
+        insert into t_picture (`name`, url, thumbnail_url,
+                               original_name, description, format,
+                               pic_width, pic_height, pic_scale,
+                               `size`, main_color,
+                               space_id, view_count, like_count,
+                               collection_count, review_status, review_message,
+                               review_user_id, review_time, create_time,
+                               create_user, update_time, update_user,
+                               is_deleted)
+        values (#{name,jdbcType=VARCHAR}, #{url,jdbcType=VARCHAR}, #{thumbnailUrl,jdbcType=VARCHAR},
+                #{originalName,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR}, #{format,jdbcType=VARCHAR},
+                #{picWidth,jdbcType=INTEGER}, #{picHeight,jdbcType=INTEGER}, #{picScale,jdbcType=INTEGER},
+                #{size,jdbcType=BIGINT}, #{mainColor,jdbcType=VARCHAR},
+                #{spaceId,jdbcType=BIGINT}, #{viewCount,jdbcType=BIGINT}, #{likeCount,jdbcType=INTEGER},
+                #{collectionCount,jdbcType=INTEGER}, #{reviewStatus,jdbcType=VARCHAR},
+                #{reviewMessage,jdbcType=VARCHAR},
+                #{reviewUserId,jdbcType=BIGINT}, #{reviewTime,jdbcType=TIMESTAMP}, #{createTime,jdbcType=TIMESTAMP},
+                #{createUser,jdbcType=BIGINT}, #{updateTime,jdbcType=TIMESTAMP}, #{updateUser,jdbcType=BIGINT},
+                #{isDeleted,jdbcType=BOOLEAN})
+    </insert>
+
+    <!-- 通过指定ID插入 -->
+    <insert id="insertWithId" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.Picture">
+        <!--@mbg.generated-->
+        insert into t_picture (id, `name`, url, thumbnail_url,
+                               original_name, description, format,
+                               pic_width, pic_height, pic_scale,
+                               `size`, main_color,
+                               space_id, view_count, like_count,
+                               collection_count, review_status, review_message,
+                               review_user_id, review_time, create_time,
+                               create_user, update_time, update_user,
+                               is_deleted)
+        values (#{id,jdbcType=BIGINT}, #{name,jdbcType=VARCHAR}, #{url,jdbcType=VARCHAR},
+                #{thumbnailUrl,jdbcType=VARCHAR},
+                #{originalName,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR}, #{format,jdbcType=VARCHAR},
+                #{picWidth,jdbcType=INTEGER}, #{picHeight,jdbcType=INTEGER}, #{picScale,jdbcType=INTEGER},
+                #{size,jdbcType=BIGINT}, #{mainColor,jdbcType=VARCHAR},
+                #{spaceId,jdbcType=BIGINT}, #{viewCount,jdbcType=BIGINT}, #{likeCount,jdbcType=INTEGER},
+                #{collectionCount,jdbcType=INTEGER}, #{reviewStatus,jdbcType=VARCHAR},
+                #{reviewMessage,jdbcType=VARCHAR},
+                #{reviewUserId,jdbcType=BIGINT}, #{reviewTime,jdbcType=TIMESTAMP}, #{createTime,jdbcType=TIMESTAMP},
+                #{createUser,jdbcType=BIGINT}, #{updateTime,jdbcType=TIMESTAMP}, #{updateUser,jdbcType=BIGINT},
+                #{isDeleted,jdbcType=BOOLEAN})
+    </insert>
+
+    <insert id="insertSelective" keyColumn="id" keyProperty="id"
+            parameterType="org.leocoder.picture.domain.pojo.Picture"
+            useGeneratedKeys="true">
+        <!--@mbg.generated-->
+        insert into t_picture
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null">
+                `name`,
+            </if>
+            <if test="url != null">
+                url,
+            </if>
+            <if test="thumbnailUrl != null">
+                thumbnail_url,
+            </if>
+            <if test="originalName != null">
+                original_name,
+            </if>
+            <if test="description != null">
+                description,
+            </if>
+            <if test="format != null">
+                format,
+            </if>
+            <if test="picWidth != null">
+                pic_width,
+            </if>
+            <if test="picHeight != null">
+                pic_height,
+            </if>
+            <if test="picScale != null">
+                pic_scale,
+            </if>
+            <if test="size != null">
+                `size`,
+            </if>
+            <if test="mainColor != null">
+                main_color,
+            </if>
+            <if test="spaceId != null">
+                space_id,
+            </if>
+            <if test="viewCount != null">
+                view_count,
+            </if>
+            <if test="likeCount != null">
+                like_count,
+            </if>
+            <if test="collectionCount != null">
+                collection_count,
+            </if>
+            <if test="reviewStatus != null">
+                review_status,
+            </if>
+            <if test="reviewMessage != null">
+                review_message,
+            </if>
+            <if test="reviewUserId != null">
+                review_user_id,
+            </if>
+            <if test="reviewTime != null">
+                review_time,
+            </if>
+            <if test="createTime != null">
+                create_time,
+            </if>
+            <if test="createUser != null">
+                create_user,
+            </if>
+            <if test="updateTime != null">
+                update_time,
+            </if>
+            <if test="updateUser != null">
+                update_user,
+            </if>
+            <if test="isDeleted != null">
+                is_deleted,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null">
+                #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="url != null">
+                #{url,jdbcType=VARCHAR},
+            </if>
+            <if test="thumbnailUrl != null">
+                #{thumbnailUrl,jdbcType=VARCHAR},
+            </if>
+            <if test="originalName != null">
+                #{originalName,jdbcType=VARCHAR},
+            </if>
+            <if test="description != null">
+                #{description,jdbcType=VARCHAR},
+            </if>
+            <if test="format != null">
+                #{format,jdbcType=VARCHAR},
+            </if>
+            <if test="picWidth != null">
+                #{picWidth,jdbcType=INTEGER},
+            </if>
+            <if test="picHeight != null">
+                #{picHeight,jdbcType=INTEGER},
+            </if>
+            <if test="picScale != null">
+                #{picScale,jdbcType=INTEGER},
+            </if>
+            <if test="size != null">
+                #{size,jdbcType=BIGINT},
+            </if>
+            <if test="mainColor != null">
+                #{mainColor,jdbcType=VARCHAR},
+            </if>
+            <if test="spaceId != null">
+                #{spaceId,jdbcType=BIGINT},
+            </if>
+            <if test="viewCount != null">
+                #{viewCount,jdbcType=BIGINT},
+            </if>
+            <if test="likeCount != null">
+                #{likeCount,jdbcType=INTEGER},
+            </if>
+            <if test="collectionCount != null">
+                #{collectionCount,jdbcType=INTEGER},
+            </if>
+            <if test="reviewStatus != null">
+                #{reviewStatus,jdbcType=VARCHAR},
+            </if>
+            <if test="reviewMessage != null">
+                #{reviewMessage,jdbcType=VARCHAR},
+            </if>
+            <if test="reviewUserId != null">
+                #{reviewUserId,jdbcType=BIGINT},
+            </if>
+            <if test="reviewTime != null">
+                #{reviewTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createUser != null">
+                #{createUser,jdbcType=BIGINT},
+            </if>
+            <if test="updateTime != null">
+                #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateUser != null">
+                #{updateUser,jdbcType=BIGINT},
+            </if>
+            <if test="isDeleted != null">
+                #{isDeleted,jdbcType=BOOLEAN},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="org.leocoder.picture.domain.pojo.Picture">
+        <!--@mbg.generated-->
+        update t_picture
+        <set>
+            <if test="name != null">
+                `name` = #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="url != null">
+                url = #{url,jdbcType=VARCHAR},
+            </if>
+            <if test="thumbnailUrl != null">
+                thumbnail_url = #{thumbnailUrl,jdbcType=VARCHAR},
+            </if>
+            <if test="originalName != null">
+                original_name = #{originalName,jdbcType=VARCHAR},
+            </if>
+            <if test="description != null">
+                description = #{description,jdbcType=VARCHAR},
+            </if>
+            <if test="format != null">
+                format = #{format,jdbcType=VARCHAR},
+            </if>
+            <if test="picWidth != null">
+                pic_width = #{picWidth,jdbcType=INTEGER},
+            </if>
+            <if test="picHeight != null">
+                pic_height = #{picHeight,jdbcType=INTEGER},
+            </if>
+            <if test="picScale != null">
+                pic_scale = #{picScale,jdbcType=INTEGER},
+            </if>
+            <if test="size != null">
+                `size` = #{size,jdbcType=BIGINT},
+            </if>
+            <if test="mainColor != null">
+                main_color = #{mainColor,jdbcType=VARCHAR},
+            </if>
+            <if test="spaceId != null">
+                space_id = #{spaceId,jdbcType=BIGINT},
+            </if>
+            <if test="viewCount != null">
+                view_count = #{viewCount,jdbcType=BIGINT},
+            </if>
+            <if test="likeCount != null">
+                like_count = #{likeCount,jdbcType=INTEGER},
+            </if>
+            <if test="collectionCount != null">
+                collection_count = #{collectionCount,jdbcType=INTEGER},
+            </if>
+            <if test="reviewStatus != null">
+                review_status = #{reviewStatus,jdbcType=VARCHAR},
+            </if>
+            <if test="reviewMessage != null">
+                review_message = #{reviewMessage,jdbcType=VARCHAR},
+            </if>
+            <if test="reviewUserId != null">
+                review_user_id = #{reviewUserId,jdbcType=BIGINT},
+            </if>
+            <if test="reviewTime != null">
+                review_time = #{reviewTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createUser != null">
+                create_user = #{createUser,jdbcType=BIGINT},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateUser != null">
+                update_user = #{updateUser,jdbcType=BIGINT},
+            </if>
+            <if test="isDeleted != null">
+                is_deleted = #{isDeleted,jdbcType=BOOLEAN},
+            </if>
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+    <update id="updateById" parameterType="org.leocoder.picture.domain.pojo.Picture">
+        <!--@mbg.generated-->
+        update t_picture
+        set `name`           = #{name,jdbcType=VARCHAR},
+            url              = #{url,jdbcType=VARCHAR},
+            thumbnail_url    = #{thumbnailUrl,jdbcType=VARCHAR},
+            original_name    = #{originalName,jdbcType=VARCHAR},
+            description      = #{description,jdbcType=VARCHAR},
+            format           = #{format,jdbcType=VARCHAR},
+            pic_width        = #{picWidth,jdbcType=INTEGER},
+            pic_height       = #{picHeight,jdbcType=INTEGER},
+            pic_scale        = #{picScale,jdbcType=INTEGER},
+            `size`           = #{size,jdbcType=BIGINT},
+            main_color       = #{mainColor,jdbcType=VARCHAR},
+            space_id         = #{spaceId,jdbcType=BIGINT},
+            view_count       = #{viewCount,jdbcType=BIGINT},
+            like_count       = #{likeCount,jdbcType=INTEGER},
+            collection_count = #{collectionCount,jdbcType=INTEGER},
+            review_status    = #{reviewStatus,jdbcType=VARCHAR},
+            review_message   = #{reviewMessage,jdbcType=VARCHAR},
+            review_user_id   = #{reviewUserId,jdbcType=BIGINT},
+            review_time      = #{reviewTime,jdbcType=TIMESTAMP},
+            create_time      = #{createTime,jdbcType=TIMESTAMP},
+            create_user      = #{createUser,jdbcType=BIGINT},
+            update_time      = #{updateTime,jdbcType=TIMESTAMP},
+            update_user      = #{updateUser,jdbcType=BIGINT},
+            is_deleted       = #{isDeleted,jdbcType=BOOLEAN}
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <!-- 查询上一张图片 -->
+    <select id="selectPreviousPicture" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_picture
+        where id &lt; #{currentId}
+        and review_status = #{reviewStatus}
+        and is_deleted = 0
+        order by id desc
+        limit 1
+    </select>
+
+    <!-- 查询下一张图片 -->
+    <select id="selectNextPicture" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_picture
+        where id &gt; #{currentId}
+        and review_status = #{reviewStatus}
+        and is_deleted = 0
+        order by id asc
+        limit 1
+    </select>
+
+    <!-- 增加图片浏览量 -->
+    <update id="incrementViewCount">
+        update t_picture
+        set view_count = view_count + 1
+        where id = #{id}
+    </update>
+
+
+    <!-- 查询瀑布流图片列表（初始加载） -->
+    <select id="selectWaterfallPictures" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_picture p
+        <where>
+            p.review_status = #{reviewStatus}
+            and p.is_deleted = 0
+            <if test="format != null and format != ''">
+                and p.format = #{format}
+            </if>
+            <if test="minWidth != null">
+                and p.pic_width >= #{minWidth}
+            </if>
+            <if test="minHeight != null">
+                and p.pic_height >= #{minHeight}
+            </if>
+            <if test="userId != null">
+                and p.create_user = #{userId}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                and (p.name like concat('%', #{keyword}, '%')
+                or p.description like concat('%', #{keyword}, '%'))
+            </if>
+            <if test="categoryId != null">
+                and exists (
+                select 1 from t_category_relation cr
+                where cr.content_type = 'picture'
+                and cr.content_id = p.id
+                and cr.category_id = #{categoryId}
+                and cr.is_deleted = 0
+                )
+            </if>
+            <if test="tagIds != null and tagIds.size() > 0">
+                and exists (
+                select 1 from t_tag_relation tr
+                where tr.content_type = 'picture'
+                and tr.content_id = p.id
+                and tr.tag_id in
+                <foreach collection="tagIds" item="tagId" open="(" separator="," close=")">
+                    #{tagId}
+                </foreach>
+                and tr.is_deleted = 0
+                )
+            </if>
+        </where>
+        order by
+        <choose>
+            <when test="sortBy == 'newest'">p.create_time DESC</when>
+            <when test="sortBy == 'popular'">p.view_count DESC</when>
+            <when test="sortBy == 'mostViewed'">p.view_count DESC</when>
+            <when test="sortBy == 'mostLiked'">p.like_count DESC</when>
+            <when test="sortBy == 'mostCollected'">p.collection_count DESC</when>
+            <otherwise>p.create_time DESC</otherwise>
+        </choose>, p.id DESC
+        limit #{limit}
+    </select>
+
+    <!-- 加载更多瀑布流图片（基于最后一个ID和排序值） -->
+    <select id="selectMoreWaterfallPictures" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_picture p
+        <where>
+            p.review_status = #{reviewStatus}
+            and p.is_deleted = 0
+            <if test="format != null and format != ''">
+                and p.format = #{format}
+            </if>
+            <if test="minWidth != null">
+                and p.pic_width >= #{minWidth}
+            </if>
+            <if test="minHeight != null">
+                and p.pic_height >= #{minHeight}
+            </if>
+            <if test="userId != null">
+                and p.create_user = #{userId}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                and (p.name like concat('%', #{keyword}, '%')
+                or p.description like concat('%', #{keyword}, '%'))
+            </if>
+            <if test="categoryId != null">
+                and exists (
+                select 1 from t_category_relation cr
+                where cr.content_type = 'picture'
+                and cr.content_id = p.id
+                and cr.category_id = #{categoryId}
+                and cr.is_deleted = 0
+                )
+            </if>
+            <if test="tagIds != null and tagIds.size() > 0">
+                and exists (
+                select 1 from t_tag_relation tr
+                where tr.content_type = 'picture'
+                and tr.content_id = p.id
+                and tr.tag_id in
+                <foreach collection="tagIds" item="tagId" open="(" separator="," close=")">
+                    #{tagId}
+                </foreach>
+                and tr.is_deleted = 0
+                )
+            </if>
+
+            <!-- 游标分页条件：根据不同的排序方式构建不同的条件 -->
+            <choose>
+                <when test="sortBy == 'newest'">
+                    and (
+                    p.create_time &lt; #{lastValue}
+                    or (p.create_time = #{lastValue} and p.id &lt; #{lastId})
+                    )
+                </when>
+                <when test="sortBy == 'popular' or sortBy == 'mostViewed'">
+                    and (
+                    p.view_count &lt; #{lastValue}
+                    or (p.view_count = #{lastValue} and p.id &lt; #{lastId})
+                    )
+                </when>
+                <when test="sortBy == 'mostLiked'">
+                    and (
+                    p.like_count &lt; #{lastValue}
+                    or (p.like_count = #{lastValue} and p.id &lt; #{lastId})
+                    )
+                </when>
+                <when test="sortBy == 'mostCollected'">
+                    and (
+                    p.collection_count &lt; #{lastValue}
+                    or (p.collection_count = #{lastValue} and p.id &lt; #{lastId})
+                    )
+                </when>
+                <otherwise>
+                    and p.id &lt; #{lastId}
+                </otherwise>
+            </choose>
+        </where>
+        order by
+        <choose>
+            <when test="sortBy == 'newest'">p.create_time DESC</when>
+            <when test="sortBy == 'popular'">p.view_count DESC</when>
+            <when test="sortBy == 'mostViewed'">p.view_count DESC</when>
+            <when test="sortBy == 'mostLiked'">p.like_count DESC</when>
+            <when test="sortBy == 'mostCollected'">p.collection_count DESC</when>
+            <otherwise>p.create_time DESC</otherwise>
+        </choose>, p.id DESC
+        limit #{limit}
+    </select>
+
+    <!-- 计算符合条件的图片总数 -->
+    <select id="countWaterfallPictures" resultType="java.lang.Long">
+        select count(1)
+        from t_picture p
+        <where>
+            p.review_status = #{reviewStatus}
+            and p.is_deleted = 0
+            <if test="format != null and format != ''">
+                and p.format = #{format}
+            </if>
+            <if test="minWidth != null">
+                and p.pic_width >= #{minWidth}
+            </if>
+            <if test="minHeight != null">
+                and p.pic_height >= #{minHeight}
+            </if>
+            <if test="userId != null">
+                and p.create_user = #{userId}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                and (p.name like concat('%', #{keyword}, '%')
+                or p.description like concat('%', #{keyword}, '%'))
+            </if>
+            <if test="categoryId != null">
+                and exists (
+                select 1 from t_category_relation cr
+                where cr.content_type = 'picture'
+                and cr.content_id = p.id
+                and cr.category_id = #{categoryId}
+                and cr.is_deleted = 0
+                )
+            </if>
+            <if test="tagIds != null and tagIds.size() > 0">
+                and exists (
+                select 1 from t_tag_relation tr
+                where tr.content_type = 'picture'
+                and tr.content_id = p.id
+                and tr.tag_id in
+                <foreach collection="tagIds" item="tagId" open="(" separator="," close=")">
+                    #{tagId}
+                </foreach>
+                and tr.is_deleted = 0
+                )
+            </if>
+        </where>
+    </select>
+</mapper>
