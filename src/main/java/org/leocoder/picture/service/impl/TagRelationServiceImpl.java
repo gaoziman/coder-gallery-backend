@@ -2,6 +2,7 @@ package org.leocoder.picture.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.leocoder.picture.domain.pojo.TagRelation;
 import org.leocoder.picture.mapper.TagRelationMapper;
@@ -30,14 +31,15 @@ import java.util.stream.Collectors;
 public class TagRelationServiceImpl implements TagRelationService {
 
     private final TagRelationMapper tagRelationMapper;
-    private SnowflakeIdGenerator idGenerator;
+
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     private TagService tagService;
 
     public TagRelationServiceImpl(TagRelationMapper tagRelationMapper,
                                   SnowflakeIdGenerator idGenerator) {
         this.tagRelationMapper = tagRelationMapper;
-        this.idGenerator = idGenerator;
+        this.snowflakeIdGenerator = idGenerator;
     }
 
     @Autowired
@@ -63,7 +65,7 @@ public class TagRelationServiceImpl implements TagRelationService {
 
         // 创建关系
         TagRelation relation = TagRelation.builder()
-                .id(idGenerator.nextId())
+                .id(snowflakeIdGenerator.nextId())
                 .tagId(tagId)
                 .contentType(contentType)
                 .contentId(contentId)
@@ -74,14 +76,7 @@ public class TagRelationServiceImpl implements TagRelationService {
                 .isDeleted(0)
                 .build();
 
-        tagRelationMapper.insert(relation);
-
-        // 更新标签引用次数
-        tagService.updateTagReferenceCount(tagId, 1);
-
-        log.info("创建标签关系成功: tagId={}, contentType={}, contentId={}",
-                tagId, contentType, contentId);
-
+        tagRelationMapper.insertWithId(relation);
         return true;
     }
 
@@ -113,7 +108,7 @@ public class TagRelationServiceImpl implements TagRelationService {
         // 批量创建关系
         for (Long tagId : newTagIds) {
             TagRelation relation = TagRelation.builder()
-                    .id(idGenerator.nextId())
+                    .id(snowflakeIdGenerator.nextId())
                     .tagId(tagId)
                     .contentType(contentType)
                     .contentId(contentId)
@@ -124,7 +119,7 @@ public class TagRelationServiceImpl implements TagRelationService {
                     .isDeleted(0)
                     .build();
 
-            tagRelationMapper.insert(relation);
+            tagRelationMapper.insertWithId(relation);
 
             // 更新标签引用次数
             tagService.updateTagReferenceCount(tagId, 1);
@@ -342,5 +337,34 @@ public class TagRelationServiceImpl implements TagRelationService {
     public Boolean checkRelationExists(Long tagId, String contentType, Long contentId) {
         TagRelation relation = tagRelationMapper.selectByTagAndContent(tagId, contentType, contentId);
         return relation != null && relation.getIsDeleted() == 0;
+    }
+
+
+    /**
+     * 删除内容的所有标签关联关系，但不更新引用计数
+     *
+     * @param contentType 内容类型（如"picture"）
+     * @param contentId 内容ID
+     * @return 是否成功
+     */
+    @Override
+    public boolean deleteAllTagRelations(String contentType, Long contentId) {
+        // 参数校验
+        if (StrUtil.isBlank(contentType) || contentId == null || contentId <= 0) {
+            log.error("删除标签关联参数无效: contentType={}, contentId={}", contentType, contentId);
+            return false;
+        }
+
+        try {
+            // 直接通过条件删除所有匹配的记录
+            int result = tagRelationMapper.deleteByContentTypeAndContentId(contentType, contentId);
+            log.info("已删除内容的所有标签关联: contentType={}, contentId={}, 删除记录数={}",
+                    contentType, contentId, result);
+            // 返回true表示操作成功，即使没有记录被删除
+            return result >= 0;
+        } catch (Exception e) {
+            log.error("删除内容标签关联异常: contentType={}, contentId={}", contentType, contentId, e);
+            return false;
+        }
     }
 }

@@ -25,6 +25,8 @@ public enum ErrorCode {
 
     SYSTEM_ERROR(50003, "系统内部异常"),
 
+    NOT_FOUND_ERROR(404,  "资源不存在"),
+
 
     ACCOUNT_EXIST(40201, "账号已存在"),
 
@@ -68,7 +70,9 @@ public enum ErrorCode {
 
     FILE_TYPE_ERROR(40503, "文件类型错误"),
 
-    FILE_SIZE_ERROR(40504, "文件大小超出限制"),
+    FILE_SIZE_ERROR(40504, "文件大小不能超过6M"),
+
+    FILE_NOT_NULL(40505, "文件不能为空"),
 
     // 标签相关错误码
     TAG_NAME_EXIST( 40601, "标签名称已存在" ),
@@ -81,7 +85,10 @@ public enum ErrorCode {
 
     TAG_PATH_ERROR( 40605, "标签路径错误" ),
 
-    TAG_NAME_ALREADY_EXISTS( 40606, "标签名称已存在" );
+    TAG_NAME_ALREADY_EXISTS( 40606, "标签名称已存在" ),
+
+
+;
 
     /**
      * 状态码

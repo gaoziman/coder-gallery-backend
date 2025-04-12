@@ -30,6 +30,7 @@ import java.util.List;
 public class CategoryRelationServiceImpl implements CategoryRelationService {
 
     private final CategoryRelationMapper categoryRelationMapper;
+
     private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     /**
@@ -73,7 +74,7 @@ public class CategoryRelationServiceImpl implements CategoryRelationService {
                 .build();
 
         // 4. 插入数据库
-        int result = categoryRelationMapper.insert(relation);
+        int result = categoryRelationMapper.insertWithId(relation);
 
         return result > 0;
     }
@@ -104,7 +105,7 @@ public class CategoryRelationServiceImpl implements CategoryRelationService {
         for (Long categoryId : categoryIds) {
             // 检查是否已存在相同的关系
             CategoryRelation existRelation = categoryRelationMapper.selectByCondition(categoryId, contentType, contentId);
-            if (ObjectUtil.isNotNull(existRelation) && !Boolean.TRUE.equals(existRelation.getIsDeleted())) {
+            if (ObjectUtil.isNotNull(existRelation)) {
                 // 已存在且未删除，跳过
                 continue;
             }
@@ -155,7 +156,7 @@ public class CategoryRelationServiceImpl implements CategoryRelationService {
 
         // 2. 查询关系是否存在
         CategoryRelation relation = categoryRelationMapper.selectByCondition(categoryId, contentType, contentId);
-        if (ObjectUtil.isNull(relation) || Boolean.TRUE.equals(relation.getIsDeleted())) {
+        if (ObjectUtil.isNull(relation)) {
             // 关系不存在或已删除，直接返回成功
             return true;
         }

@@ -182,4 +182,14 @@ public interface UserService {
      * @return 用户
      */
     User getUsernameById(Long createUser);
+
+
+    /**
+     * 判断是否是管理员
+     *
+     * @param loginUser 登录用户
+     * @return 是否是管理员
+     */
+    Boolean isAdmin(User loginUser);
+
 }

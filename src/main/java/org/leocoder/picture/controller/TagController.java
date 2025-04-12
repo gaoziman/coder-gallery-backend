@@ -323,4 +323,13 @@ public class TagController {
         return ResultUtils.success(trendData);
     }
 
+    // 前台接口
+
+    @ApiOperation("获取标签列表（不分页）")
+    @GetMapping("/tag/list")
+    public Result<List<TagVO>> getTagList() {
+        List<TagVO> tagList = tagService.getTagList();
+        return ResultUtils.success(tagList);
+    }
+
 }

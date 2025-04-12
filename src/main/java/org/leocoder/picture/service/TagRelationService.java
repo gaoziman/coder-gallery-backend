@@ -102,4 +102,14 @@ public interface TagRelationService {
      * @return 是否存在
      */
     Boolean checkRelationExists(Long tagId, String contentType, Long contentId);
+
+
+    /**
+     * 删除内容的所有标签关联关系，但不更新引用计数
+     *
+     * @param contentType 内容类型（如"picture"）
+     * @param contentId 内容ID
+     * @return 是否成功
+     */
+    boolean deleteAllTagRelations(String contentType, Long contentId);
 }

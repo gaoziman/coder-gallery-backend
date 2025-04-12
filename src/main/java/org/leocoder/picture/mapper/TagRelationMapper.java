@@ -2,6 +2,7 @@ package org.leocoder.picture.mapper;
 
 import org.apache.ibatis.annotations.Param;
 import org.leocoder.picture.domain.pojo.TagRelation;
+
 import java.util.List;
 import java.util.Map;
 
@@ -29,6 +30,14 @@ public interface TagRelationMapper {
      */
     int insert(TagRelation tagRelation);
 
+
+    /**
+     * 通过指定Id插入标签关系
+     *
+     * @param relation 标签关系对象
+     */
+    void insertWithId(TagRelation relation);
+
     /**
      * 选择性更新标签关系
      *
@@ -48,9 +57,9 @@ public interface TagRelationMapper {
     /**
      * 根据标签ID和内容信息查询关系
      *
-     * @param tagId 标签ID
+     * @param tagId       标签ID
      * @param contentType 内容类型
-     * @param contentId 内容ID
+     * @param contentId   内容ID
      * @return 标签关系
      */
     TagRelation selectByTagAndContent(@Param("tagId") Long tagId,
@@ -61,7 +70,7 @@ public interface TagRelationMapper {
      * 根据内容信息查询关联的标签ID列表
      *
      * @param contentType 内容类型
-     * @param contentId 内容ID
+     * @param contentId   内容ID
      * @return 标签ID列表
      */
     List<Long> selectTagIdsByContent(@Param("contentType") String contentType,
@@ -71,7 +80,7 @@ public interface TagRelationMapper {
      * 根据内容信息删除所有标签关系
      *
      * @param contentType 内容类型
-     * @param contentId 内容ID
+     * @param contentId   内容ID
      * @return 影响的行数
      */
     int deleteByContent(@Param("contentType") String contentType,
@@ -96,7 +105,7 @@ public interface TagRelationMapper {
     /**
      * 统计标签关联的内容数量
      *
-     * @param tagId 标签ID
+     * @param tagId       标签ID
      * @param contentType 内容类型（可选）
      * @return 关联数量
      */
@@ -106,7 +115,7 @@ public interface TagRelationMapper {
     /**
      * 获取标签关联的内容列表
      *
-     * @param tagId 标签ID
+     * @param tagId       标签ID
      * @param contentType 内容类型
      * @return 内容ID列表
      */
@@ -116,12 +125,22 @@ public interface TagRelationMapper {
     /**
      * 查询标签使用趋势
      *
-     * @param tagId 标签ID
+     * @param tagId     标签ID
      * @param startDate 开始日期
-     * @param endDate 结束日期
+     * @param endDate   结束日期
      * @return 日期和使用次数
      */
     List<Map<String, Object>> selectUsageTrend(@Param("tagId") Long tagId,
                                                @Param("startDate") String startDate,
                                                @Param("endDate") String endDate);
+
+    /**
+     * 根据内容类型和内容ID删除所有标签关联
+     *
+     * @param contentType 内容类型
+     * @param contentId 内容ID
+     * @return 删除的记录数
+     */
+    int deleteByContentTypeAndContentId(@Param("contentType") String contentType, @Param("contentId") Long contentId);
+
 }

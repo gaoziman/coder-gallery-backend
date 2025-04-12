@@ -88,10 +88,10 @@ public interface TagService {
     /**
      * 获取标签关联的内容列表
      *
-     * @param tagId 标签ID
+     * @param tagId       标签ID
      * @param contentType 内容类型
-     * @param pageNum 页码
-     * @param pageSize 每页大小
+     * @param pageNum     页码
+     * @param pageSize    每页大小
      * @return 分页结果
      */
     PageResult<TagRelatedItemVO> getTagRelatedItems(Long tagId, String contentType, Integer pageNum, Integer pageSize);
@@ -99,30 +99,39 @@ public interface TagService {
     /**
      * 获取标签使用趋势数据
      *
-     * @param tagId 标签ID
+     * @param tagId     标签ID
      * @param startDate 开始日期
-     * @param endDate 结束日期
+     * @param endDate   结束日期
      * @return 趋势数据列表
      */
     List<TagUsageTrendVO> getTagUsageTrend(Long tagId, String startDate, String endDate);
 
 
-    
     /**
      * 检查标签名称是否存在
      *
-     * @param name 标签名称
+     * @param name      标签名称
      * @param excludeId 排除的标签ID（更新时使用）
      * @return 是否存在
      */
     Boolean checkTagNameExists(String name, Long excludeId);
-    
+
     /**
      * 更新标签引用次数
      *
-     * @param tagId 标签ID
+     * @param tagId     标签ID
      * @param increment 增量（可为负）
      * @return 是否成功
      */
     Boolean updateTagReferenceCount(Long tagId, Integer increment);
+
+
+    /**
+     * 获取标签列表
+     *
+     * @return 标签列表
+     */
+    List<TagVO> getTagList();
+
+
 }

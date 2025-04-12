@@ -3,6 +3,7 @@ package org.leocoder.picture.mapper;
 
 import org.apache.ibatis.annotations.Param;
 import org.leocoder.picture.domain.pojo.Tag;
+import org.leocoder.picture.domain.vo.tag.TagVO;
 
 import java.util.List;
 
@@ -74,7 +75,7 @@ public interface TagMapper {
      * @return 标签列表
      */
     List<Tag> selectByCondition(@Param("name") String name, @Param("status") String status,
-                                @Param("createTimeStart")String createTimeStart, @Param("createTimeEnd")String createTimeEnd);
+                                @Param("createTimeStart") String createTimeStart, @Param("createTimeEnd") String createTimeEnd);
 
     /**
      * 更新标签引用次数
@@ -153,4 +154,21 @@ public interface TagMapper {
      * @return 引用总数
      */
     Integer sumTagReferenceCount();
+
+
+    /**
+     * 查询标签列表
+     *
+     * @return 标签列表
+     */
+    List<TagVO> selectTagList();
+
+
+    /**
+     * 根据标签ID列表查询标签名称列表
+     *
+     * @param tagIds 标签ID列表
+     * @return 标签名称列表
+     */
+    List<String> selectNamesByIds(@Param("tagIds") List<Long> tagIds);
 }

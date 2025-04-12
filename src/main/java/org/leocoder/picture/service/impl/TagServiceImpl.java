@@ -2,11 +2,11 @@ package org.leocoder.picture.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.leocoder.picture.common.PageResult;
 import org.leocoder.picture.domain.dto.tag.*;
 import org.leocoder.picture.domain.pojo.Tag;
-import org.leocoder.picture.domain.pojo.User;
 import org.leocoder.picture.domain.vo.tag.TagRelatedItemVO;
 import org.leocoder.picture.domain.vo.tag.TagStatisticsVO;
 import org.leocoder.picture.domain.vo.tag.TagUsageTrendVO;
@@ -450,7 +450,7 @@ public class TagServiceImpl implements TagService {
     public Boolean updateTagReferenceCount(Long tagId, Integer increment) {
         // 校验标签是否存在
         Tag tag = tagMapper.selectById(tagId);
-        if (tag == null || tag.getIsDeleted() == 1) {
+        if (ObjectUtil.isNull(tag) || tag.getIsDeleted() == 1) {
             throw new BusinessException(ErrorCode.TAG_NOT_FOUND);
         }
 
@@ -459,6 +459,17 @@ public class TagServiceImpl implements TagService {
         log.info("更新标签引用次数成功: {}, 增量: {}", tagId, increment);
 
         return true;
+    }
+
+
+    /**
+     * 获取标签列表
+     *
+     * @return 标签列表
+     */
+    @Override
+    public List<TagVO> getTagList() {
+        return tagMapper.selectTagList();
     }
 
     /**
@@ -482,11 +493,10 @@ public class TagServiceImpl implements TagService {
         // 设置创建人信息
         if (tag.getCreateUser() != null) {
             try {
-                User user = userService.getUsernameById(tag.getCreateUser());
-                vo.setCreator(user.getUsername());
+                vo.setCreateUser(tag.getCreateUser());
             } catch (Exception e) {
                 log.warn("获取用户名失败: {}", tag.getCreateUser(), e);
-                vo.setCreator("未知用户");
+                vo.setCreateUser(tag.getCreateUser());
             }
         }
 

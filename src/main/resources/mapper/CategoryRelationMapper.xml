@@ -150,6 +150,16 @@
     #{updateUser,jdbcType=BIGINT}, #{isDeleted,jdbcType=BOOLEAN})
   </insert>
 
+  <insert id="insertWithId" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.CategoryRelation">
+    insert into t_category_relation (id, category_id, content_type, content_id,
+    create_time, create_user, update_time,
+    update_user, is_deleted)
+    values (#{id,jdbcType=BIGINT}, #{categoryId,jdbcType=BIGINT}, #{contentType,jdbcType=VARCHAR}, #{contentId,jdbcType=BIGINT},
+    #{createTime,jdbcType=TIMESTAMP}, #{createUser,jdbcType=BIGINT}, #{updateTime,jdbcType=TIMESTAMP},
+    #{updateUser,jdbcType=BIGINT}, #{isDeleted,jdbcType=BOOLEAN})
+  </insert>
+
+
   <!-- 批量插入分类关系 -->
   <insert id="batchInsert" parameterType="java.util.List">
     insert into t_category_relation (id, category_id, content_type, content_id,

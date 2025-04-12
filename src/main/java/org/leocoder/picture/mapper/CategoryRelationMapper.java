@@ -42,6 +42,14 @@ public interface CategoryRelationMapper {
     int insert(CategoryRelation categoryRelation);
 
     /**
+     * 指定ID插入分类关系
+     *
+     * @param categoryRelation 分类关系
+     * @return 影响行数
+     */
+    int insertWithId(CategoryRelation categoryRelation);
+
+    /**
      * 选择性插入分类关系
      *
      * @param categoryRelation 分类关系
