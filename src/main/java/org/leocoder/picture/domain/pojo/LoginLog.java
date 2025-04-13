@@ -25,11 +25,6 @@ public class LoginLog {
     private Long id;
 
     /**
-     * 用户ID
-     */
-    private Long userId;
-
-    /**
      * 登录时间
      */
     private LocalDateTime loginTime;

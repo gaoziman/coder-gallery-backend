@@ -5,7 +5,6 @@
         <!--@mbg.generated-->
         <!--@Table t_user_operation_log-->
         <id column="id" jdbcType="BIGINT" property="id"/>
-        <result column="user_id" jdbcType="BIGINT" property="userId"/>
         <result column="module" jdbcType="VARCHAR" property="module"/>
         <result column="action" jdbcType="VARCHAR" property="action"/>
         <result column="method" jdbcType="VARCHAR" property="method"/>
@@ -24,7 +23,6 @@
     <sql id="Base_Column_List">
         <!--@mbg.generated-->
         id,
-        user_id,
         `module`,
         `action`,
         `method`,
@@ -56,12 +54,12 @@
     <insert id="insert" keyColumn="id" keyProperty="id"
             parameterType="org.leocoder.picture.domain.pojo.OperationLog" useGeneratedKeys="true">
         <!--@mbg.generated-->
-        insert into t_user_operation_log (user_id, `module`, `action`,
+        insert into t_user_operation_log (`module`, `action`,
                                           `method`, params, `time`,
                                           ip, operation_time, `status`,
                                           error_msg, create_time, create_by,
                                           update_time, update_by, is_deleted)
-        values (#{userId,jdbcType=BIGINT}, #{module,jdbcType=VARCHAR}, #{action,jdbcType=VARCHAR},
+        values (#{module,jdbcType=VARCHAR}, #{action,jdbcType=VARCHAR},
                 #{method,jdbcType=VARCHAR}, #{params,jdbcType=LONGVARCHAR}, #{time,jdbcType=BIGINT},
                 #{ip,jdbcType=VARCHAR}, #{operationTime,jdbcType=TIMESTAMP}, #{status,jdbcType=INTEGER},
                 #{errorMsg,jdbcType=LONGVARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{createBy,jdbcType=BIGINT},
@@ -71,12 +69,12 @@
 
     <insert id="insertWithId" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.LoginLog">
         <!--@mbg.generated-->
-        insert into t_user_operation_log (id, user_id, `module`, `action`,
+        insert into t_user_operation_log (id, `module`, `action`,
                                           `method`, params, `time`,
                                           ip, operation_time, `status`,
                                           error_msg, create_time, create_by,
                                           update_time, update_by, is_deleted)
-        values (#{id,jdbcType=BIGINT}, #{userId,jdbcType=BIGINT}, #{module,jdbcType=VARCHAR},
+        values (#{id,jdbcType=BIGINT}, #{module,jdbcType=VARCHAR},
                 #{action,jdbcType=VARCHAR},
                 #{method,jdbcType=VARCHAR}, #{params,jdbcType=LONGVARCHAR}, #{time,jdbcType=BIGINT},
                 #{ip,jdbcType=VARCHAR}, #{operationTime,jdbcType=TIMESTAMP}, #{status,jdbcType=INTEGER},
@@ -90,9 +88,6 @@
         <!--@mbg.generated-->
         insert into t_user_operation_log
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="userId != null">
-                user_id,
-            </if>
             <if test="module != null">
                 `module`,
             </if>
@@ -137,9 +132,6 @@
             </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="userId != null">
-                #{userId,jdbcType=BIGINT},
-            </if>
             <if test="module != null">
                 #{module,jdbcType=VARCHAR},
             </if>
@@ -188,9 +180,6 @@
         <!--@mbg.generated-->
         update t_user_operation_log
         <set>
-            <if test="userId != null">
-                user_id = #{userId,jdbcType=BIGINT},
-            </if>
             <if test="module != null">
                 `module` = #{module,jdbcType=VARCHAR},
             </if>
@@ -239,8 +228,7 @@
     <update id="updateById" parameterType="org.leocoder.picture.domain.pojo.OperationLog">
         <!--@mbg.generated-->
         update t_user_operation_log
-        set user_id        = #{userId,jdbcType=BIGINT},
-            `module`       = #{module,jdbcType=VARCHAR},
+        set `module`       = #{module,jdbcType=VARCHAR},
             `action`       = #{action,jdbcType=VARCHAR},
             `method`       = #{method,jdbcType=VARCHAR},
             params         = #{params,jdbcType=LONGVARCHAR},
@@ -444,19 +432,19 @@
 
     <!-- 获取本月活跃用户数（去重） -->
     <select id="countActiveUsers" resultType="java.lang.Long">
-        SELECT COUNT(DISTINCT user_id)
+        SELECT COUNT(DISTINCT create_by)
         FROM t_user_operation_log
         WHERE is_deleted = 0
-          AND user_id IS NOT NULL
+          AND t_user_operation_log.create_by IS NOT NULL
           AND operation_time BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND NOW()
     </select>
 
     <!-- 获取上月活跃用户数（去重） -->
     <select id="countLastMonthActiveUsers" resultType="java.lang.Long">
-        SELECT COUNT(DISTINCT user_id)
+        SELECT COUNT(DISTINCT create_by)
         FROM t_user_operation_log
         WHERE is_deleted = 0
-          AND user_id IS NOT NULL
+          AND t_user_operation_log.create_by IS NOT NULL
           AND operation_time BETWEEN DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH), '%Y-%m-01')
             AND LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
     </select>

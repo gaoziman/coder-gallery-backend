@@ -175,7 +175,7 @@ public class LoginLogAspect {
                     if (data instanceof LoginUserVO) {
                         LoginUserVO loginUserVO = (LoginUserVO) data;
                         userId = loginUserVO.getId();
-                        loginLog.setUserId(userId);
+                        loginLog.setCreateBy(userId);
                         loginLog.setCreateBy(userId);
                         loginLog.setMessage("登录成功");
                     }
@@ -191,7 +191,7 @@ public class LoginLogAspect {
                         User user = userMapper.selectByAccount(account);
                         if (user != null) {
                             userId = user.getId();
-                            loginLog.setUserId(userId);
+                            loginLog.setCreateBy(userId);
                             loginLog.setCreateBy(userId);
                         } else {
                             // 账号不存在的情况，记录特殊标记
@@ -205,7 +205,7 @@ public class LoginLogAspect {
                 // 如果仍然无法确定用户ID（可能是账号不存在）
                 if (userId == null) {
                     // 生成一个临时ID，或者设置为0，标记为未知用户
-                    loginLog.setUserId(0L);
+                    loginLog.setCreateBy(0L);
                     loginLog.setCreateBy(0L);
                 }
             }
@@ -266,7 +266,7 @@ public class LoginLogAspect {
                     // 通过IP查找最近的登录记录
                     LoginLog latestLog = loginLogMapper.findLatestLoginByIp(ip);
                     if (latestLog != null) {
-                        userId = latestLog.getUserId();
+                        userId = latestLog.getCreateBy();
                     }
                 }
             }
@@ -299,8 +299,8 @@ public class LoginLogAspect {
 
             // 构建新的登出日志对象 - 完整记录登出情况
             LoginLog logoutLog = new LoginLog();
-            logoutLog.setUserId(snowflakeIdGenerator.nextId());
-            logoutLog.setUserId(userId);
+            logoutLog.setCreateBy(snowflakeIdGenerator.nextId());
+            logoutLog.setCreateBy(userId);
             // 如果有最近登录记录，使用其登录时间
             if (latestLoginLog != null) {
                 logoutLog.setLoginTime(latestLoginLog.getLoginTime());

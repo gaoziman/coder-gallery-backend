@@ -14,10 +14,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.leocoder.picture.annotation.Log;
 import org.leocoder.picture.domain.pojo.OperationLog;
 import org.leocoder.picture.mapper.OperationLogMapper;
-import org.leocoder.picture.utils.IpUtils;
-import org.leocoder.picture.utils.SecurityUtils;
-import org.leocoder.picture.utils.SensitiveInfoUtils;
-import org.leocoder.picture.utils.SnowflakeIdGenerator;
+import org.leocoder.picture.utils.*;
 import org.springframework.core.annotation.Order;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -87,7 +84,7 @@ public class LogAspect {
     protected void handleLog(JoinPoint joinPoint, Object result, Exception e, long time) {
         try {
             // 获取当前用户ID
-            Long userId = SecurityUtils.getCurrentUserId();
+            Long userId = UserContext.getUserId();
             if (userId == null) {
                 // 用户未登录，不记录日志
                 return;
@@ -115,7 +112,7 @@ public class LogAspect {
             // 构建操作日志对象
             OperationLog operationLog = new OperationLog();
             operationLog.setId(snowflakeIdGenerator.nextId());
-            operationLog.setCreateUser(userId);
+            operationLog.setCreateBy(userId);
             operationLog.setModule(logAnnotation.module());
             operationLog.setAction(actionName);
             operationLog.setMethod(signature.getDeclaringTypeName() + "." + signature.getName());
@@ -159,7 +156,7 @@ public class LogAspect {
             
             // 设置基础字段
             operationLog.setCreateTime(LocalDateTime.now());
-            operationLog.setCreateUser(userId);
+            operationLog.setCreateBy(userId);
             operationLog.setIsDeleted(0);
             
             // 保存日志

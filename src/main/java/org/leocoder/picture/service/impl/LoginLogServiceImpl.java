@@ -1,6 +1,5 @@
 package org.leocoder.picture.service.impl;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -21,14 +20,13 @@ import org.leocoder.picture.exception.ErrorCode;
 import org.leocoder.picture.mapper.LoginLogMapper;
 import org.leocoder.picture.service.LoginLogService;
 import org.leocoder.picture.service.UserService;
-import org.leocoder.picture.utils.SecurityUtils;
+import org.leocoder.picture.utils.UserContext;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -48,6 +46,28 @@ public class LoginLogServiceImpl implements LoginLogService {
 
 
     /**
+     * 设置登录日志VO的用户相关信息
+     *
+     * @param logVO 登录日志VO
+     * @param log 登录日志实体
+     */
+    private void setUserInfo(LoginLogVO logVO, LoginLog log) {
+        if (log.getCreateBy() != null) {
+            try {
+                User user = userService.getUsernameById(log.getCreateBy());
+                if (user != null) {
+                    logVO.setUsername(user.getUsername());
+                    logVO.setAvatar(user.getAvatar());
+                    logVO.setRole(user.getRole());
+                }
+            } catch (Exception e) {
+                LoginLogServiceImpl.log.error("获取用户信息失败, userId={}", log.getCreateBy(), e);
+            }
+        }
+    }
+
+
+    /**
      * 分页查询登录日志
      *
      * @param queryRequest 查询参数
@@ -62,19 +82,8 @@ public class LoginLogServiceImpl implements LoginLogService {
                     // 基本属性转换
                     LoginLogVO vo = LoginLogConvert.INSTANCE.toLoginLogVO(log);
 
-                    // 获取用户信息
-                    if (log.getUserId() != null) {
-                        try {
-                            User user = userService.getUsernameById(log.getUserId());
-                            if (user != null) {
-                                vo.setUsername(user.getUsername());
-                                vo.setAvatar(user.getAvatar());
-                                vo.setRole(user.getRole());
-                            }
-                        } catch (Exception e) {
-                            LoginLogServiceImpl.log.error("获取用户信息失败, userId={}", log.getUserId(), e);
-                        }
-                    }
+                    // 设置用户信息
+                    setUserInfo(vo, log);
 
                     return vo;
                 }
@@ -100,15 +109,11 @@ public class LoginLogServiceImpl implements LoginLogService {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "日志不存在");
         }
 
-        // 转换为VO对象
-        LoginLogVO vo = new LoginLogVO();
-        BeanUtil.copyProperties(log, vo);
+        // 使用MapStruct转换为VO对象
+        LoginLogVO vo = LoginLogConvert.INSTANCE.toLoginLogVO(log);
 
-        // 获取用户信息
-        if (log.getUserId() != null) {
-            User user = userService.getUsernameById(log.getUserId());
-            vo.setUsername(user.getUsername());
-        }
+        // 设置用户信息
+        setUserInfo(vo, log);
 
         return vo;
     }
@@ -138,7 +143,7 @@ public class LoginLogServiceImpl implements LoginLogService {
         updateLog.setId(id);
         updateLog.setIsDeleted(1);
         updateLog.setUpdateTime(LocalDateTime.now());
-        updateLog.setUpdateBy(SecurityUtils.getCurrentUserId());
+        updateLog.setUpdateBy(UserContext.getUserId());
 
         int result = loginLogMapper.updateByPrimaryKeySelective(updateLog);
         return result > 0;
@@ -159,7 +164,7 @@ public class LoginLogServiceImpl implements LoginLogService {
         }
 
         // 批量逻辑删除
-        int result = loginLogMapper.batchLogicDelete(ids, LocalDateTime.now(), SecurityUtils.getCurrentUserId());
+        int result = loginLogMapper.batchLogicDelete(ids, LocalDateTime.now(), UserContext.getUserId());
         return result > 0;
     }
 
@@ -173,7 +178,7 @@ public class LoginLogServiceImpl implements LoginLogService {
     @Transactional(rollbackFor = Exception.class)
     public boolean clearLoginLogs() {
         // 清空所有登录日志（逻辑删除）
-        int result = loginLogMapper.clearAllLogs(LocalDateTime.now(), SecurityUtils.getCurrentUserId());
+        int result = loginLogMapper.clearAllLogs(LocalDateTime.now(), UserContext.getUserId());
         return result > 0;
     }
 
@@ -200,19 +205,12 @@ public class LoginLogServiceImpl implements LoginLogService {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "没有符合条件的日志数据");
         }
 
-        // 转换为Excel导出对象
-        List<LoginLogVO> exportList = new ArrayList<>(logList.size());
-        for (LoginLog log : logList) {
-            LoginLogVO vo = new LoginLogVO();
-            BeanUtil.copyProperties(log, vo);
+        // 使用MapStruct批量转换
+        List<LoginLogVO> exportList = LoginLogConvert.INSTANCE.toLoginLogVOList(logList);
 
-            // 获取用户信息
-            if (log.getUserId() != null) {
-                User user = userService.getUsernameById(log.getUserId());
-                vo.setUsername(user.getUsername());
-            }
-
-            exportList.add(vo);
+        // 补充用户信息
+        for (int i = 0; i < logList.size(); i++) {
+            setUserInfo(exportList.get(i), logList.get(i));
         }
 
         // 生成Excel文件
@@ -251,7 +249,7 @@ public class LoginLogServiceImpl implements LoginLogService {
         writer.write(exportList, true);
         writer.close();
 
-        // 返回文件URL（实际项目中可能需要上传到云存储）
+        // 返回文件URL
         return filePath;
     }
 

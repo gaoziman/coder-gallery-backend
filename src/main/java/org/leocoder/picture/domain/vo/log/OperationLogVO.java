@@ -20,9 +20,6 @@ public class OperationLogVO {
     @ApiModelProperty(value = "日志ID")
     private Long id;
 
-    @ApiModelProperty(value = "用户ID")
-    private Long userId;
-
     @ApiModelProperty(value = "用户名")
     private String username;
 
@@ -57,8 +54,8 @@ public class OperationLogVO {
     @ApiModelProperty(value = "操作状态")
     private Integer status;
 
-    @ApiModelProperty(value = "错误消息")
-    private String errorMsg;
+    @ApiModelProperty(value = "创建人")
+    private Long createBy;
 
     @ApiModelProperty(value = "创建时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")

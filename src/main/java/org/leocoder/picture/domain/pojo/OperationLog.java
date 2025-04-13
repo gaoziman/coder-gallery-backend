@@ -56,13 +56,13 @@ public class OperationLog {
     private LocalDateTime createTime;
 
     @ApiModelProperty(value = "创建人ID")
-    private Long createUser;
+    private Long createBy;
 
     @ApiModelProperty(value = "修改时间")
     private LocalDateTime updateTime;
 
     @ApiModelProperty(value = "修改人ID")
-    private Long updateUser;
+    private Long updateBy;
 
     @ApiModelProperty(value = "是否删除(0-未删除,1-已删除)")
     private Integer isDeleted;

@@ -5,7 +5,6 @@
         <!--@mbg.generated-->
         <!--@Table t_user_login_log-->
         <id column="id" jdbcType="BIGINT" property="id"/>
-        <result column="user_id" jdbcType="BIGINT" property="userId"/>
         <result column="login_time" jdbcType="TIMESTAMP" property="loginTime"/>
         <result column="logout_time" jdbcType="TIMESTAMP" property="logoutTime"/>
         <result column="ip" jdbcType="VARCHAR" property="ip"/>
@@ -24,7 +23,6 @@
     <sql id="Base_Column_List">
         <!--@mbg.generated-->
         id,
-        user_id,
         login_time,
         logout_time,
         ip,
@@ -56,12 +54,12 @@
     <insert id="insert" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.LoginLog"
             useGeneratedKeys="true">
         <!--@mbg.generated-->
-        insert into t_user_login_log (user_id, login_time, logout_time,
+        insert into t_user_login_log (login_time, logout_time,
                                       ip, `location`, device,
                                       browser, os, `status`,
                                       message, create_time, create_by,
                                       update_time, update_by, is_deleted)
-        values (#{userId,jdbcType=BIGINT}, #{loginTime,jdbcType=TIMESTAMP}, #{logoutTime,jdbcType=TIMESTAMP},
+        values (#{loginTime,jdbcType=TIMESTAMP}, #{logoutTime,jdbcType=TIMESTAMP},
                 #{ip,jdbcType=VARCHAR}, #{location,jdbcType=VARCHAR}, #{device,jdbcType=VARCHAR},
                 #{browser,jdbcType=VARCHAR}, #{os,jdbcType=VARCHAR}, #{status,jdbcType=INTEGER},
                 #{message,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{createBy,jdbcType=BIGINT},
@@ -70,12 +68,12 @@
 
     <insert id="insertWithId" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.LoginLog">
         <!--@mbg.generated-->
-        insert into t_user_login_log (id, user_id, login_time, logout_time,
+        insert into t_user_login_log (id, login_time, logout_time,
                                       ip, `location`, device,
                                       browser, os, `status`,
                                       message, create_time, create_by,
                                       update_time, update_by, is_deleted)
-        values (#{id,jdbcType=BIGINT}, #{userId,jdbcType=BIGINT}, #{loginTime,jdbcType=TIMESTAMP},
+        values (#{id,jdbcType=BIGINT}, #{loginTime,jdbcType=TIMESTAMP},
                 #{logoutTime,jdbcType=TIMESTAMP},
                 #{ip,jdbcType=VARCHAR}, #{location,jdbcType=VARCHAR}, #{device,jdbcType=VARCHAR},
                 #{browser,jdbcType=VARCHAR}, #{os,jdbcType=VARCHAR}, #{status,jdbcType=INTEGER},
@@ -89,9 +87,6 @@
         <!--@mbg.generated-->
         insert into t_user_login_log
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="userId != null">
-                user_id,
-            </if>
             <if test="loginTime != null">
                 login_time,
             </if>
@@ -136,9 +131,6 @@
             </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="userId != null">
-                #{userId,jdbcType=BIGINT},
-            </if>
             <if test="loginTime != null">
                 #{loginTime,jdbcType=TIMESTAMP},
             </if>
@@ -187,9 +179,6 @@
         <!--@mbg.generated-->
         update t_user_login_log
         <set>
-            <if test="userId != null">
-                user_id = #{userId,jdbcType=BIGINT},
-            </if>
             <if test="loginTime != null">
                 login_time = #{loginTime,jdbcType=TIMESTAMP},
             </if>
@@ -238,8 +227,7 @@
     <update id="updateById" parameterType="org.leocoder.picture.domain.pojo.LoginLog">
         <!--@mbg.generated-->
         update t_user_login_log
-        set user_id     = #{userId,jdbcType=BIGINT},
-            login_time  = #{loginTime,jdbcType=TIMESTAMP},
+        set login_time  = #{loginTime,jdbcType=TIMESTAMP},
             logout_time = #{logoutTime,jdbcType=TIMESTAMP},
             ip          = #{ip,jdbcType=VARCHAR},
             `location`  = #{location,jdbcType=VARCHAR},
@@ -347,7 +335,7 @@
 
     <!-- 统计今日登录用户数 -->
     <select id="countTodayLoginUsers" resultType="java.lang.Long">
-        SELECT COUNT(DISTINCT user_id)
+        SELECT COUNT(DISTINCT create_by)
         FROM t_user_login_log
         WHERE is_deleted = 0
           AND DATE(login_time) = CURDATE()
@@ -384,7 +372,7 @@
         SELECT *
         FROM t_user_login_log
         WHERE ip = #{ip}
-        AND is_deleted = 0
+          AND is_deleted = 0
         ORDER BY login_time DESC
         LIMIT 1
     </select>
@@ -393,9 +381,9 @@
     <select id="findLatestLoginWithoutLogout" resultType="org.leocoder.picture.domain.pojo.LoginLog">
         SELECT *
         FROM t_user_login_log
-        WHERE user_id = #{userId}
-        AND logout_time IS NULL
-        AND is_deleted = 0
+        WHERE create_by = #{createBy}
+          AND logout_time IS NULL
+          AND is_deleted = 0
         ORDER BY login_time DESC
         LIMIT 1
     </select>
@@ -409,7 +397,7 @@
 
     <!-- 统计活跃用户数（过去30天有登录记录的用户） -->
     <select id="countActiveUsers" resultType="java.lang.Long">
-        SELECT COUNT(DISTINCT user_id)
+        SELECT COUNT(DISTINCT create_by)
         FROM t_user_login_log
         WHERE is_deleted = 0
           AND login_time >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)

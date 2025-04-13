@@ -36,3 +36,4 @@ build/
 
 ### Application Config ###
 application-local.yml
+/log/

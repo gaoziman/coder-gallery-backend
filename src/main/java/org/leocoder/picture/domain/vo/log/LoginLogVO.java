@@ -20,8 +20,6 @@ public class LoginLogVO {
     @ApiModelProperty(value = "日志ID")
     private Long id;
 
-    @ApiModelProperty(value = "用户ID")
-    private Long userId;
 
     @ApiModelProperty(value = "用户名")
     private String username;

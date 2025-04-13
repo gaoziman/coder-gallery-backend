@@ -1,6 +1,5 @@
 package org.leocoder.picture.service.impl;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -21,7 +20,7 @@ import org.leocoder.picture.exception.ErrorCode;
 import org.leocoder.picture.mapper.OperationLogMapper;
 import org.leocoder.picture.service.OperationLogService;
 import org.leocoder.picture.service.UserService;
-import org.leocoder.picture.utils.SecurityUtils;
+import org.leocoder.picture.utils.UserContext;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +29,6 @@ import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -49,6 +47,29 @@ public class OperationLogServiceImpl implements OperationLogService {
     private final UserService userService;
 
 
+
+    /**
+     * 设置操作日志VO的用户相关信息
+     *
+     * @param logVO 操作日志VO
+     * @param log 操作日志实体
+     */
+    private void setUserInfo(OperationLogVO logVO, OperationLog log) {
+        if (log.getCreateBy() != null) {
+            try {
+                User user = userService.getUsernameById(log.getCreateBy());
+                if (user != null) {
+                    logVO.setUsername(user.getUsername());
+                    logVO.setAvatar(user.getAvatar());
+                    logVO.setRole(user.getRole());
+                }
+            } catch (Exception e) {
+                OperationLogServiceImpl.log.error("获取用户信息失败, userId={}", log.getCreateBy(), e);
+            }
+        }
+    }
+
+
     /**
      * 分页查询操作日志
      *
@@ -64,19 +85,8 @@ public class OperationLogServiceImpl implements OperationLogService {
                     // 基本属性转换
                     OperationLogVO vo = OperationLogConvert.INSTANCE.toOperationLogVO(log);
 
-                    // 获取用户信息
-                    if (log.getCreateUser() != null) {
-                        try {
-                            User user = userService.getUsernameById(log.getCreateUser());
-                            if (user != null) {
-                                vo.setUsername(user.getUsername());
-                                vo.setAvatar(user.getAvatar());
-                                vo.setRole(user.getRole());
-                            }
-                        } catch (Exception e) {
-                            OperationLogServiceImpl.log.error("获取用户信息失败, userId={}", log.getCreateUser(), e);
-                        }
-                    }
+                    // 设置用户信息
+                    setUserInfo(vo, log);
 
                     return vo;
                 }
@@ -102,15 +112,12 @@ public class OperationLogServiceImpl implements OperationLogService {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "日志不存在");
         }
 
-        // 转换为VO对象
-        OperationLogVO vo = new OperationLogVO();
-        BeanUtil.copyProperties(log, vo);
 
-        // 获取用户信息
-        if (log.getCreateUser() != null) {
-            User user = userService.getUsernameById(log.getCreateUser());
-            vo.setUsername(user.getUsername());
-        }
+        // 使用MapStruct转换为VO对象
+        OperationLogVO vo = OperationLogConvert.INSTANCE.toOperationLogVO(log);
+
+        // 设置用户信息
+        setUserInfo(vo, log);
 
         return vo;
     }
@@ -140,7 +147,7 @@ public class OperationLogServiceImpl implements OperationLogService {
         updateLog.setId(id);
         updateLog.setIsDeleted(1);
         updateLog.setUpdateTime(LocalDateTime.now());
-        updateLog.setUpdateUser(SecurityUtils.getCurrentUserId());
+        updateLog.setUpdateBy(UserContext.getUserId());
 
         int result = operationLogMapper.updateByPrimaryKeySelective(updateLog);
         return result > 0;
@@ -161,7 +168,7 @@ public class OperationLogServiceImpl implements OperationLogService {
         }
 
         // 批量逻辑删除
-        int result = operationLogMapper.batchLogicDelete(ids, LocalDateTime.now(), SecurityUtils.getCurrentUserId());
+        int result = operationLogMapper.batchLogicDelete(ids, LocalDateTime.now(), UserContext.getUserId());
         return result > 0;
     }
 
@@ -175,17 +182,11 @@ public class OperationLogServiceImpl implements OperationLogService {
     @Transactional(rollbackFor = Exception.class)
     public boolean clearOperationLogs() {
         // 清空所有操作日志（逻辑删除）
-        int result = operationLogMapper.clearAllLogs(LocalDateTime.now(), SecurityUtils.getCurrentUserId());
+        int result = operationLogMapper.clearAllLogs(LocalDateTime.now(), UserContext.getUserId());
         return result > 0;
     }
 
 
-    /**
-     * 导出操作日志
-     *
-     * @param queryRequest 查询参数
-     * @return 导出文件URL
-     */
     @Override
     public String exportOperationLogs(OperationLogQueryRequest queryRequest) {
         // 查询数据
@@ -202,19 +203,12 @@ public class OperationLogServiceImpl implements OperationLogService {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "没有符合条件的日志数据");
         }
 
-        // 转换为Excel导出对象
-        List<OperationLogVO> exportList = new ArrayList<>(logList.size());
-        for (OperationLog log : logList) {
-            OperationLogVO vo = new OperationLogVO();
-            BeanUtil.copyProperties(log, vo);
+        // 使用MapStruct批量转换
+        List<OperationLogVO> exportList = OperationLogConvert.INSTANCE.toOperationLogVOList(logList);
 
-            // 获取用户信息
-            if (log.getCreateUser() != null) {
-                User user = userService.getUsernameById(log.getCreateUser());
-                vo.setUsername(user.getUsername());
-            }
-
-            exportList.add(vo);
+        // 补充用户信息
+        for (int i = 0; i < logList.size(); i++) {
+            setUserInfo(exportList.get(i), logList.get(i));
         }
 
         // 生成Excel文件
@@ -413,7 +407,7 @@ public class OperationLogServiceImpl implements OperationLogService {
         BigDecimal previousBD = BigDecimal.valueOf(previous);
         BigDecimal hundred = new BigDecimal(100);
 
-        // (current - previous) / previous * 100
+        //   (current - previous) / previous * 100
         return currentBD.subtract(previousBD)
                 .divide(previousBD, 4, RoundingMode.HALF_UP)
                 .multiply(hundred)
