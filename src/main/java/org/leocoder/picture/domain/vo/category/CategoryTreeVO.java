@@ -15,7 +15,7 @@ import java.util.List;
  */
 @Data
 @Builder
-@ApiModel(value = "CategoryTreeVO", description = "分类树形结构VO")
+@ApiModel(description = "分类树形结构VO")
 public class CategoryTreeVO {
     
     @ApiModelProperty(value = "分类ID")

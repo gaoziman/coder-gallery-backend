@@ -11,11 +11,7 @@ import java.time.LocalDateTime;
  * @author : 程序员Leo
  * @date  2025-04-09 10:24
  * @version 1.0
- * @description :
- */
-
-/**
- * 标签关联表
+ * @description : 标签关联表
  */
 @Data
 @Builder

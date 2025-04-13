@@ -15,7 +15,7 @@ import java.util.Map;
  */
 @Data
 @Builder
-@ApiModel(value = "CategoryStatisticsVO", description = "分类统计VO")
+@ApiModel(description = "分类统计VO")
 public class CategoryStatisticsVO {
 
     @ApiModelProperty(value = "分类总数")

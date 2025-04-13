@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @Builder
-@ApiModel(value = "分类CategoryVO", description = "分类VO")
+@ApiModel(description = "分类VO")
 public class CategoryVO {
     
     @ApiModelProperty(value = "分类ID")

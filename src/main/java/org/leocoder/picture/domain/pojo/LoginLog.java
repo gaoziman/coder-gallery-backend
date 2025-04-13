@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
  * @author : 程序员Leo
  * @version 1.0
  * @date 2025-04-10 13:37
- * @description : 用户登录记录表
+ * @description : 用户登录记录实体类
  */
 
 @Data

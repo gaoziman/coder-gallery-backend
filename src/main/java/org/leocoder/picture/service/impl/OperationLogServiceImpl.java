@@ -65,16 +65,16 @@ public class OperationLogServiceImpl implements OperationLogService {
                     OperationLogVO vo = OperationLogConvert.INSTANCE.toOperationLogVO(log);
 
                     // 获取用户信息
-                    if (log.getUserId() != null) {
+                    if (log.getCreateUser() != null) {
                         try {
-                            User user = userService.getUsernameById(log.getUserId());
+                            User user = userService.getUsernameById(log.getCreateUser());
                             if (user != null) {
                                 vo.setUsername(user.getUsername());
                                 vo.setAvatar(user.getAvatar());
                                 vo.setRole(user.getRole());
                             }
                         } catch (Exception e) {
-                            OperationLogServiceImpl.log.error("获取用户信息失败, userId={}", log.getUserId(), e);
+                            OperationLogServiceImpl.log.error("获取用户信息失败, userId={}", log.getCreateUser(), e);
                         }
                     }
 
@@ -107,8 +107,8 @@ public class OperationLogServiceImpl implements OperationLogService {
         BeanUtil.copyProperties(log, vo);
 
         // 获取用户信息
-        if (log.getUserId() != null) {
-            User user = userService.getUsernameById(log.getUserId());
+        if (log.getCreateUser() != null) {
+            User user = userService.getUsernameById(log.getCreateUser());
             vo.setUsername(user.getUsername());
         }
 
@@ -140,7 +140,7 @@ public class OperationLogServiceImpl implements OperationLogService {
         updateLog.setId(id);
         updateLog.setIsDeleted(1);
         updateLog.setUpdateTime(LocalDateTime.now());
-        updateLog.setUpdateBy(SecurityUtils.getCurrentUserId());
+        updateLog.setUpdateUser(SecurityUtils.getCurrentUserId());
 
         int result = operationLogMapper.updateByPrimaryKeySelective(updateLog);
         return result > 0;
@@ -209,8 +209,8 @@ public class OperationLogServiceImpl implements OperationLogService {
             BeanUtil.copyProperties(log, vo);
 
             // 获取用户信息
-            if (log.getUserId() != null) {
-                User user = userService.getUsernameById(log.getUserId());
+            if (log.getCreateUser() != null) {
+                User user = userService.getUsernameById(log.getCreateUser());
                 vo.setUsername(user.getUsername());
             }
 

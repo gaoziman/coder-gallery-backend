@@ -1,6 +1,8 @@
 package org.leocoder.picture.domain.vo.user;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -15,83 +17,55 @@ import java.time.LocalDateTime;
  */
 @Data
 @Builder
+@ApiModel(description = "脱敏后登录用户信息")
 public class LoginUserVO implements Serializable {
 
-    /**
-     * 用户 id
-     */
+    @ApiModelProperty(value = "用户 id")
     private Long id;
 
-    /**
-     * 账号
-     */
+    @ApiModelProperty(value = "账号")
     private String account;
 
-    /**
-     * 用户昵称
-     */
+    @ApiModelProperty(value = "用户昵称")
     private String username;
 
-
-    /**
-     * 用户手机号
-     */
+    @ApiModelProperty(value = "用户手机号")
     private String userPhone;
 
-    /**
-     * 用户头像
-     */
+    @ApiModelProperty(value = "用户头像")
     private String avatar;
 
-    /**
-     * 用户简介
-     */
+    @ApiModelProperty(value = "用户简介")
     private String userProfile;
 
-    /**
-     * 角色(admin-管理员,user-普通用户)
-     */
+
+    @ApiModelProperty(value = "用户角色")
     private String role;
 
 
-    /**
-     * Sa-Token令牌
-     */
+    @ApiModelProperty(value = "Sa-Token令牌")
     private String tokenValue;
 
-    /**
-     * Sa-Token令牌名称
-     */
+    @ApiModelProperty(value = "Sa-Token令牌名称")
     private String tokenName;
 
-    /**
-     * 令牌过期时间（秒）
-     */
+    @ApiModelProperty(value = "令牌过期时间（秒）")
     private Long tokenTimeout;
 
-    /**
-     * 创建时间
-     */
+    @ApiModelProperty(value = "创建时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
 
-    /**
-     * 更新时间
-     */
+    @ApiModelProperty(value = "更新时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
 
 
-    /**
-     * 最后登录时间
-     */
+    @ApiModelProperty(value = "最后登录时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime lastLoginTime;
 
-    /**
-     * 最后登录IP
-     */
+    @ApiModelProperty(value = "最后登录IP")
     private String lastLoginIp;
 
-    private static final long serialVersionUID = 1L;
 }

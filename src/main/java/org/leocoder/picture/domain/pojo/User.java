@@ -1,6 +1,8 @@
 package org.leocoder.picture.domain.pojo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,106 +20,67 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@ApiModel(value = "用户实体类")
 public class User {
 
-
-    /**
-     * 用户ID
-     */
+    @ApiModelProperty(value = "用户ID")
     private Long id;
 
-    /**
-     * 账户名
-     */
+    @ApiModelProperty(value = "账户名")
     private String account;
 
-    /**
-     * 用户名
-     */
+    @ApiModelProperty(value = "用户名")
     private String username;
 
-    /**
-     * 密码(加密存储)
-     */
+    @ApiModelProperty(value = "密码(加密存储)")
     private String password;
 
-    /**
-     * 密码盐
-     */
+    @ApiModelProperty(value = "密码盐")
     private String salt;
 
-    /**
-     * 手机号
-     */
+    @ApiModelProperty
     private String phone;
 
-    /**
-     * 头像URL
-     */
+    @ApiModelProperty(value = "头像URL")
     private String avatar;
 
-    /**
-     * 个人简介
-     */
+    @ApiModelProperty(value = "个人简介")
     private String userProfile;
 
 
-    /**
-     * 角色(admin-管理员,user-普通用户,superAdmin-超级管理员)
-     */
+    @ApiModelProperty(value = "角色(admin-管理员,user-普通用户,superAdmin-超级管理员)")
     private String role;
 
-    /**
-     * 状态(active-已激活,inactive-未激活,banned-已禁用)
-     */
+    @ApiModelProperty(value = "状态(active-已激活,inactive-未激活,banned-已禁用)")
     private String status;
 
-    /**
-     * 最后登录时间
-     */
+    @ApiModelProperty(value = "最后登录时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime lastLoginTime;
 
-    /**
-     * 最后登录IP
-     */
+    @ApiModelProperty(value = "最后登录IP")
     private String lastLoginIp;
 
-    /**
-     * 注册时间
-     */
+    @ApiModelProperty(value = "注册时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime registerTime;
 
-    /**
-     * 备注
-     */
+    @ApiModelProperty(value = "备注")
     private String remark;
 
-    /**
-     * 创建时间
-     */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
 
-    /**
-     * 创建人ID
-     */
+    @ApiModelProperty(value = "创建人ID")
     private Long createBy;
 
-    /**
-     * 修改时间
-     */
+    @ApiModelProperty(value = "修改时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
 
-    /**
-     * 修改人ID
-     */
+    @ApiModelProperty(value = "修改人ID")
     private Long updateBy;
 
-    /**
-     * 是否删除(0-未删除,1-已删除)
-     */
+    @ApiModelProperty(value = "是否删除(0-未删除,1-已删除)")
     private Integer isDeleted;
 }

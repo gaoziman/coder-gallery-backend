@@ -1,5 +1,7 @@
 package org.leocoder.picture.domain.pojo;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,92 +11,59 @@ import java.time.LocalDateTime;
 
 /**
  * @author : 程序员Leo
- * @date  2025-04-10 13:38
  * @version 1.0
+ * @date 2025-04-10 13:38
  * @description : 用户操作日志表
  */
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@ApiModel(value = "用户操作日志表")
 public class OperationLog {
-    /**
-    * 日志ID
-    */
+    @ApiModelProperty(value = "主键ID")
     private Long id;
 
-    /**
-    * 用户ID
-    */
-    private Long userId;
 
-    /**
-    * 操作模块
-    */
+    @ApiModelProperty(value = "操作模块")
     private String module;
 
-    /**
-    * 操作类型
-    */
+    @ApiModelProperty(value = "操作动作")
     private String action;
 
-    /**
-    * 请求方法
-    */
+    @ApiModelProperty(value = "操作方法")
     private String method;
 
-    /**
-    * 请求参数
-    */
+    @ApiModelProperty(value = "请求参数")
     private String params;
 
-    /**
-    * 执行时长(毫秒)
-    */
+    @ApiModelProperty(value = "操作耗时(毫秒)")
     private Long time;
 
-    /**
-    * 操作IP
-    */
+    @ApiModelProperty(value = "操作IP")
     private String ip;
 
-    /**
-    * 操作时间
-    */
+    @ApiModelProperty(value = "操作时间")
     private LocalDateTime operationTime;
 
-    /**
-    * 操作状态(0-失败,1-成功)
-    */
+    @ApiModelProperty(value = "操作结果(0-成功,1-失败)")
     private Integer status;
 
-    /**
-    * 错误消息
-    */
+    @ApiModelProperty(value = "错误信息")
     private String errorMsg;
 
-    /**
-    * 创建时间
-    */
+    @ApiModelProperty(value = "创建时间")
     private LocalDateTime createTime;
 
-    /**
-    * 创建人ID
-    */
-    private Long createBy;
+    @ApiModelProperty(value = "创建人ID")
+    private Long createUser;
 
-    /**
-    * 修改时间
-    */
+    @ApiModelProperty(value = "修改时间")
     private LocalDateTime updateTime;
 
-    /**
-    * 修改人ID
-    */
-    private Long updateBy;
+    @ApiModelProperty(value = "修改人ID")
+    private Long updateUser;
 
-    /**
-    * 是否删除(0-未删除,1-已删除)
-    */
+    @ApiModelProperty(value = "是否删除(0-未删除,1-已删除)")
     private Integer isDeleted;
 }

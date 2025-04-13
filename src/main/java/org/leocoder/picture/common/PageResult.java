@@ -2,7 +2,6 @@ package org.leocoder.picture.common;
 
 import lombok.Data;
 
-import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -12,9 +11,8 @@ import java.util.List;
  * @description : 分页结果封装类
  */
 @Data
-public class PageResult<T> implements Serializable {
+public class PageResult<T> {
 
-    private static final long serialVersionUID = 1L;
 
     /**
      * 总记录数

@@ -115,7 +115,7 @@ public class LogAspect {
             // 构建操作日志对象
             OperationLog operationLog = new OperationLog();
             operationLog.setId(snowflakeIdGenerator.nextId());
-            operationLog.setUserId(userId);
+            operationLog.setCreateUser(userId);
             operationLog.setModule(logAnnotation.module());
             operationLog.setAction(actionName);
             operationLog.setMethod(signature.getDeclaringTypeName() + "." + signature.getName());
@@ -159,7 +159,7 @@ public class LogAspect {
             
             // 设置基础字段
             operationLog.setCreateTime(LocalDateTime.now());
-            operationLog.setCreateBy(userId);
+            operationLog.setCreateUser(userId);
             operationLog.setIsDeleted(0);
             
             // 保存日志
