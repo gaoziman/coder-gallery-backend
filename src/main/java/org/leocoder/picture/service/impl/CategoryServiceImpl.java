@@ -34,8 +34,8 @@ import java.util.stream.Collectors;
 
 /**
  * @author : 程序员Leo
- * @date  2025-04-08 13:59
  * @version 1.0
+ * @date 2025-04-08 13:59
  * @description : 分类服务实现类
  */
 @Slf4j
@@ -55,8 +55,48 @@ public class CategoryServiceImpl implements CategoryService {
 
 
     /**
+     * 设置CategoryVO的额外字段（父分类名称、创建者和更新者用户名）
+     *
+     * @param categoryVO 待补充信息的CategoryVO
+     * @param category   原始Category实体
+     */
+    private void setAdditionalFields(CategoryVO categoryVO, Category category) {
+        // 设置父分类名称
+        if (ObjectUtil.isNotNull(category.getParentId()) && category.getParentId() > 0) {
+            try {
+                Category parentCategory = categoryMapper.selectById(category.getParentId());
+                if (ObjectUtil.isNotNull(parentCategory)) {
+                    categoryVO.setParentName(parentCategory.getName());
+                }
+            } catch (Exception e) {
+                log.error("获取父分类信息失败, parentId={}", category.getParentId(), e);
+            }
+        }
+
+        // 设置创建者用户名
+        if (ObjectUtil.isNotNull(category.getCreateUser())) {
+            try {
+                categoryVO.setCreateUsername(userService.getUserVOById(category.getCreateUser()).getUsername());
+            } catch (Exception e) {
+                log.error("获取创建者信息失败, userId={}", category.getCreateUser(), e);
+            }
+        }
+
+        // 设置更新者用户名
+        if (category.getUpdateUser() != null) {
+            try {
+                categoryVO.setUpdateUsername(userService.getUserVOById(category.getUpdateUser()).getUsername());
+            } catch (Exception e) {
+                log.error("获取更新者信息失败, userId={}", category.getUpdateUser(), e);
+            }
+        }
+    }
+
+
+    /**
      * 检查urlName是否已存在
-     * @param urlName 分类别名
+     *
+     * @param urlName   分类别名
      * @param excludeId 排除的分类ID（用于更新时排除自身）
      * @return 是否存在
      */
@@ -405,61 +445,25 @@ public class CategoryServiceImpl implements CategoryService {
 
         // 2. 查询分类
         Category category = categoryMapper.selectById(id);
-        if (ObjectUtil.isNull(category) || Boolean.TRUE.equals(category.getIsDeleted())) {
+        if (ObjectUtil.isNull(category)) {
             throw new BusinessException(ErrorCode.DATA_NOT_FOUND, "分类不存在");
         }
 
-        // 3. 获取父分类名称
-        String parentName = "";
+        // 3. 使用MapStruct转换基本字段
+        CategoryVO categoryVO = CategoryConvert.INSTANCE.toCategoryVO(category);
+
+        // 4. 设置额外字段 - 父分类名称
         if (category.getParentId() > 0) {
             Category parentCategory = categoryMapper.selectById(category.getParentId());
-            if (ObjectUtil.isNotNull(parentCategory) && !Boolean.TRUE.equals(parentCategory.getIsDeleted())) {
-                parentName = parentCategory.getName();
+            if (ObjectUtil.isNotNull(parentCategory)) {
+                categoryVO.setParentName(parentCategory.getName());
             }
         }
 
-        // 4. 创建者和更新者名称
-        String createUsername = "";
-        String updateUsername = "";
+        // 4. 使用辅助方法设置额外字段
+        setAdditionalFields(categoryVO, category);
 
-        if (ObjectUtil.isNotNull(category.getCreateUser())) {
-            try {
-                createUsername = userService.getUserVOById(category.getCreateUser()).getUsername();
-            } catch (Exception e) {
-                log.error("获取创建者信息失败", e);
-            }
-        }
-
-        if (ObjectUtil.isNotNull(category.getUpdateUser())) {
-            try {
-                updateUsername = userService.getUserVOById(category.getUpdateUser()).getUsername();
-            } catch (Exception e) {
-                log.error("获取更新者信息失败", e);
-            }
-        }
-
-        // 5. 构建并返回VO
-        return CategoryVO.builder()
-                .id(category.getId())
-                .name(category.getName())
-                .parentId(category.getParentId())
-                .parentName(parentName)
-                .type(category.getType())
-                .level(category.getLevel())
-                .path(category.getPath())
-                .description(category.getDescription())
-                .icon(category.getIcon())
-                .urlName(category.getUrlName())
-                .sortOrder(category.getSortOrder())
-                .contentCount(category.getContentCount())
-                .status(category.getStatus())
-                .createTime(category.getCreateTime())
-                .createUser(category.getCreateUser())
-                .createUsername(createUsername)
-                .updateTime(category.getUpdateTime())
-                .updateUser(category.getUpdateUser())
-                .updateUsername(updateUsername)
-                .build();
+        return categoryVO;
     }
 
     /**
@@ -503,34 +507,8 @@ public class CategoryServiceImpl implements CategoryService {
                     // 基本属性转换
                     CategoryVO vo = CategoryConvert.INSTANCE.toCategoryVO(category);
 
-                    // 设置父分类名称
-                    if (category.getParentId() != null && category.getParentId() > 0) {
-                        try {
-                            Category parentCategory = categoryMapper.selectById(category.getParentId());
-                            if (parentCategory != null) {
-                                vo.setParentName(parentCategory.getName());
-                            }
-                        } catch (Exception e) {
-                            log.error("获取父分类信息失败, parentId={}", category.getParentId(), e);
-                        }
-                    }
-
-                    // 设置创建人和更新人信息
-                    if (category.getCreateUser() != null) {
-                        try {
-                            vo.setCreateUsername(userService.getUserVOById(category.getCreateUser()).getUsername());
-                        } catch (Exception e) {
-                            log.error("获取创建者信息失败, userId={}", category.getCreateUser(), e);
-                        }
-                    }
-
-                    if (category.getUpdateUser() != null) {
-                        try {
-                            vo.setUpdateUsername(userService.getUserVOById(category.getUpdateUser()).getUsername());
-                        } catch (Exception e) {
-                            log.error("获取更新者信息失败, userId={}", category.getUpdateUser(), e);
-                        }
-                    }
+                    // 使用辅助方法设置额外字段
+                    setAdditionalFields(vo, category);
 
                     return vo;
                 }
@@ -738,7 +716,7 @@ public class CategoryServiceImpl implements CategoryService {
     /**
      * 检查是否为子分类
      *
-     * @param categoryId 当前分类ID
+     * @param categoryId       当前分类ID
      * @param possibleParentId 可能的父分类ID
      * @return 是否为子分类
      */
@@ -762,9 +740,9 @@ public class CategoryServiceImpl implements CategoryService {
     /**
      * 更新子分类的层级和路径
      *
-     * @param parentId 父分类ID
+     * @param parentId    父分类ID
      * @param parentLevel 父分类层级
-     * @param parentPath 父分类路径
+     * @param parentPath  父分类路径
      */
     private void updateChildrenLevelAndPath(Long parentId, Integer parentLevel, String parentPath) {
         // 查询所有子分类
@@ -904,10 +882,10 @@ public class CategoryServiceImpl implements CategoryService {
     /**
      * 获取分类关联的内容列表
      *
-     * @param categoryId 分类ID
+     * @param categoryId  分类ID
      * @param contentType 内容类型
-     * @param pageNum 页码
-     * @param pageSize 每页大小
+     * @param pageNum     页码
+     * @param pageSize    每页大小
      * @return 分页结果
      */
     @Override
@@ -993,7 +971,7 @@ public class CategoryServiceImpl implements CategoryService {
         // 3. 根据导出格式处理数据
         String format = categoryExportRequest.getFormat();
         if (StrUtil.isBlank(format)) {
-            format = "xlsx"; // 默认为Excel格式
+            format = "xlsx";
         }
 
         // 这里应该调用文件处理服务，将分类数据导出为指定格式的文件
@@ -1065,51 +1043,31 @@ public class CategoryServiceImpl implements CategoryService {
             }
         }
 
-        // 5. 构建VO列表
-        List<CategoryVO> categoryVOList = new ArrayList<>();
+        // 5. 使用MapStruct进行基本转换
+        List<CategoryVO> categoryVOList = CategoryConvert.INSTANCE.toCategoryVOList(categories);
 
-        for (Category category : categories) {
-            String parentName = "";
+        // 6. 补充额外信息
+        for (int i = 0; i < categories.size(); i++) {
+            Category category = categories.get(i);
+            CategoryVO categoryVO = categoryVOList.get(i);
+
+            // 设置父分类名称
             if (category.getParentId() != null && category.getParentId() > 0) {
-                parentName = parentNameMap.getOrDefault(category.getParentId(), "");
+                categoryVO.setParentName(parentNameMap.getOrDefault(category.getParentId(), ""));
             }
 
-            String createUsername = "";
+            // 设置创建者用户名
             if (category.getCreateUser() != null) {
-                createUsername = usernameMap.getOrDefault(category.getCreateUser(), "");
+                categoryVO.setCreateUsername(usernameMap.getOrDefault(category.getCreateUser(), ""));
             }
 
-            String updateUsername = "";
+            // 设置更新者用户名
             if (category.getUpdateUser() != null) {
-                updateUsername = usernameMap.getOrDefault(category.getUpdateUser(), "");
+                categoryVO.setUpdateUsername(usernameMap.getOrDefault(category.getUpdateUser(), ""));
             }
-
-            CategoryVO categoryVO = CategoryVO.builder()
-                    .id(category.getId())
-                    .name(category.getName())
-                    .parentId(category.getParentId())
-                    .parentName(parentName)
-                    .type(category.getType())
-                    .level(category.getLevel())
-                    .path(category.getPath())
-                    .description(category.getDescription())
-                    .icon(category.getIcon())
-                    .urlName(category.getUrlName())
-                    .sortOrder(category.getSortOrder())
-                    .contentCount(category.getContentCount())
-                    .status(category.getStatus())
-                    .createTime(category.getCreateTime())
-                    .createUser(category.getCreateUser())
-                    .createUsername(createUsername)
-                    .updateTime(category.getUpdateTime())
-                    .updateUser(category.getUpdateUser())
-                    .updateUsername(updateUsername)
-                    .build();
-
-            categoryVOList.add(categoryVO);
         }
 
-        // 6. 按排序字段排序
+        // 7. 按排序字段排序
         categoryVOList.sort(Comparator.comparing(CategoryVO::getSortOrder, Comparator.nullsLast(Comparator.naturalOrder())));
 
         return categoryVOList;
@@ -1118,9 +1076,9 @@ public class CategoryServiceImpl implements CategoryService {
     /**
      * 检查分类名称是否存在
      *
-     * @param name 分类名称
-     * @param parentId 父分类ID
-     * @param type 分类类型
+     * @param name      分类名称
+     * @param parentId  父分类ID
+     * @param type      分类类型
      * @param excludeId 排除的分类ID(更新时使用)
      * @return 是否存在
      */
@@ -1147,7 +1105,7 @@ public class CategoryServiceImpl implements CategoryService {
      * 更新分类内容数量
      *
      * @param categoryId 分类ID
-     * @param increment 增量(可为负)
+     * @param increment  增量(可为负)
      * @return 是否成功
      */
     @Override

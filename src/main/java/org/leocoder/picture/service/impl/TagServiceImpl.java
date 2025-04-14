@@ -20,7 +20,6 @@ import org.leocoder.picture.mapper.TagMapper;
 import org.leocoder.picture.mapper.TagRelationMapper;
 import org.leocoder.picture.service.TagRelationService;
 import org.leocoder.picture.service.TagService;
-import org.leocoder.picture.service.UserService;
 import org.leocoder.picture.utils.SnowflakeIdGenerator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,21 +45,17 @@ public class TagServiceImpl implements TagService {
 
     private TagRelationService tagRelationService;
 
-    private final UserService userService;
 
     private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     // 使用构造器注入除了 TagRelationService 以外的依赖
     public TagServiceImpl(TagMapper tagMapper,
                           TagRelationMapper tagRelationMapper,
-                          UserService userService,
                           SnowflakeIdGenerator idGenerator) {
         this.tagMapper = tagMapper;
         this.tagRelationMapper = tagRelationMapper;
-        this.userService = userService;
         this.snowflakeIdGenerator = idGenerator;
     }
-
 
 
     /**
@@ -77,21 +72,13 @@ public class TagServiceImpl implements TagService {
             throw new BusinessException(ErrorCode.TAG_NAME_ALREADY_EXISTS);
         }
 
-        // 创建标签实体
-        Tag tag = Tag.builder()
-                .id(snowflakeIdGenerator.nextId())
-                .name(requestParam.getName())
-                .color(requestParam.getColor())
-                .description(requestParam.getDescription())
-                .status(TagStatusEnum.ACTIVE.getValue())
-                .referenceCount(0)
-                .sortOrder(requestParam.getSortOrder())
-                .createTime(LocalDateTime.now())
-                .createUser(StpUtil.getLoginIdAsLong())
-                .updateTime(LocalDateTime.now())
-                .updateUser(StpUtil.getLoginIdAsLong())
-                .isDeleted(0)
-                .build();
+        // 生成必要的基础数据
+        Long tagId = snowflakeIdGenerator.nextId();
+        Long userId = StpUtil.getLoginIdAsLong();
+        LocalDateTime now = LocalDateTime.now();
+
+        // 使用MapStruct转换请求对象为实体
+        Tag tag = TagConvert.INSTANCE.toTag(requestParam, tagId, userId, now);
 
         // 插入数据库
         tagMapper.insertTagWithId(tag);
@@ -208,8 +195,8 @@ public class TagServiceImpl implements TagService {
             throw new BusinessException(ErrorCode.TAG_NOT_FOUND);
         }
 
-        // 转换为VO
-        return convertToVO(tag);
+        // 使用MapStruct转换为VO
+        return TagConvert.INSTANCE.toTagVO(tag);
     }
 
     /**
@@ -341,10 +328,10 @@ public class TagServiceImpl implements TagService {
     /**
      * 获取标签关联的内容列表
      *
-     * @param tagId 标签ID
+     * @param tagId       标签ID
      * @param contentType 内容类型
-     * @param pageNum 页码
-     * @param pageSize 每页大小
+     * @param pageNum     页码
+     * @param pageSize    每页大小
      * @return 分页结果
      */
     @Override
@@ -386,16 +373,16 @@ public class TagServiceImpl implements TagService {
     /**
      * 获取标签使用趋势数据
      *
-     * @param tagId 标签ID
+     * @param tagId     标签ID
      * @param startDate 开始日期
-     * @param endDate 结束日期
+     * @param endDate   结束日期
      * @return 趋势数据列表
      */
     @Override
     public List<TagUsageTrendVO> getTagUsageTrend(Long tagId, String startDate, String endDate) {
         // 校验标签是否存在
         Tag tag = tagMapper.selectById(tagId);
-        if (tag == null || tag.getIsDeleted() == 1) {
+        if (ObjectUtil.isNull(tag) || tag.getIsDeleted() == 1) {
             throw new BusinessException(ErrorCode.TAG_NOT_FOUND);
         }
 
@@ -416,13 +403,10 @@ public class TagServiceImpl implements TagService {
     }
 
 
-
-
-
     /**
      * 检查标签名称是否存在
      *
-     * @param name 标签名称
+     * @param name      标签名称
      * @param excludeId 排除的标签ID（更新时使用）
      * @return 是否存在
      */
@@ -434,7 +418,7 @@ public class TagServiceImpl implements TagService {
         }
 
         // 如果是更新操作，需要排除自身
-        if (excludeId != null && existingTag.getId().equals(excludeId)) {
+        if (ObjectUtil.isNotNull(excludeId) && existingTag.getId().equals(excludeId)) {
             return false;
         }
 
@@ -445,7 +429,7 @@ public class TagServiceImpl implements TagService {
     /**
      * 更新标签引用次数
      *
-     * @param tagId 标签ID
+     * @param tagId     标签ID
      * @param increment 增量（可为负）
      * @return 是否成功
      */
@@ -476,34 +460,4 @@ public class TagServiceImpl implements TagService {
         return tagMapper.selectTagList();
     }
 
-    /**
-     * 将实体转换为VO
-     */
-    private TagVO convertToVO(Tag tag) {
-        if (tag == null) {
-            return null;
-        }
-
-        TagVO vo = new TagVO();
-        vo.setId(tag.getId());
-        vo.setName(tag.getName());
-        vo.setColor(tag.getColor());
-        vo.setDescription(tag.getDescription());
-        vo.setStatus(tag.getStatus());
-        vo.setReferenceCount(tag.getReferenceCount());
-        vo.setSortOrder(tag.getSortOrder());
-        vo.setCreateTime(tag.getCreateTime());
-
-        // 设置创建人信息
-        if (tag.getCreateUser() != null) {
-            try {
-                vo.setCreateUser(tag.getCreateUser());
-            } catch (Exception e) {
-                log.warn("获取用户名失败: {}", tag.getCreateUser(), e);
-                vo.setCreateUser(tag.getCreateUser());
-            }
-        }
-
-        return vo;
-    }
 }

@@ -59,6 +59,7 @@ public class UserServiceImpl implements UserService {
 
     // 账号正则：4-16位，字母开头，允许字母、数字、下划线
     private static final Pattern ACCOUNT_PATTERN = Pattern.compile("^[a-zA-Z]\\w{3,15}$");
+
     // 密码正则：6-16位，必须包含字母和数字
     private static final Pattern PASSWORD_PATTERN = Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,16}$");
 
@@ -188,8 +189,6 @@ public class UserServiceImpl implements UserService {
 
         // 7. 更新登录信息
         LocalDateTime now = LocalDateTime.now();
-
-
         userMapper.updateLoginInfo(user.getId(), now, ipAddress);
 
         // 8. Sa-Token登录并获取token信息
@@ -203,23 +202,8 @@ public class UserServiceImpl implements UserService {
         // 9. 将用户信息设置到当前线程上下文
         UserContext.setUser(user);
 
-        // 10. 构建并返回登录用户VO
-        return LoginUserVO.builder()
-                .id(user.getId())
-                .account(user.getAccount())
-                .username(user.getUsername())
-                .userPhone(user.getPhone())
-                .avatar(user.getAvatar())
-                .role(user.getRole())
-                .userProfile(user.getUserProfile())
-                .tokenName(tokenInfo.getTokenName())
-                .tokenValue(tokenInfo.getTokenValue())
-                .tokenTimeout(tokenInfo.getTokenTimeout())
-                .lastLoginTime(now)
-                .lastLoginIp(ipAddress)
-                .createTime(user.getCreateTime())
-                .updateTime(user.getUpdateTime())
-                .build();
+        // 10. 使用MapStruct转换器构建登录用户VO
+        return UserConvert.INSTANCE.toLoginUserVO(user, tokenInfo);
     }
 
 
@@ -237,6 +221,8 @@ public class UserServiceImpl implements UserService {
         }
 
         // 转换为VO对象
+
+
         return UserVO.builder()
                 .id(user.getId())
                 .account(user.getAccount())
@@ -553,23 +539,8 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND, "用户不存在");
         }
 
-        // 3. 转换为VO对象（返回完整信息，因为是管理员访问）
-        return UserVO.builder()
-                .id(user.getId())
-                .account(user.getAccount())
-                .username(user.getUsername())
-                .phone(user.getPhone())
-                .avatar(user.getAvatar())
-                .userProfile(user.getUserProfile())
-                .role(user.getRole())
-                .status(user.getStatus())
-                .lastLoginTime(user.getLastLoginTime())
-                .lastLoginIp(user.getLastLoginIp())
-                .registerTime(user.getRegisterTime())
-                .createTime(user.getCreateTime())
-                .updateTime(user.getUpdateTime())
-                .remark(user.getRemark())
-                .build();
+        // 3. 使用MapStruct转换为VO对象
+        return UserConvert.INSTANCE.toUserVO(user);
     }
 
     /**
@@ -592,21 +563,7 @@ public class UserServiceImpl implements UserService {
         }
 
         // 3. 转换为脱敏VO对象（不包含敏感信息）
-        return UserVO.builder()
-                .id(user.getId())
-                .account(user.getAccount())
-                .username(user.getUsername())
-                .phone(user.getPhone())
-                .avatar(user.getAvatar())
-                .userProfile(user.getUserProfile())
-                .role(user.getRole())
-                .status(user.getStatus())
-                .lastLoginTime(user.getLastLoginTime())
-                .lastLoginIp(user.getLastLoginIp())
-                .registerTime(user.getRegisterTime())
-                .createTime(user.getCreateTime())
-                .updateTime(user.getUpdateTime())
-                .build();
+        return UserConvert.INSTANCE.toUserVO(user);
     }
 
     /**
