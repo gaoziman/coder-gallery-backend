@@ -41,19 +41,15 @@ public class PictureController {
     private final PictureService pictureService;
 
 
-
     @ApiOperation(value = "上传图片（可重新上传）")
     @PostMapping("/upload")
-    public Result<PictureVO> uploadPicture(@RequestPart("file") MultipartFile multipartFile,PictureUploadRequest requestParam) {
+    public Result<PictureVO> uploadPicture(@RequestPart("file") MultipartFile multipartFile, PictureUploadRequest requestParam) {
         // 获取登录用户
         User loginUser = UserContext.getUser();
         PictureVO pictureVO = pictureService.uploadPicture(multipartFile, requestParam, loginUser);
         return ResultUtils.success(pictureVO);
     }
 
-    /**
-     * 通过 URL 上传图片（可重新上传）
-     */
     @PostMapping("/upload/url")
     @ApiOperation(value = "url上传图片")
     public Result<PictureVO> uploadPictureByUrl(@RequestBody PictureUploadRequest requestParam) {
@@ -65,9 +61,6 @@ public class PictureController {
     }
 
 
-    /**
-     * 获取图片详情
-     */
     @ApiOperation(value = "获取图片详情")
     @GetMapping("/{id}")
     public Result<PictureVO> getPictureById(@PathVariable("id") Long id) {
@@ -76,9 +69,7 @@ public class PictureController {
         return ResultUtils.success(pictureVO);
     }
 
-    /**
-     * 获取上一张图片
-     */
+
     @ApiOperation(value = "获取上一张图片")
     @GetMapping("/{id}/previous")
     public Result<PictureVO> getPreviousPicture(@PathVariable("id") Long id) {
@@ -87,9 +78,6 @@ public class PictureController {
         return ResultUtils.success(pictureVO);
     }
 
-    /**
-     * 获取下一张图片
-     */
     @ApiOperation(value = "获取下一张图片")
     @GetMapping("/{id}/next")
     public Result<PictureVO> getNextPicture(@PathVariable("id") Long id) {
@@ -108,9 +96,6 @@ public class PictureController {
         return ResultUtils.success(uploadCount);
     }
 
-    /**
-     * 获取首页瀑布流图片列表
-     */
     @ApiOperation(value = "获取首页瀑布流图片列表")
     @PostMapping("/waterfall")
     public Result<PictureWaterfallVO> getWaterfallPictures(@RequestBody(required = false) PictureWaterfallRequest requestParam) {
@@ -164,12 +149,6 @@ public class PictureController {
     }
 
 
-    /**
-     * 编辑图片（用户使用）
-     *
-     * @param requestParam 图片编辑请求对象
-     * @return 操作结果
-     */
     @ApiOperation(value = "编辑图片（用户使用）")
     @PostMapping("/edit")
     public Result<Boolean> editPicture(@RequestBody PictureEditRequest requestParam) {

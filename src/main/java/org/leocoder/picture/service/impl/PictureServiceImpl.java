@@ -12,6 +12,7 @@ import org.leocoder.picture.domain.dto.picture.PictureUploadByBatchRequest;
 import org.leocoder.picture.domain.dto.picture.PictureUploadRequest;
 import org.leocoder.picture.domain.dto.picture.PictureWaterfallRequest;
 import org.leocoder.picture.domain.dto.upload.UploadPictureResult;
+import org.leocoder.picture.domain.pojo.Category;
 import org.leocoder.picture.domain.pojo.Picture;
 import org.leocoder.picture.domain.pojo.PictureHash;
 import org.leocoder.picture.domain.pojo.User;
@@ -256,11 +257,13 @@ public class PictureServiceImpl implements PictureService {
                 // 设置分类ID
                 pictureVO.setCategoryId(String.valueOf(categoryId));
 
-                // 获取分类名称并设置
-                String categoryName = categoryMapper.selectById(categoryId).getName();
-                pictureVO.setCategory(categoryName);
+                Category category = categoryMapper.selectById(categoryId);
+                if (category != null) {
+                    // 设置分类名称
+                    pictureVO.setCategory(category.getName());
 
-                log.debug("图片分类信息: 图片ID={}, 分类ID={}, 分类名称={}", id, categoryId, categoryName);
+                    log.debug("图片分类信息: 图片ID={}, 分类ID={}, 分类名称={}, 分类图标={}", id, categoryId, category.getName());
+                }
             }
 
             // 获取并设置图片关联的标签信息 - 一张图片可以关联多个标签
@@ -713,12 +716,61 @@ public class PictureServiceImpl implements PictureService {
     }
 
 
+    /**
+     * 转换并丰富图片列表
+     * 为每个图片添加标签、分类等信息
+     */
+    private List<PictureVO> convertAndEnrichPictureList(List<Picture> pictureList) {
+        return pictureList.stream().map(picture -> {
+            // 基本转换
+            PictureVO pictureVO = PictureVO.objToVo(picture);
+            try {
+                // 设置图片创建的用户信息
+                pictureVO.setUser(userService.getUserById(picture.getCreateUser()));
+
+                // 获取并设置图片关联的分类信息 - 一张图片只关联一个分类
+                List<Long> categoryIds = categoryRelationService.getCategoryIdsByContent("picture", picture.getId());
+                if (CollUtil.isNotEmpty(categoryIds)) {
+                    // 获取第一个分类ID
+                    Long categoryId = categoryIds.get(0);
+                    // 设置分类ID
+                    pictureVO.setCategoryId(String.valueOf(categoryId));
+                    Category category = categoryMapper.selectById(categoryId);
+                    if (ObjectUtil.isNotNull(category)) {
+                        // 设置分类名称
+                        pictureVO.setCategory(category.getName());
+                        log.debug("图片分类信息: 图片ID={}, 分类ID={}, 分类名称={}, 分类图标={}",
+                                picture.getId(), categoryId, category.getName());
+                    }
+                }
+
+                // 获取并设置图片关联的标签信息 - 一张图片可以关联多个标签
+                List<Long> tagIds = tagRelationService.getTagIdsByContent("picture", picture.getId());
+                if (CollUtil.isNotEmpty(tagIds)) {
+                    // 将所有标签ID转换为字符串列表
+                    List<String> tagIdStrings = tagIds.stream()
+                            .map(String::valueOf)
+                            .collect(Collectors.toList());
+                    pictureVO.setTagIds(tagIdStrings);
+                    // 获取标签名称列表
+                    List<String> tagNames = tagMapper.selectNamesByIds(tagIds);
+                    pictureVO.setTags(tagNames);
+                    log.debug("图片标签信息: 图片ID={}, 标签数={}, 标签IDs={}",
+                            picture.getId(), tagIds.size(), String.join(",", tagIdStrings));
+                }
+            } catch (Exception e) {
+                log.error("填充图片附加信息失败: pictureId={}", picture.getId(), e);
+            }
+            return pictureVO;
+        }).collect(Collectors.toList());
+    }
+
 
     /**
      * 获取首页瀑布流图片列表
      *
-     * @param requestParam   请求参数（排序方式、筛选条件等）
-     * @param loginUser 当前登录用户
+     * @param requestParam 请求参数（排序方式、筛选条件等）
+     * @param loginUser    当前登录用户
      * @return 瀑布流图片列表包装对象
      */
     @Override
@@ -1121,11 +1173,15 @@ public class PictureServiceImpl implements PictureService {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "更新图片关联关系失败: " + e.getMessage());
         }
     }
+}
 
-    /**
+/*
+    */
+/**
      * 转换并丰富图片列表
      * 为每个图片添加标签、分类等信息
-     */
+     *//*
+
     private List<PictureVO> convertAndEnrichPictureList(List<Picture> pictureList) {
         return pictureList.stream().map(picture -> {
             // 基本转换
@@ -1158,4 +1214,4 @@ public class PictureServiceImpl implements PictureService {
             return pictureVO;
         }).collect(Collectors.toList());
     }
-}
+}*/
