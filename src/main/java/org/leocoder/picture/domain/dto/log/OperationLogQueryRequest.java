@@ -15,6 +15,9 @@ import org.leocoder.picture.common.PageRequest;
 @ApiModel(value = "OperationLogQueryRequest", description = "操作日志查询条件")
 public class OperationLogQueryRequest extends PageRequest {
 
+    @ApiModelProperty(value = "用户ID", example = "1")
+    private Long createBy;
+
     @ApiModelProperty(value = "操作模块", example = "picture")
     private String module;
 

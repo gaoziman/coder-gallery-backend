@@ -249,6 +249,9 @@
         <where>
             is_deleted = 0
             <if test="queryRequest != null">
+                <if test="queryRequest.createBy != null and queryRequest.createBy != ''">
+                    AND create_by = #{queryRequest.createBy}
+                </if>
                 <if test="queryRequest.status != null">
                     AND status = #{queryRequest.status}
                 </if>

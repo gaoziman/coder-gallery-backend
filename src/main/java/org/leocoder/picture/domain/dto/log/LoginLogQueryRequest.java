@@ -15,6 +15,8 @@ import org.leocoder.picture.common.PageRequest;
 @ApiModel(value = "LoginLogQueryRequest", description = "登录日志查询条件")
 public class LoginLogQueryRequest extends PageRequest {
 
+    @ApiModelProperty(value = "用户ID", example = "1")
+    private Long createBy;
 
     @ApiModelProperty(value = "登录状态", example = "1")
     private Integer status;

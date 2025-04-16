@@ -250,6 +250,9 @@
         <where>
             is_deleted = 0
             <if test="queryRequest != null">
+                <if test="queryRequest.createBy != null and queryRequest.createBy != ''">
+                    AND create_by = #{queryRequest.createBy}
+                </if>
                 <if test="queryRequest.module != null and queryRequest.module != ''">
                     AND module LIKE CONCAT('%', #{queryRequest.module}, '%')
                 </if>

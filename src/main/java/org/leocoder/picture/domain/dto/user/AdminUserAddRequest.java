@@ -41,4 +41,7 @@ public class AdminUserAddRequest implements Serializable {
 
     @ApiModelProperty(value = "用户状态", example = "active")
     private String status;
+
+    @ApiModelProperty(value = "用户备注", example = "系统管理员")
+    private String remark;
 }
