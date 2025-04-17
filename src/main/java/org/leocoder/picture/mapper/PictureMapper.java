@@ -151,4 +151,37 @@ public interface PictureMapper {
             @Param("tagIds") List<Long> tagIds,
             @Param("keyword") String keyword
     );
+
+
+    /**
+     * 增加图片点赞数
+     *
+     * @param pictureId 图片ID
+     * @return 更新成功的记录数
+     */
+    int incrementLikeCount(Long pictureId);
+
+    /**
+     * 减少图片点赞数
+     *
+     * @param pictureId 图片ID
+     * @return 更新成功的记录数
+     */
+    int decrementLikeCount(Long pictureId);
+
+    /**
+     * 增加图片收藏数
+     *
+     * @param pictureId 图片ID
+     * @return 更新成功的记录数
+     */
+    int incrementCollectionCount(Long pictureId);
+
+    /**
+     * 减少图片收藏数
+     *
+     * @param pictureId 图片ID
+     * @return 更新成功的记录数
+     */
+    int decrementCollectionCount(Long pictureId);
 }

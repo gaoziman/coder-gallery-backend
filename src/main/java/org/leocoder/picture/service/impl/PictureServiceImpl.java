@@ -78,6 +78,9 @@ public class PictureServiceImpl implements PictureService {
 
     private final PictureHashMapper pictureHashMapper;
 
+    private final  UserReactionService userReactionService;
+
+
     /**
      * 填充审核参数
      *
@@ -215,9 +218,9 @@ public class PictureServiceImpl implements PictureService {
         return picture;
     }
 
+
     /**
      * 根据ID获取图片详情
-     *
      * @param id        图片ID
      * @param loginUser 当前登录用户
      * @return 图片详情
@@ -279,8 +282,24 @@ public class PictureServiceImpl implements PictureService {
                 List<String> tagNames = tagMapper.selectNamesByIds(tagIds);
                 pictureVO.setTags(tagNames);
 
-                log.debug("图片标签信息: 图片ID={}, 标签数={}, 标签IDs={}",
-                        id, tagIds.size(), String.join(",", tagIdStrings));
+                // 获取所有标签的颜色列表
+                List<Map<String, Object>> tagColorMaps = tagMapper.selectColorsByIds(tagIds);
+                if (CollUtil.isNotEmpty(tagColorMaps)) {
+                    List<String> tagColors = tagColorMaps.stream()
+                            .map(map -> (String) map.get("color"))
+                            .collect(Collectors.toList());
+                    pictureVO.setTagColors(tagColors);
+                    log.debug("设置图片标签颜色: 图片ID={}, 标签数量={}, 颜色数量={}",
+                            id, tagIds.size(), tagColors.size());
+                }
+            }
+
+            if (ObjectUtil.isNotNull(loginUser)) {
+                try {
+                    userReactionService.fillPictureUserReactionStatus(pictureVO, loginUser.getId());
+                } catch (Exception e) {
+                    log.warn("填充图片互动信息失败: {}", e.getMessage());
+                }
             }
 
             log.info("加载图片关联信息成功: 图片ID={}, 分类ID={}, 分类名称={}, 标签数={}",
@@ -296,7 +315,6 @@ public class PictureServiceImpl implements PictureService {
 
     /**
      * 获取上一张图片
-     *
      * @param currentPictureId 当前图片ID
      * @param loginUser        当前登录用户
      * @return 上一张图片详情，如果没有则返回null
@@ -357,11 +375,29 @@ public class PictureServiceImpl implements PictureService {
 
                     List<String> tagNames = tagMapper.selectNamesByIds(tagIds);
                     pictureVO.setTags(tagNames);
+
+                    // 获取所有标签的颜色列表
+                    List<Map<String, Object>> tagColorMaps = tagMapper.selectColorsByIds(tagIds);
+                    if (CollUtil.isNotEmpty(tagColorMaps)) {
+                        List<String> tagColors = tagColorMaps.stream()
+                                .map(map -> (String) map.get("color"))
+                                .collect(Collectors.toList());
+                        pictureVO.setTagColors(tagColors);
+                        log.debug("设置图片标签颜色: 图片ID={}, 标签数量={}, 颜色数量={}",
+                                previousPicture.getId(), tagIds.size(), tagColors.size());
+                    }
                 }
             } catch (Exception e) {
                 log.warn("获取上一张图片标签信息失败: {}", e.getMessage());
             }
 
+            if (ObjectUtil.isNotNull(loginUser)) {
+                try {
+                    userReactionService.fillPictureUserReactionStatus(pictureVO, loginUser.getId());
+                } catch (Exception e) {
+                    log.warn("填充图片互动信息失败: {}", e.getMessage());
+                }
+            }
             log.info("获取上一张图片成功: 当前图片ID={}, 上一张图片ID={}", currentPictureId, previousPicture.getId());
             return pictureVO;
         } catch (Exception e) {
@@ -372,7 +408,6 @@ public class PictureServiceImpl implements PictureService {
 
     /**
      * 获取下一张图片
-     *
      * @param currentPictureId 当前图片ID
      * @param loginUser        当前登录用户
      * @return 下一张图片详情，如果没有则返回null
@@ -433,9 +468,28 @@ public class PictureServiceImpl implements PictureService {
 
                     List<String> tagNames = tagMapper.selectNamesByIds(tagIds);
                     pictureVO.setTags(tagNames);
+
+                    // 获取所有标签的颜色列表
+                    List<Map<String, Object>> tagColorMaps = tagMapper.selectColorsByIds(tagIds);
+                    if (CollUtil.isNotEmpty(tagColorMaps)) {
+                        List<String> tagColors = tagColorMaps.stream()
+                                .map(map -> (String) map.get("color"))
+                                .collect(Collectors.toList());
+                        pictureVO.setTagColors(tagColors);
+                        log.debug("设置图片标签颜色: 图片ID={}, 标签数量={}, 颜色数量={}",
+                                nextPicture.getId(), tagIds.size(), tagColors.size());
+                    }
                 }
             } catch (Exception e) {
                 log.warn("获取下一张图片标签信息失败: {}", e.getMessage());
+            }
+
+            if (ObjectUtil.isNotNull(loginUser)) {
+                try {
+                    userReactionService.fillPictureUserReactionStatus(pictureVO, loginUser.getId());
+                } catch (Exception e) {
+                    log.warn("填充图片互动信息失败: {}", e.getMessage());
+                }
             }
 
             log.info("获取下一张图片成功: 当前图片ID={}, 下一张图片ID={}", currentPictureId, nextPicture.getId());
@@ -721,7 +775,8 @@ public class PictureServiceImpl implements PictureService {
      * 为每个图片添加标签、分类等信息
      */
     private List<PictureVO> convertAndEnrichPictureList(List<Picture> pictureList) {
-        return pictureList.stream().map(picture -> {
+        // 转换所有图片并收集到列表中
+        List<PictureVO> pictureVOList = pictureList.stream().map(picture -> {
             // 基本转换
             PictureVO pictureVO = PictureVO.objToVo(picture);
             try {
@@ -739,8 +794,7 @@ public class PictureServiceImpl implements PictureService {
                     if (ObjectUtil.isNotNull(category)) {
                         // 设置分类名称
                         pictureVO.setCategory(category.getName());
-                        log.debug("图片分类信息: 图片ID={}, 分类ID={}, 分类名称={}, 分类图标={}",
-                                picture.getId(), categoryId, category.getName());
+                        log.debug("图片分类信息: 图片ID={}, 分类ID={}, 分类名称={}, 分类图标={}", picture.getId(), categoryId, category.getName());
                     }
                 }
 
@@ -752,17 +806,30 @@ public class PictureServiceImpl implements PictureService {
                             .map(String::valueOf)
                             .collect(Collectors.toList());
                     pictureVO.setTagIds(tagIdStrings);
+
                     // 获取标签名称列表
                     List<String> tagNames = tagMapper.selectNamesByIds(tagIds);
                     pictureVO.setTags(tagNames);
-                    log.debug("图片标签信息: 图片ID={}, 标签数={}, 标签IDs={}",
-                            picture.getId(), tagIds.size(), String.join(",", tagIdStrings));
+
+                    // 获取所有标签的颜色列表
+                    List<Map<String, Object>> tagColorMaps = tagMapper.selectColorsByIds(tagIds);
+                    if (CollUtil.isNotEmpty(tagColorMaps)) {
+                        List<String> tagColors = tagColorMaps.stream()
+                                .map(map -> (String) map.get("color"))
+                                .collect(Collectors.toList());
+                        pictureVO.setTagColors(tagColors);
+                        log.debug("设置图片标签颜色: 图片ID={}, 标签数量={}, 颜色数量={}",
+                                picture.getId(), tagIds.size(), tagColors.size());
+                    }
+
+                    log.debug("图片标签信息: 图片ID={}, 标签数={}, 标签IDs={}", picture.getId(), tagIds.size(), String.join(",", tagIdStrings));
                 }
             } catch (Exception e) {
                 log.error("填充图片附加信息失败: pictureId={}", picture.getId(), e);
             }
             return pictureVO;
         }).collect(Collectors.toList());
+        return pictureVOList;
     }
 
 
@@ -858,6 +925,14 @@ public class PictureServiceImpl implements PictureService {
 
                 // 判断是否还有更多数据
                 hasMore = pictureVOList.size() >= pageSize && total > pageSize;
+            }
+
+            if (ObjectUtil.isNotNull(loginUser)) {
+                try {
+                    userReactionService.batchFillPictureUserReactionStatus(pictureVOList, loginUser.getId());
+                } catch (Exception e) {
+                    log.warn("批量填充图片互动信息失败: {}", e.getMessage());
+                }
             }
 
             log.info("获取瀑布流图片成功: 返回{}条记录, 排序方式={}, 总数={}",
@@ -983,6 +1058,14 @@ public class PictureServiceImpl implements PictureService {
 
             log.info("加载更多瀑布流图片成功: 返回{}条记录, 排序方式={}, 总数={}",
                     pictureVOList.size(), sortBy, total);
+
+            if(ObjectUtil.isNotNull(loginUser)){
+                try {
+                    userReactionService.batchFillPictureUserReactionStatus(pictureVOList, loginUser.getId());
+                } catch (Exception e) {
+                    log.warn("批量填充图片互动信息失败: {}", e.getMessage());
+                }
+            }
 
             return PictureWaterfallVO.builder()
                     .records(pictureVOList)
@@ -1174,44 +1257,3 @@ public class PictureServiceImpl implements PictureService {
         }
     }
 }
-
-/*
-    */
-/**
-     * 转换并丰富图片列表
-     * 为每个图片添加标签、分类等信息
-     *//*
-
-    private List<PictureVO> convertAndEnrichPictureList(List<Picture> pictureList) {
-        return pictureList.stream().map(picture -> {
-            // 基本转换
-            PictureVO pictureVO = PictureVO.objToVo(picture);
-
-            try {
-                // 填充标签
-                List<Long> tagIds = tagRelationService.getTagIdsByContent("picture", picture.getId());
-                if (CollUtil.isNotEmpty(tagIds)) {
-                    // 这里可以进一步查询标签名称，简化处理直接使用ID
-                    pictureVO.setTags(tagIds.stream()
-                            .map(String::valueOf)
-                            .collect(Collectors.toList()));
-                }
-
-                // 填充分类
-                List<Long> categoryIds = categoryRelationService.getCategoryIdsByContent("picture", picture.getId());
-                if (CollUtil.isNotEmpty(categoryIds)) {
-                    // 简化处理，只取第一个分类
-                    pictureVO.setCategory(String.valueOf(categoryIds.get(0)));
-                }
-
-                // 可以进一步填充上传者信息等
-                // pictureVO.setUser(userService.getUserVOById(picture.getCreateUser()));
-
-            } catch (Exception e) {
-                log.error("填充图片附加信息失败: pictureId={}", picture.getId(), e);
-            }
-
-            return pictureVO;
-        }).collect(Collectors.toList());
-    }
-}*/

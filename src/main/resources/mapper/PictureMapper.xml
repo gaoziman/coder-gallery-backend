@@ -611,4 +611,39 @@
             </if>
         </where>
     </select>
+
+
+    <!-- 增加图片点赞数 -->
+    <update id="incrementLikeCount">
+        update t_picture
+        set like_count = like_count + 1
+        where id = #{pictureId}
+    </update>
+
+    <!-- 减少图片点赞数 -->
+    <update id="decrementLikeCount">
+        update t_picture
+        set like_count = CASE
+        WHEN like_count > 0 THEN like_count - 1
+        ELSE 0
+        END
+        where id = #{pictureId}
+    </update>
+
+    <!-- 增加图片收藏数 -->
+    <update id="incrementCollectionCount">
+        update t_picture
+        set collection_count = collection_count + 1
+        where id = #{pictureId}
+    </update>
+
+    <!-- 减少图片收藏数 -->
+    <update id="decrementCollectionCount">
+        update t_picture
+        set collection_count = CASE
+        WHEN collection_count > 0 THEN collection_count - 1
+        ELSE 0
+        END
+        where id = #{pictureId}
+    </update>
 </mapper>

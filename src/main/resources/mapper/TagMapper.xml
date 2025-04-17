@@ -341,4 +341,17 @@
             #{id}
         </foreach>
     </select>
+
+    <select id="selectColorById" parameterType="java.lang.Long" resultType="java.lang.String">
+        SELECT color FROM t_tag WHERE id = #{tagId} AND is_deleted = 0
+    </select>
+
+    <select id="selectColorsByIds" parameterType="java.util.List" resultType="java.util.Map">
+        SELECT id, color FROM t_tag
+        WHERE id IN
+        <foreach collection="tagIds" item="tagId" open="(" separator="," close=")">
+            #{tagId}
+        </foreach>
+        AND is_deleted = 0
+    </select>
 </mapper>

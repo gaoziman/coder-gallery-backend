@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.leocoder.picture.mapper.UserReactionMapper">
+    <resultMap id="BaseResultMap" type="org.leocoder.picture.domain.pojo.UserReaction">
+        <!--@mbg.generated-->
+        <!--@Table t_user_reaction-->
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="target_type" jdbcType="VARCHAR" property="targetType"/>
+        <result column="target_id" jdbcType="BIGINT" property="targetId"/>
+        <result column="reaction_type" jdbcType="VARCHAR" property="reactionType"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="create_user" jdbcType="BIGINT" property="createUser"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="update_user" jdbcType="BIGINT" property="updateUser"/>
+        <result column="is_deleted" jdbcType="BOOLEAN" property="isDeleted"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        <!--@mbg.generated-->
+        id,
+        target_type,
+        target_id,
+        reaction_type,
+        create_time,
+        create_user,
+        update_time,
+        update_user,
+        is_deleted
+    </sql>
+
+    <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        <!--@mbg.generated-->
+        select
+        <include refid="Base_Column_List"/>
+        from t_user_reaction
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+
+    <delete id="deleteById" parameterType="java.lang.Long">
+        <!--@mbg.generated-->
+        delete
+        from t_user_reaction
+        where id = #{id,jdbcType=BIGINT}
+    </delete>
+
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.UserReaction"
+            useGeneratedKeys="true">
+        <!--@mbg.generated-->
+        insert into t_user_reaction (target_type, target_id,
+        reaction_type, create_time, create_user,
+        update_time, update_user, is_deleted)
+        values (#{targetType,jdbcType=VARCHAR}, #{targetId,jdbcType=BIGINT},
+        #{reactionType,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{createUser,jdbcType=BIGINT},
+        #{updateTime,jdbcType=TIMESTAMP}, #{updateUser,jdbcType=BIGINT}, #{isDeleted,jdbcType=BOOLEAN})
+    </insert>
+
+    <insert id="insertWithId" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.UserReaction">
+        <!--@mbg.generated-->
+        insert into t_user_reaction (id, target_type, target_id,
+        reaction_type, create_time, create_user,
+        update_time, update_user, is_deleted)
+        values (#{id,jdbcType=BIGINT}, #{targetType,jdbcType=VARCHAR}, #{targetId,jdbcType=BIGINT},
+        #{reactionType,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{createUser,jdbcType=BIGINT},
+        #{updateTime,jdbcType=TIMESTAMP}, #{updateUser,jdbcType=BIGINT}, #{isDeleted,jdbcType=BOOLEAN})
+    </insert>
+
+
+    <insert id="insertSelective" keyColumn="id" keyProperty="id"
+            parameterType="org.leocoder.picture.domain.pojo.UserReaction" useGeneratedKeys="true">
+        <!--@mbg.generated-->
+        insert into t_user_reaction
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="targetType != null">
+                target_type,
+            </if>
+            <if test="targetId != null">
+                target_id,
+            </if>
+            <if test="reactionType != null">
+                reaction_type,
+            </if>
+            <if test="createTime != null">
+                create_time,
+            </if>
+            <if test="createUser != null">
+                create_user,
+            </if>
+            <if test="updateTime != null">
+                update_time,
+            </if>
+            <if test="updateUser != null">
+                update_user,
+            </if>
+            <if test="isDeleted != null">
+                is_deleted,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="targetType != null">
+                #{targetType,jdbcType=VARCHAR},
+            </if>
+            <if test="targetId != null">
+                #{targetId,jdbcType=BIGINT},
+            </if>
+            <if test="reactionType != null">
+                #{reactionType,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createUser != null">
+                #{createUser,jdbcType=BIGINT},
+            </if>
+            <if test="updateTime != null">
+                #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateUser != null">
+                #{updateUser,jdbcType=BIGINT},
+            </if>
+            <if test="isDeleted != null">
+                #{isDeleted,jdbcType=BOOLEAN},
+            </if>
+        </trim>
+    </insert>
+
+    <update id="updateByPrimaryKeySelective" parameterType="org.leocoder.picture.domain.pojo.UserReaction">
+        <!--@mbg.generated-->
+        update t_user_reaction
+        <set>
+            <if test="targetType != null">
+                target_type = #{targetType,jdbcType=VARCHAR},
+            </if>
+            <if test="targetId != null">
+                target_id = #{targetId,jdbcType=BIGINT},
+            </if>
+            <if test="reactionType != null">
+                reaction_type = #{reactionType,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createUser != null">
+                create_user = #{createUser,jdbcType=BIGINT},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateUser != null">
+                update_user = #{updateUser,jdbcType=BIGINT},
+            </if>
+            <if test="isDeleted != null">
+                is_deleted = #{isDeleted,jdbcType=BOOLEAN},
+            </if>
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <update id="updateById" parameterType="org.leocoder.picture.domain.pojo.UserReaction">
+        <!--@mbg.generated-->
+        update t_user_reaction
+        set target_type   = #{targetType,jdbcType=VARCHAR},
+        target_id     = #{targetId,jdbcType=BIGINT},
+        reaction_type = #{reactionType,jdbcType=VARCHAR},
+        create_time   = #{createTime,jdbcType=TIMESTAMP},
+        create_user   = #{createUser,jdbcType=BIGINT},
+        update_time   = #{updateTime,jdbcType=TIMESTAMP},
+        update_user   = #{updateUser,jdbcType=BIGINT},
+        is_deleted    = #{isDeleted,jdbcType=BOOLEAN}
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <!-- 根据用户ID、目标类型、目标ID和类型查询用户点赞、踩、收藏、查看等操作 -->
+    <select id="selectByUserAndTarget" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_user_reaction
+        where target_type = #{targetType}
+        and target_id = #{targetId,jdbcType=BIGINT}
+        and reaction_type = #{reactionType}
+        and create_user = #{createUser}
+        limit 1
+    </select>
+
+    <!-- 软删除用户反应记录 -->
+    <update id="softDeleteReaction">
+        update t_user_reaction
+        set is_deleted = 1,
+        update_time = now(),
+        update_user = #{createUser}
+        where target_type = #{targetType}
+        and target_id = #{targetId,jdbcType=BIGINT}
+        and reaction_type = #{reactionType}
+        and create_user = #{createUser}
+        and is_deleted = 0
+    </update>
+
+    <!-- 统计目标的特定反应数量 -->
+    <select id="countReactionsByTarget" resultType="java.lang.Long">
+        select count(1)
+        from t_user_reaction
+        <where>
+            is_deleted = 0
+            <if test="targetType != null">
+                and target_type = #{targetType}
+            </if>
+            <if test="targetId != null">
+                and target_id = #{targetId,jdbcType=BIGINT}
+            </if>
+            <if test="reactionType != null">
+                and reaction_type = #{reactionType}
+            </if>
+        </where>
+    </select>
+
+    <!-- 批量查询多个目标的特定反应数量 -->
+    <select id="countBatchReactionsByTargets" resultMap="BaseResultMap">
+        select target_id, count(1) as count
+        from t_user_reaction
+        <where>
+            is_deleted = 0
+            <if test="targetType != null">
+                and target_type = #{targetType}
+            </if>
+            <if test="targetIds != null and targetIds.size() > 0">
+                and target_id in
+                <foreach collection="targetIds" item="targetId" open="(" separator="," close=")">
+                    #{targetId}
+                </foreach>
+            </if>
+            <if test="reactionType != null">
+                and reaction_type = #{reactionType}
+            </if>
+        </where>
+        group by target_id
+    </select>
+
+    <!-- 查询用户所有的反应记录（按目标类型和反应类型） -->
+    <select id="selectUserReactions" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_user_reaction
+        <where>
+            is_deleted = 0
+            <if test="createUser != null">
+                and create_user = #{createUser}
+            </if>
+            <if test="targetType != null">
+                and target_type = #{targetType}
+            </if>
+            <if test="reactionType != null">
+                and reaction_type = #{reactionType}
+            </if>
+        </where>
+        order by create_time desc
+        <if test="limit != null">
+            limit #{limit}
+            <if test="offset != null">
+                offset #{offset}
+            </if>
+        </if>
+    </select>
+
+    <!-- 获取热门内容ID列表（基于特定反应类型） -->
+    <select id="selectHotTargetIds" resultType="java.lang.Long">
+        select target_id
+        from t_user_reaction
+        <where>
+            is_deleted = 0
+            <if test="targetType != null">
+                and target_type = #{targetType}
+            </if>
+            <if test="reactionType != null">
+                and reaction_type = #{reactionType}
+            </if>
+            <!-- 可以添加时间范围条件，例如最近一周 -->
+            and create_time > DATE_SUB(NOW(), INTERVAL 7 DAY)
+        </where>
+        group by target_id
+        order by count(1) desc
+        <if test="limit != null">
+            limit #{limit}
+        </if>
+    </select>
+</mapper>

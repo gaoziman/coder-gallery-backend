@@ -70,6 +70,9 @@ public class PictureVO implements Serializable {
     @ApiModelProperty(value = "标签名称", name = "tags")
     private List<String> tags;
 
+    @ApiModelProperty(value = "标签颜色", name = "tagColors")
+    private List<String> tagColors;
+
     @ApiModelProperty(value = "分类名称", name = "category")
     private String category;
 
@@ -96,6 +99,12 @@ public class PictureVO implements Serializable {
 
     @ApiModelProperty(value = "浏览量", name = "viewCount")
     private Long viewCount;
+
+    @ApiModelProperty(value = "当前用户是否已点赞", name = "hasLiked")
+    private boolean hasLiked;
+
+    @ApiModelProperty(value = "当前用户是否已收藏", name = "hasFavorited")
+    private boolean hasCollectioned;
 
     @ApiModelProperty(value = "创建用户信息", name = "user")
     private UserVO user;

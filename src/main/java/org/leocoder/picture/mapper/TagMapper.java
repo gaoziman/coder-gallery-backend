@@ -6,6 +6,7 @@ import org.leocoder.picture.domain.pojo.Tag;
 import org.leocoder.picture.domain.vo.tag.TagVO;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author : 程序员Leo
@@ -171,4 +172,12 @@ public interface TagMapper {
      * @return 标签名称列表
      */
     List<String> selectNamesByIds(@Param("tagIds") List<Long> tagIds);
+
+
+    /**
+     * 根据标签ID列表批量获取标签颜色
+     * @param tagIds 标签ID列表
+     * @return 标签ID到颜色的映射
+     */
+    List<Map<String, Object>> selectColorsByIds(@Param("tagIds") List<Long> tagIds);
 }

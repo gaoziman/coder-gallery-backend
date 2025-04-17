@@ -158,6 +158,19 @@
                 </TableGenerateConfig>
               </value>
             </entry>
+            <entry key="coder-gallery:t_user_reaction">
+              <value>
+                <TableGenerateConfig>
+                  <option name="generatedKey" value="id" />
+                  <option name="javaModelName" value="UserReaction" />
+                  <option name="moduleName" value="coder-gallery-backend" />
+                  <option name="mybatisplusIdType" value="AUTO" />
+                  <option name="sequenceColumn" value="" />
+                  <option name="sequenceId" value="" />
+                  <option name="useActualColumnName" value="false" />
+                </TableGenerateConfig>
+              </value>
+            </entry>
           </map>
         </option>
         <option name="xmlMapperPackage" value="mapper" />
