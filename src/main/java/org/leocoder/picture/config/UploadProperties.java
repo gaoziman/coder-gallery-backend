@@ -25,6 +25,6 @@ public class UploadProperties {
     private List<String> allowedExtensions = Arrays.asList("jpeg", "jpg", "png", "webp", "heic");
     
     // 允许的内容类型
-    private List<String> allowedContentTypes = Arrays.asList("image/jpeg", "image/jpg", "image/png", "image/webp");
+    private List<String> allowedContentTypes = Arrays.asList("image/jpeg", "image/jpg", "image/png", "image/webp", "image/heic");
 
 }
