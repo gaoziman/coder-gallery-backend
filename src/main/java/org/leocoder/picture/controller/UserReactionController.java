@@ -32,7 +32,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/reaction")
 @RequiredArgsConstructor
-@Api(tags = "用户点赞、踩、收藏、查看等操作相关接口")
+@Api(tags = "用户点赞、踩、收藏等操作相关接口")
 @Slf4j
 public class UserReactionController {
 
@@ -150,6 +150,42 @@ public class UserReactionController {
         UserReactionRequest request = UserReactionRequest.builder()
                 .targetType("picture")
                 .targetId(pictureId)
+                .reactionType("like")
+                .build();
+
+        boolean result = userReactionService.removeReaction(request, loginUser.getId());
+        return ResultUtils.success(result);
+    }
+
+
+
+    @GetMapping("/likeComment")
+    @ApiOperation(value = "快捷接口：点赞评论")
+    public Result<Boolean> likeComment(@RequestParam("commentId") Long commentId) {
+        User loginUser = UserContext.getUser();
+        ThrowUtils.throwIf(ObjectUtil.isNull(loginUser), ErrorCode.NO_AUTH_ERROR, "用户未登录");
+
+        // 构建点赞请求
+        UserReactionRequest request = UserReactionRequest.builder()
+                .targetType("comment")
+                .targetId(commentId)
+                .reactionType("like")
+                .build();
+
+        boolean result = userReactionService.addReaction(request, loginUser.getId());
+        return ResultUtils.success(result);
+    }
+
+    @GetMapping("/unlikeComment")
+    @ApiOperation(value = "快捷接口：取消点赞评论")
+    public Result<Boolean> unlikeComment(@RequestParam("commentId") Long commentId) {
+        User loginUser = UserContext.getUser();
+        ThrowUtils.throwIf(ObjectUtil.isNull(loginUser), ErrorCode.NO_AUTH_ERROR, "用户未登录");
+
+        // 构建取消点赞请求
+        UserReactionRequest request = UserReactionRequest.builder()
+                .targetType("comment")
+                .targetId(commentId)
                 .reactionType("like")
                 .build();
 

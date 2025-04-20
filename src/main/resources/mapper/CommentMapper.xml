@@ -1,0 +1,447 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.leocoder.picture.mapper.CommentMapper">
+    <resultMap id="BaseResultMap" type="org.leocoder.picture.domain.pojo.Comment">
+        <!--@mbg.generated-->
+        <!--@Table t_comment-->
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="content" jdbcType="LONGVARCHAR" property="content"/>
+        <result column="parent_id" jdbcType="BIGINT" property="parentId"/>
+        <result column="root_id" jdbcType="BIGINT" property="rootId"/>
+        <result column="content_type" jdbcType="VARCHAR" property="contentType"/>
+        <result column="content_id" jdbcType="BIGINT" property="contentId"/>
+        <result column="reply_user_id" jdbcType="BIGINT" property="replyUserId"/>
+        <result column="reply_count" jdbcType="INTEGER" property="replyCount"/>
+        <result column="like_count" jdbcType="INTEGER" property="likeCount"/>
+        <result column="status" jdbcType="VARCHAR" property="status"/>
+        <result column="is_top" jdbcType="BOOLEAN" property="isTop"/>
+        <result column="is_hot" jdbcType="BOOLEAN" property="isHot"/>
+        <result column="review_user_id" jdbcType="BIGINT" property="reviewUserId"/>
+        <result column="review_time" jdbcType="TIMESTAMP" property="reviewTime"/>
+        <result column="review_remark" jdbcType="VARCHAR" property="reviewRemark"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="create_user" jdbcType="BIGINT" property="createUser"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="update_user" jdbcType="BIGINT" property="updateUser"/>
+        <result column="is_deleted" jdbcType="BOOLEAN" property="isDeleted"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        <!--@mbg.generated-->
+        id,
+        content,
+        parent_id,
+        root_id,
+        content_type,
+        content_id,
+        reply_user_id,
+        reply_count,
+        like_count,
+        `status`,
+        is_top,
+        is_hot,
+        review_user_id,
+        review_time,
+        review_remark,
+        create_time,
+        create_user,
+        update_time,
+        update_user,
+        is_deleted
+    </sql>
+    <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        <!--@mbg.generated-->
+        select
+        <include refid="Base_Column_List"/>
+        from t_comment
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+    <delete id="deleteById" parameterType="java.lang.Long">
+        <!--@mbg.generated-->
+        delete
+        from t_comment
+        where id = #{id,jdbcType=BIGINT}
+    </delete>
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.Comment"
+            useGeneratedKeys="true">
+        <!--@mbg.generated-->
+        insert into t_comment (content, parent_id, root_id,
+                               content_type, content_id, reply_user_id,
+                               reply_count, like_count, `status`,
+                               is_top, is_hot, review_user_id,
+                               review_time, review_remark, create_time,
+                               create_user, update_time, update_user,
+                               is_deleted)
+        values (#{content,jdbcType=LONGVARCHAR}, #{parentId,jdbcType=BIGINT}, #{rootId,jdbcType=BIGINT},
+                #{contentType,jdbcType=VARCHAR}, #{contentId,jdbcType=BIGINT}, #{replyUserId,jdbcType=BIGINT},
+                #{replyCount,jdbcType=INTEGER}, #{likeCount,jdbcType=INTEGER}, #{status,jdbcType=VARCHAR},
+                #{isTop,jdbcType=BOOLEAN}, #{isHot,jdbcType=BOOLEAN}, #{reviewUserId,jdbcType=BIGINT},
+                #{reviewTime,jdbcType=TIMESTAMP}, #{reviewRemark,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP},
+                #{createUser,jdbcType=BIGINT}, #{updateTime,jdbcType=TIMESTAMP}, #{updateUser,jdbcType=BIGINT},
+                #{isDeleted,jdbcType=BOOLEAN})
+    </insert>
+
+    <!-- 使用指定id插入 -->
+    <insert id="insertWithId" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.Comment">
+        <!--@mbg.generated-->
+        insert into t_comment (id,content, parent_id, root_id,
+        content_type, content_id, reply_user_id,
+        reply_count, like_count, `status`,
+        is_top, is_hot, review_user_id,
+        review_time, review_remark, create_time,
+        create_user, update_time, update_user,
+        is_deleted)
+        values (#{id,jdbcType=BIGINT},#{content,jdbcType=LONGVARCHAR}, #{parentId,jdbcType=BIGINT}, #{rootId,jdbcType=BIGINT},
+        #{contentType,jdbcType=VARCHAR}, #{contentId,jdbcType=BIGINT}, #{replyUserId,jdbcType=BIGINT},
+        #{replyCount,jdbcType=INTEGER}, #{likeCount,jdbcType=INTEGER}, #{status,jdbcType=VARCHAR},
+        #{isTop,jdbcType=BOOLEAN}, #{isHot,jdbcType=BOOLEAN}, #{reviewUserId,jdbcType=BIGINT},
+        #{reviewTime,jdbcType=TIMESTAMP}, #{reviewRemark,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP},
+        #{createUser,jdbcType=BIGINT}, #{updateTime,jdbcType=TIMESTAMP}, #{updateUser,jdbcType=BIGINT},
+        #{isDeleted,jdbcType=BOOLEAN})
+    </insert>
+
+    <insert id="insertSelective" keyColumn="id" keyProperty="id"
+            parameterType="org.leocoder.picture.domain.pojo.Comment" useGeneratedKeys="true">
+        <!--@mbg.generated-->
+        insert into t_comment
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="content != null">
+                content,
+            </if>
+            <if test="parentId != null">
+                parent_id,
+            </if>
+            <if test="rootId != null">
+                root_id,
+            </if>
+            <if test="contentType != null">
+                content_type,
+            </if>
+            <if test="contentId != null">
+                content_id,
+            </if>
+            <if test="replyUserId != null">
+                reply_user_id,
+            </if>
+            <if test="replyCount != null">
+                reply_count,
+            </if>
+            <if test="likeCount != null">
+                like_count,
+            </if>
+            <if test="status != null">
+                `status`,
+            </if>
+            <if test="isTop != null">
+                is_top,
+            </if>
+            <if test="isHot != null">
+                is_hot,
+            </if>
+            <if test="reviewUserId != null">
+                review_user_id,
+            </if>
+            <if test="reviewTime != null">
+                review_time,
+            </if>
+            <if test="reviewRemark != null">
+                review_remark,
+            </if>
+            <if test="createTime != null">
+                create_time,
+            </if>
+            <if test="createUser != null">
+                create_user,
+            </if>
+            <if test="updateTime != null">
+                update_time,
+            </if>
+            <if test="updateUser != null">
+                update_user,
+            </if>
+            <if test="isDeleted != null">
+                is_deleted,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="content != null">
+                #{content,jdbcType=LONGVARCHAR},
+            </if>
+            <if test="parentId != null">
+                #{parentId,jdbcType=BIGINT},
+            </if>
+            <if test="rootId != null">
+                #{rootId,jdbcType=BIGINT},
+            </if>
+            <if test="contentType != null">
+                #{contentType,jdbcType=VARCHAR},
+            </if>
+            <if test="contentId != null">
+                #{contentId,jdbcType=BIGINT},
+            </if>
+            <if test="replyUserId != null">
+                #{replyUserId,jdbcType=BIGINT},
+            </if>
+            <if test="replyCount != null">
+                #{replyCount,jdbcType=INTEGER},
+            </if>
+            <if test="likeCount != null">
+                #{likeCount,jdbcType=INTEGER},
+            </if>
+            <if test="status != null">
+                #{status,jdbcType=VARCHAR},
+            </if>
+            <if test="isTop != null">
+                #{isTop,jdbcType=BOOLEAN},
+            </if>
+            <if test="isHot != null">
+                #{isHot,jdbcType=BOOLEAN},
+            </if>
+            <if test="reviewUserId != null">
+                #{reviewUserId,jdbcType=BIGINT},
+            </if>
+            <if test="reviewTime != null">
+                #{reviewTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="reviewRemark != null">
+                #{reviewRemark,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createUser != null">
+                #{createUser,jdbcType=BIGINT},
+            </if>
+            <if test="updateTime != null">
+                #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateUser != null">
+                #{updateUser,jdbcType=BIGINT},
+            </if>
+            <if test="isDeleted != null">
+                #{isDeleted,jdbcType=BOOLEAN},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="org.leocoder.picture.domain.pojo.Comment">
+        <!--@mbg.generated-->
+        update t_comment
+        <set>
+            <if test="content != null">
+                content = #{content,jdbcType=LONGVARCHAR},
+            </if>
+            <if test="parentId != null">
+                parent_id = #{parentId,jdbcType=BIGINT},
+            </if>
+            <if test="rootId != null">
+                root_id = #{rootId,jdbcType=BIGINT},
+            </if>
+            <if test="contentType != null">
+                content_type = #{contentType,jdbcType=VARCHAR},
+            </if>
+            <if test="contentId != null">
+                content_id = #{contentId,jdbcType=BIGINT},
+            </if>
+            <if test="replyUserId != null">
+                reply_user_id = #{replyUserId,jdbcType=BIGINT},
+            </if>
+            <if test="replyCount != null">
+                reply_count = #{replyCount,jdbcType=INTEGER},
+            </if>
+            <if test="likeCount != null">
+                like_count = #{likeCount,jdbcType=INTEGER},
+            </if>
+            <if test="status != null">
+                `status` = #{status,jdbcType=VARCHAR},
+            </if>
+            <if test="isTop != null">
+                is_top = #{isTop,jdbcType=BOOLEAN},
+            </if>
+            <if test="isHot != null">
+                is_hot = #{isHot,jdbcType=BOOLEAN},
+            </if>
+            <if test="reviewUserId != null">
+                review_user_id = #{reviewUserId,jdbcType=BIGINT},
+            </if>
+            <if test="reviewTime != null">
+                review_time = #{reviewTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="reviewRemark != null">
+                review_remark = #{reviewRemark,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createUser != null">
+                create_user = #{createUser,jdbcType=BIGINT},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateUser != null">
+                update_user = #{updateUser,jdbcType=BIGINT},
+            </if>
+            <if test="isDeleted != null">
+                is_deleted = #{isDeleted,jdbcType=BOOLEAN},
+            </if>
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+    <update id="updateById" parameterType="org.leocoder.picture.domain.pojo.Comment">
+        <!--@mbg.generated-->
+        update t_comment
+        set content        = #{content,jdbcType=LONGVARCHAR},
+            parent_id      = #{parentId,jdbcType=BIGINT},
+            root_id        = #{rootId,jdbcType=BIGINT},
+            content_type   = #{contentType,jdbcType=VARCHAR},
+            content_id     = #{contentId,jdbcType=BIGINT},
+            reply_user_id  = #{replyUserId,jdbcType=BIGINT},
+            reply_count    = #{replyCount,jdbcType=INTEGER},
+            like_count     = #{likeCount,jdbcType=INTEGER},
+            `status`       = #{status,jdbcType=VARCHAR},
+            is_top         = #{isTop,jdbcType=BOOLEAN},
+            is_hot         = #{isHot,jdbcType=BOOLEAN},
+            review_user_id = #{reviewUserId,jdbcType=BIGINT},
+            review_time    = #{reviewTime,jdbcType=TIMESTAMP},
+            review_remark  = #{reviewRemark,jdbcType=VARCHAR},
+            create_time    = #{createTime,jdbcType=TIMESTAMP},
+            create_user    = #{createUser,jdbcType=BIGINT},
+            update_time    = #{updateTime,jdbcType=TIMESTAMP},
+            update_user    = #{updateUser,jdbcType=BIGINT},
+            is_deleted     = #{isDeleted,jdbcType=BOOLEAN}
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <!-- 查询内容的一级评论列表 -->
+    <select id="selectContentComments" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from t_comment
+        where content_type = #{contentType,jdbcType=VARCHAR}
+        and content_id = #{contentId,jdbcType=BIGINT}
+        and parent_id is null
+        and is_deleted = 0
+        order by is_top desc, create_time desc
+    </select>
+
+    <!-- 查询评论的回复列表 -->
+    <select id="selectCommentReplies" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from t_comment
+        where root_id = #{rootId,jdbcType=BIGINT}
+        and parent_id is not null
+        and is_deleted = 0
+        order by create_time asc
+    </select>
+
+    <!-- 统计内容的评论数量 -->
+    <select id="countContentComments" resultType="java.lang.Integer">
+        select count(1)
+        from t_comment
+        where content_type = #{contentType,jdbcType=VARCHAR}
+        and content_id = #{contentId,jdbcType=BIGINT}
+        and parent_id is null
+        and is_deleted = 0
+    </select>
+
+    <!-- 统计评论的回复数量 -->
+    <select id="countCommentReplies" resultType="java.lang.Integer">
+        select count(1)
+        from t_comment
+        where root_id = #{rootId,jdbcType=BIGINT}
+        and parent_id is not null
+        and is_deleted = 0
+    </select>
+
+    <!-- 增加评论回复数 -->
+    <update id="incrementReplyCount">
+        update t_comment
+        set reply_count = reply_count + 1
+        where id = #{commentId,jdbcType=BIGINT}
+    </update>
+
+    <!-- 减少评论回复数 -->
+    <update id="decrementReplyCount">
+        update t_comment
+        set reply_count = reply_count - 1
+        where id = #{commentId,jdbcType=BIGINT}
+        and reply_count > 0
+    </update>
+
+    <!-- 标记评论为逻辑删除 -->
+    <update id="markAsDeleted">
+        update t_comment
+        set is_deleted = 1,
+        update_time = now(),
+        update_user = #{userId,jdbcType=BIGINT}
+        where id = #{commentId,jdbcType=BIGINT}
+    </update>
+
+    <!-- 管理员分页查询评论列表 -->
+    <select id="adminListComments" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from t_comment
+        <where>
+            is_deleted = 0
+            <if test="query.content != null and query.content != ''">
+                and content like concat('%', #{query.content}, '%')
+            </if>
+            <if test="query.contentType != null and query.contentType != ''">
+                and content_type = #{query.contentType}
+            </if>
+            <if test="query.contentId != null">
+                and content_id = #{query.contentId}
+            </if>
+            <if test="query.userId != null">
+                and create_user = #{query.userId}
+            </if>
+            <if test="query.status != null and query.status != ''">
+                and status = #{query.status}
+            </if>
+            <if test="query.isTop != null">
+                and is_top = #{query.isTop}
+            </if>
+            <if test="query.isHot != null">
+                and is_hot = #{query.isHot}
+            </if>
+            <if test="query.onlyRoot != null and query.onlyRoot == true">
+                and parent_id is null
+            </if>
+            <if test="startTime != null">
+                and create_time >= #{startTime}
+            </if>
+            <if test="endTime != null">
+                and create_time &lt;= #{endTime}
+            </if>
+        </where>
+        order by is_top desc, create_time desc
+    </select>
+
+    <!-- 批量标记评论为逻辑删除 -->
+    <update id="batchLogicDeleteComments">
+        update t_comment
+        set is_deleted = 1,
+        update_time = now(),
+        update_user = #{userId}
+        where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+
+    <!-- 根据根评论ID列表查询所有回复 -->
+    <select id="selectAllRepliesByRootIds" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from t_comment
+        where root_id in
+        <foreach collection="rootIds" item="rootId" open="(" separator="," close=")">
+            #{rootId}
+        </foreach>
+        and parent_id is not null
+        and is_deleted = 0
+        order by create_time asc
+    </select>
+</mapper>
