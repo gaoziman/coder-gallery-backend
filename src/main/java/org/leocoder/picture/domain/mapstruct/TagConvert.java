@@ -51,7 +51,7 @@ public interface TagConvert {
     @Mapping(target = "updateUser", source = "userId")
     @Mapping(target = "createTime", source = "now")
     @Mapping(target = "updateTime", source = "now")
-    @Mapping(target = "status", constant = "ACTIVE")
+    @Mapping(target = "status", constant = "active")
     @Mapping(target = "referenceCount", constant = "0")
     @Mapping(target = "isDeleted", constant = "0")
     Tag toTag(TagCreateRequest request, Long id, Long userId, LocalDateTime now);
