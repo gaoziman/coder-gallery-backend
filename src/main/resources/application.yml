@@ -288,3 +288,23 @@ knife4j:
       allowed-extensions: jpg,jpeg,png,gif,webp
       # 图片压缩质量(1-100)，影响文件大小和清晰度
       compress-quality: 85
+
+
+# ===================================================================
+# RocketMQ配置 - 消息队列设置
+# ===================================================================
+rocketmq:
+  name-server: 117.72.33.254:9876
+  producer:
+    group: gallery-producer-group
+    send-message-timeout: 3000
+    retry-times-when-send-failed: 3
+    retry-times-when-send-async-failed: 3
+    max-message-size: 4096
+    compress-message-body-threshold: 4096
+  consumer:
+    picture-reaction:
+      group: picture-reaction-consumer-group
+      topic: PICTURE_REACTION_TOPIC
+      consume-thread-max: 10
+      consume-thread-min: 5

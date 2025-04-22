@@ -7,11 +7,13 @@ import cn.hutool.core.util.StrUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.leocoder.picture.constants.RedisConstants;
 import org.leocoder.picture.domain.dto.picture.PictureEditRequest;
 import org.leocoder.picture.domain.dto.picture.PictureUploadByBatchRequest;
 import org.leocoder.picture.domain.dto.picture.PictureUploadRequest;
 import org.leocoder.picture.domain.dto.picture.PictureWaterfallRequest;
 import org.leocoder.picture.domain.dto.upload.UploadPictureResult;
+import org.leocoder.picture.domain.message.PictureReactionMessage;
 import org.leocoder.picture.domain.pojo.Category;
 import org.leocoder.picture.domain.pojo.Picture;
 import org.leocoder.picture.domain.pojo.PictureHash;
@@ -32,13 +34,16 @@ import org.leocoder.picture.mapper.PictureHashMapper;
 import org.leocoder.picture.mapper.PictureMapper;
 import org.leocoder.picture.mapper.TagMapper;
 import org.leocoder.picture.service.*;
+import org.leocoder.picture.service.mq.MessageProducerService;
 import org.leocoder.picture.utils.SnowflakeIdGenerator;
 import org.leocoder.picture.utils.UserContext;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -80,6 +85,9 @@ public class PictureServiceImpl implements PictureService {
 
     private final  UserReactionService userReactionService;
 
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    private final MessageProducerService messageProducerService;
 
     /**
      * 填充审核参数
@@ -98,7 +106,7 @@ public class PictureServiceImpl implements PictureService {
         } else {
             // 非管理员，创建或编辑都要改为待审核
             picture.setReviewStatus(PictureReviewStatusEnum.REVIEWING.getValue());
-            picture.setReviewMessage("等待管理员审核");
+            picture.setReviewMessage("等待管理员审核 ，。。");
         }
     }
 
@@ -241,7 +249,7 @@ public class PictureServiceImpl implements PictureService {
 
         ThrowUtils.throwIf(!canView, ErrorCode.NO_AUTH_ERROR, "您无权查看此图片");
 
-        // 增加浏览量（异步更新浏览量可以提高性能，此处简化为同步更新）
+        // 增加浏览量
         incrementViewCount(id);
 
         // 转换为VO对象
@@ -342,7 +350,7 @@ public class PictureServiceImpl implements PictureService {
                 return null;
             }
 
-            // 增加浏览量（可以考虑异步处理以提高响应速度）
+            // 增加浏览量
             incrementViewCount(previousPicture.getId());
 
             // 转换为VO并返回
@@ -435,7 +443,7 @@ public class PictureServiceImpl implements PictureService {
                 return null;
             }
 
-            // 增加浏览量（可以考虑异步处理以提高响应速度）
+            // 增加浏览量
             incrementViewCount(nextPicture.getId());
 
             // 转换为VO并返回
@@ -501,13 +509,44 @@ public class PictureServiceImpl implements PictureService {
     }
 
     /**
-     * 增加图片浏览量
+     * 增加图片浏览量（异步实现）
      *
      * @param pictureId 图片ID
      */
     private void incrementViewCount(Long pictureId) {
-        // 此处可以优化为异步更新或批量更新，以提高性能
-        pictureMapper.incrementViewCount(pictureId);
+        try {
+            // 1. 立即更新Redis缓存，确保用户能立即看到最新浏览量
+            String viewCountKey = RedisConstants.getReactionCountKey(
+                    RedisConstants.TARGET_PICTURE, pictureId, RedisConstants.REACTION_VIEW);
+            redisTemplate.opsForValue().increment(viewCountKey, 1);
+            redisTemplate.expire(viewCountKey, RedisConstants.COUNT_CACHE_EXPIRE_DAYS, TimeUnit.DAYS);
+
+            // 2. 构建消息并发送到RocketMQ进行异步处理
+            PictureReactionMessage message = PictureReactionMessage.builder()
+                    .pictureId(pictureId)
+                    .reactionType(RedisConstants.REACTION_VIEW)
+                    .operationType("add")
+                    .userId(UserContext.getUserId())
+                    .timestamp(System.currentTimeMillis())
+                    .build();
+
+            // 3. 发送消息到RocketMQ
+            boolean sendResult = messageProducerService.sendPictureReactionMessage(message);
+
+            // 4. 发送失败则降级为同步更新
+            if (!sendResult) {
+                log.warn("发送浏览量增加消息失败，降级为同步更新: pictureId={}", pictureId);
+                pictureMapper.incrementViewCount(pictureId);
+            }
+        } catch (Exception e) {
+            log.error("增加图片浏览量失败: pictureId={}, error={}", pictureId, e.getMessage(), e);
+            // 出现异常时，仍然尝试同步更新，确保基本功能可用
+            try {
+                pictureMapper.incrementViewCount(pictureId);
+            } catch (Exception ex) {
+                log.error("同步增加图片浏览量也失败: pictureId={}", pictureId, ex);
+            }
+        }
     }
 
 

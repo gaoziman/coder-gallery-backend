@@ -646,4 +646,25 @@
         END
         where id = #{pictureId}
     </update>
+
+
+    <!-- 批量获取图片信息 -->
+    <select id="selectBatchPictures" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_picture
+        where id > #{lastId}
+        and is_deleted = 0
+        order by id asc
+        limit #{limit}
+    </select>
+
+    <!-- 更新图片计数 -->
+    <update id="updateCounters">
+        update t_picture
+        set like_count = #{likeCount},
+        collection_count = #{favoriteCount},
+        update_time = now()
+        where id = #{pictureId}
+    </update>
 </mapper>

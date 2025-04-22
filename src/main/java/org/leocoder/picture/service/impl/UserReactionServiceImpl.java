@@ -5,6 +5,7 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.leocoder.picture.constants.RedisConstants;
+import org.leocoder.picture.domain.message.PictureReactionMessage;
 import org.leocoder.picture.domain.pojo.Picture;
 import org.leocoder.picture.domain.pojo.UserReaction;
 import org.leocoder.picture.domain.userreaction.UserReactionRequest;
@@ -18,6 +19,7 @@ import org.leocoder.picture.mapper.PictureMapper;
 import org.leocoder.picture.mapper.UserReactionMapper;
 import org.leocoder.picture.service.PictureService;
 import org.leocoder.picture.service.UserReactionService;
+import org.leocoder.picture.service.mq.MessageProducerService;
 import org.leocoder.picture.utils.UserContext;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -31,8 +33,8 @@ import java.util.stream.Collectors;
 
 /**
  * @author : 程序员Leo
- * @date  2025-04-16 21:53
  * @version 1.0
+ * @date 2025-04-16 21:53
  * @description : 用户点赞、收藏、喜欢等操作的实现类
  */
 
@@ -41,26 +43,34 @@ import java.util.stream.Collectors;
 public class UserReactionServiceImpl implements UserReactionService {
 
     private final RedisTemplate<String, Object> redisTemplate;
+
     private final UserReactionMapper userReactionMapper;
+
     private final PictureMapper pictureMapper;
+
     private final PictureService pictureService;
+
+    private final MessageProducerService messageProducerService;
 
     public UserReactionServiceImpl(
             RedisTemplate<String, Object> redisTemplate,
             UserReactionMapper userReactionMapper,
             PictureMapper pictureMapper,
-            @Lazy PictureService pictureService) {
+            @Lazy PictureService pictureService,
+            MessageProducerService messageProducerService) {
 
         this.redisTemplate = redisTemplate;
         this.userReactionMapper = userReactionMapper;
         this.pictureMapper = pictureMapper;
         this.pictureService = pictureService;
+        this.messageProducerService = messageProducerService;
     }
 
     /**
      * 添加用户点赞/收藏（点赞、收藏等）
+     *
      * @param request 点赞/收藏请求
-     * @param userId 用户ID
+     * @param userId  用户ID
      * @return 操作是否成功
      */
     @Override
@@ -144,8 +154,9 @@ public class UserReactionServiceImpl implements UserReactionService {
 
     /**
      * 取消用户点赞/收藏
+     *
      * @param request 点赞/收藏请求
-     * @param userId 用户ID
+     * @param userId  用户ID
      * @return 操作是否成功
      */
     @Override
@@ -196,9 +207,10 @@ public class UserReactionServiceImpl implements UserReactionService {
 
     /**
      * 查询用户对特定目标的点赞/收藏状态
+     *
      * @param targetType 目标类型
-     * @param targetId 目标ID
-     * @param userId 用户ID
+     * @param targetId   目标ID
+     * @param userId     用户ID
      * @return 点赞/收藏状态（包含是否点赞、收藏等）
      */
     @Override
@@ -250,9 +262,10 @@ public class UserReactionServiceImpl implements UserReactionService {
 
     /**
      * 批量查询用户对多个目标的点赞/收藏状态
+     *
      * @param targetType 目标类型
-     * @param targetIds 目标ID列表
-     * @param userId 用户ID
+     * @param targetIds  目标ID列表
+     * @param userId     用户ID
      * @return 目标ID到点赞/收藏状态的映射
      */
     @Override
@@ -342,8 +355,9 @@ public class UserReactionServiceImpl implements UserReactionService {
 
     /**
      * 获取目标的点赞/收藏计数
+     *
      * @param targetType 目标类型
-     * @param targetId 目标ID
+     * @param targetId   目标ID
      * @return 点赞/收藏计数（包含点赞数、收藏数等）
      */
     @Override
@@ -606,8 +620,9 @@ public class UserReactionServiceImpl implements UserReactionService {
 
     /**
      * 填充图片的用户点赞/收藏状态
+     *
      * @param picture 图片
-     * @param userId 用户ID
+     * @param userId  用户ID
      */
     @Override
     public void fillPictureUserReactionStatus(PictureVO picture, Long userId) {
@@ -630,8 +645,9 @@ public class UserReactionServiceImpl implements UserReactionService {
 
     /**
      * 批量填充图片列表的用户点赞/收藏状态
+     *
      * @param pictures 图片列表
-     * @param userId 用户ID
+     * @param userId   用户ID
      */
     @Override
     public void batchFillPictureUserReactionStatus(List<PictureVO> pictures, Long userId) {
@@ -673,57 +689,86 @@ public class UserReactionServiceImpl implements UserReactionService {
     // ====================== 辅助方法 ======================
 
     /**
-     * 增加目标计数
+     * rocketmq异步计数
+     *
+     * @param targetType   目标类型
+     * @param targetId     目标ID
+     * @param reactionType 点赞/收藏类型
      */
     private void incrementTargetCounter(String targetType, Long targetId, String reactionType) {
-        if (RedisConstants.TARGET_PICTURE.equals(targetType)) {
-            if (RedisConstants.REACTION_LIKE.equals(reactionType)) {
-                pictureMapper.incrementLikeCount(targetId);
-            } else if (RedisConstants.REACTION_FAVORITE.equals(reactionType)) {
-                pictureMapper.incrementCollectionCount(targetId);
-            } else if (RedisConstants.REACTION_VIEW.equals(reactionType)) {
-                pictureMapper.incrementViewCount(targetId);
-            }
-        }
-
-        // 更新Redis中的计数
+        // 更新Redis中的计数 - 立即执行，保证缓存一致性
         String countKey = RedisConstants.getReactionCountKey(targetType, targetId, reactionType);
         redisTemplate.opsForValue().increment(countKey, 1);
         redisTemplate.expire(countKey, RedisConstants.COUNT_CACHE_EXPIRE_DAYS, TimeUnit.DAYS);
+
+        // 只有图片类型的操作才需要异步更新数据库
+        if (RedisConstants.TARGET_PICTURE.equals(targetType)) {
+            // 构建消息并发送到RocketMQ
+            PictureReactionMessage message = PictureReactionMessage.builder()
+                    .pictureId(targetId)
+                    .reactionType(reactionType)
+                    .operationType("add")
+                    .userId(UserContext.getUserId())
+                    .timestamp(System.currentTimeMillis())
+                    .build();
+
+            // 发送消息到RocketMQ
+            boolean sendResult = messageProducerService.sendPictureReactionMessage(message);
+
+            if (!sendResult) {
+                log.warn("发送增加计数消息失败，降级为同步更新: targetType={}, targetId={}, reactionType={}",
+                        targetType, targetId, reactionType);
+                // 降级为同步更新
+                if (RedisConstants.REACTION_LIKE.equals(reactionType)) {
+                    pictureMapper.incrementLikeCount(targetId);
+                } else if (RedisConstants.REACTION_FAVORITE.equals(reactionType)) {
+                    pictureMapper.incrementCollectionCount(targetId);
+                }
+            }
+        }
     }
 
     /**
-     * 减少目标计数
+     * rocketmq异步减数
+     *
+     * @param targetType   目标类型
+     * @param targetId     目标ID
+     * @param reactionType 点赞/收藏类型
      */
     private void decrementTargetCounter(String targetType, Long targetId, String reactionType) {
-        if (RedisConstants.TARGET_PICTURE.equals(targetType)) {
-            if (RedisConstants.REACTION_LIKE.equals(reactionType)) {
-                pictureMapper.decrementLikeCount(targetId);
-            } else if (RedisConstants.REACTION_FAVORITE.equals(reactionType)) {
-                pictureMapper.decrementCollectionCount(targetId);
-            }
-        }
-
-        // 更新Redis中的计数
+        // 更新Redis中的计数 - 立即执行，保证缓存一致性
         String countKey = RedisConstants.getReactionCountKey(targetType, targetId, reactionType);
         Object countObj = redisTemplate.opsForValue().get(countKey);
-        Long count = null;
-
-        // 处理不同类型的计数值
-        if (countObj instanceof Long) {
-            count = (Long) countObj;
-        } else if (countObj instanceof Integer) {
-            count = ((Integer) countObj).longValue();
-        } else if (countObj instanceof String) {
-            try {
-                count = Long.parseLong((String) countObj);
-            } catch (NumberFormatException e) {
-                log.warn("无法将字符串转换为Long: {}", countObj);
-            }
-        }
+        Long count = getLongFromRedis(countKey);
 
         if (count != null && count > 0) {
             redisTemplate.opsForValue().decrement(countKey, 1);
+        }
+
+        // 只有图片类型的操作才需要异步更新数据库
+        if (RedisConstants.TARGET_PICTURE.equals(targetType)) {
+            // 构建消息并发送到RocketMQ
+            PictureReactionMessage message = PictureReactionMessage.builder()
+                    .pictureId(targetId)
+                    .reactionType(reactionType)
+                    .operationType("remove")
+                    .userId(UserContext.getUserId())
+                    .timestamp(System.currentTimeMillis())
+                    .build();
+
+            // 发送消息到RocketMQ
+            boolean sendResult = messageProducerService.sendPictureReactionMessage(message);
+
+            if (!sendResult) {
+                log.warn("发送减少计数消息失败，降级为同步更新: targetType={}, targetId={}, reactionType={}",
+                        targetType, targetId, reactionType);
+                // 降级为同步更新
+                if (RedisConstants.REACTION_LIKE.equals(reactionType)) {
+                    pictureMapper.decrementLikeCount(targetId);
+                } else if (RedisConstants.REACTION_FAVORITE.equals(reactionType)) {
+                    pictureMapper.decrementCollectionCount(targetId);
+                }
+            }
         }
     }
 

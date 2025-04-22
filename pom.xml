@@ -34,6 +34,7 @@
         <easyexcel.version>3.3.3</easyexcel.version>
         <bitwalker.version>1.21</bitwalker.version>
         <pagehelper.version>1.4.7</pagehelper.version>
+        <rocketmq.version>2.2.3</rocketmq.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -262,6 +263,14 @@
             <groupId>com.github.pagehelper</groupId>
             <artifactId>pagehelper-spring-boot-starter</artifactId>
             <version>${pagehelper.version}</version>
+        </dependency>
+
+        <!-- ================ RocketMQ ================ -->
+        <!-- RocketMQ Spring Boot Starter：RocketMQ客户端整合，提供RocketMQ操作模板 -->
+        <dependency>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-spring-boot-starter</artifactId>
+            <version>${rocketmq.version}</version>
         </dependency>
     </dependencies>
 
