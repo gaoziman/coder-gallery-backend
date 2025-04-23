@@ -1,6 +1,7 @@
 package org.leocoder.picture.service;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author : 程序员Leo
@@ -112,4 +113,12 @@ public interface TagRelationService {
      * @return 是否成功
      */
     boolean deleteAllTagRelations(String contentType, Long contentId);
+
+    /**
+     * 批量获取内容的标签ID列表
+     * @param contentType 内容类型
+     * @param contentIds 内容ID列表
+     * @return Map<内容ID字符串, 标签ID列表>
+     */
+    Map<String, List<Long>> batchGetTagIdsByContents(String contentType, List<Long> contentIds);
 }

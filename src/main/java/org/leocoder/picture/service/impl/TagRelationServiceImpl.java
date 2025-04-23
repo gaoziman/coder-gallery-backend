@@ -14,16 +14,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * @author : 程序员Leo
- * @date  2025-04-09 10:24
  * @version 1.0
+ * @date 2025-04-09 10:24
  * @description : 标签关系服务实现类
  */
 @Slf4j
@@ -50,9 +47,9 @@ public class TagRelationServiceImpl implements TagRelationService {
     /**
      * 创建标签关系
      *
-     * @param tagId 标签ID
+     * @param tagId       标签ID
      * @param contentType 内容类型
-     * @param contentId 内容ID
+     * @param contentId   内容ID
      * @return 是否成功
      */
     @Override
@@ -83,9 +80,9 @@ public class TagRelationServiceImpl implements TagRelationService {
     /**
      * 批量创建标签关系
      *
-     * @param tagIds 标签ID列表
+     * @param tagIds      标签ID列表
      * @param contentType 内容类型
-     * @param contentId 内容ID
+     * @param contentId   内容ID
      * @return 是否成功
      */
     @Override
@@ -135,9 +132,9 @@ public class TagRelationServiceImpl implements TagRelationService {
     /**
      * 删除标签关系
      *
-     * @param tagId 标签ID
+     * @param tagId       标签ID
      * @param contentType 内容类型
-     * @param contentId 内容ID
+     * @param contentId   内容ID
      * @return 是否成功
      */
     @Override
@@ -255,9 +252,9 @@ public class TagRelationServiceImpl implements TagRelationService {
     /**
      * 更新内容的标签关系
      *
-     * @param tagIds 标签ID列表
+     * @param tagIds      标签ID列表
      * @param contentType 内容类型
-     * @param contentId 内容ID
+     * @param contentId   内容ID
      * @return 是否成功
      */
     @Override
@@ -303,7 +300,7 @@ public class TagRelationServiceImpl implements TagRelationService {
      * 获取内容关联的标签ID列表
      *
      * @param contentType 内容类型
-     * @param contentId 内容ID
+     * @param contentId   内容ID
      * @return 标签ID列表
      */
     @Override
@@ -315,7 +312,7 @@ public class TagRelationServiceImpl implements TagRelationService {
     /**
      * 查询标签下有多少内容
      *
-     * @param tagId 标签ID
+     * @param tagId       标签ID
      * @param contentType 内容类型（可选）
      * @return 内容数量
      */
@@ -328,9 +325,9 @@ public class TagRelationServiceImpl implements TagRelationService {
     /**
      * 检查标签关系是否存在
      *
-     * @param tagId 标签ID
+     * @param tagId       标签ID
      * @param contentType 内容类型
-     * @param contentId 内容ID
+     * @param contentId   内容ID
      * @return 是否存在
      */
     @Override
@@ -344,7 +341,7 @@ public class TagRelationServiceImpl implements TagRelationService {
      * 删除内容的所有标签关联关系，但不更新引用计数
      *
      * @param contentType 内容类型（如"picture"）
-     * @param contentId 内容ID
+     * @param contentId   内容ID
      * @return 是否成功
      */
     @Override
@@ -366,5 +363,35 @@ public class TagRelationServiceImpl implements TagRelationService {
             log.error("删除内容标签关联异常: contentType={}, contentId={}", contentType, contentId, e);
             return false;
         }
+    }
+
+    /**
+     * 批量获取内容关联的标签ID列表
+     *
+     * @param contentType 内容类型
+     * @param contentIds  内容ID列表
+     * @return 标签ID列表
+     */
+    @Override
+    public Map<String, List<Long>> batchGetTagIdsByContents(String contentType, List<Long> contentIds) {
+        if (StrUtil.isBlank(contentType) || CollUtil.isEmpty(contentIds)) {
+            return Collections.emptyMap();
+        }
+
+        Map<String, List<Long>> result = new HashMap<>();
+
+        try {
+            // todo 当前实现使用多次单条查询，后面可优化为一次批量查询
+            for (Long contentId : contentIds) {
+                List<Long> tagIds = tagRelationMapper.selectTagIdsByContent(contentType, contentId);
+                if (CollUtil.isNotEmpty(tagIds)) {
+                    result.put(contentId.toString(), tagIds);
+                }
+            }
+        } catch (Exception e) {
+            log.error("批量获取内容标签关系失败: contentType={}, contentIds={}", contentType, contentIds, e);
+        }
+
+        return result;
     }
 }

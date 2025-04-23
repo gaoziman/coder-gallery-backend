@@ -6,6 +6,7 @@ import org.leocoder.picture.domain.dto.category.CategoryQueryRequest;
 import org.leocoder.picture.domain.pojo.Category;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -69,9 +70,9 @@ public interface CategoryMapper {
     /**
      * 根据名称和父ID查询分类
      *
-     * @param name 分类名称
+     * @param name     分类名称
      * @param parentId 父分类ID
-     * @param type 分类类型
+     * @param type     分类类型
      * @return 分类
      */
     Category selectByNameAndParent(@Param("name") String name, @Param("parentId") Long parentId, @Param("type") String type);
@@ -87,9 +88,9 @@ public interface CategoryMapper {
     /**
      * 根据条件查询分类数量
      *
-     * @param queryRequest 查询条件
+     * @param queryRequest    查询条件
      * @param createTimeStart 创建开始时间
-     * @param createTimeEnd 创建结束时间
+     * @param createTimeEnd   创建结束时间
      * @return 分类数量
      */
     Long countCategories(@Param("queryRequest") CategoryQueryRequest queryRequest,
@@ -100,7 +101,7 @@ public interface CategoryMapper {
      * 分页查询分类列表
      *
      * @param createTimeStart 创建开始时间
-     * @param createTimeEnd 创建结束时间
+     * @param createTimeEnd   创建结束时间
      * @return 分类列表
      */
     List<Category> listCategoriesByPage(
@@ -108,6 +109,7 @@ public interface CategoryMapper {
             @Param("createTimeStart") LocalDateTime createTimeStart,
             @Param("createTimeEnd") LocalDateTime createTimeEnd
     );
+
     /**
      * 根据类型查询分类列表
      *
@@ -119,7 +121,7 @@ public interface CategoryMapper {
     /**
      * 逻辑删除分类
      *
-     * @param id 分类ID
+     * @param id         分类ID
      * @param updateTime 更新时间
      * @param updateUser 更新用户
      * @return 影响行数
@@ -131,7 +133,7 @@ public interface CategoryMapper {
     /**
      * 批量逻辑删除分类
      *
-     * @param ids 分类ID列表
+     * @param ids        分类ID列表
      * @param updateTime 更新时间
      * @param updateUser 更新用户
      * @return 影响行数
@@ -143,8 +145,8 @@ public interface CategoryMapper {
     /**
      * 更新分类路径
      *
-     * @param id 分类ID
-     * @param path 路径
+     * @param id         分类ID
+     * @param path       路径
      * @param updateTime 更新时间
      * @param updateUser 更新用户
      * @return 影响行数
@@ -214,8 +216,8 @@ public interface CategoryMapper {
     /**
      * 更新分类内容数量
      *
-     * @param id 分类ID
-     * @param increment 增量
+     * @param id         分类ID
+     * @param increment  增量
      * @param updateTime 更新时间
      * @return 影响行数
      */
@@ -231,5 +233,20 @@ public interface CategoryMapper {
      */
     int insertWithId(Category category);
 
+
+    /**
+     * 根据urlName查询分类数量
+     *
+     * @param params 查询参数
+     * @return 分类数量
+     */
     Integer countByUrlName(Map<String, Object> params);
+
+
+    /**
+     *  批量获取分类
+     * @param longs 分类ID列表
+     * @return 分类列表
+     */
+    List<Category> selectBatchIds(@Param("ids") ArrayList<Long> longs);
 }

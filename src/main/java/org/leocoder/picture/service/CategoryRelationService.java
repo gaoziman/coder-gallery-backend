@@ -1,6 +1,7 @@
 package org.leocoder.picture.service;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author : 程序员Leo
@@ -92,4 +93,12 @@ public interface CategoryRelationService {
      * @return 是否成功
      */
     Boolean updateContentCategories(List<Long> categoryIds, String contentType, Long contentId);
+
+    /**
+     * 批量获取内容的分类ID列表
+     * @param contentType 内容类型
+     * @param contentIds 内容ID列表
+     * @return Map<内容ID字符串, 分类ID列表>
+     */
+    Map<String, List<Long>> batchGetCategoryIdsByContents(String contentType, List<Long> contentIds);
 }

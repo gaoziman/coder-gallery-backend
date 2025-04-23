@@ -180,4 +180,11 @@ public interface TagMapper {
      * @return 标签ID到颜色的映射
      */
     List<Map<String, Object>> selectColorsByIds(@Param("tagIds") List<Long> tagIds);
+
+    /**
+     * 批量查询标签的名称和颜色
+     * @param tagIds 标签ID列表
+     * @return 包含id、name、color的Map列表
+     */
+    List<Map<String, Object>> selectNamesAndColorsByIds(@Param("tagIds") List<Long> tagIds);
 }

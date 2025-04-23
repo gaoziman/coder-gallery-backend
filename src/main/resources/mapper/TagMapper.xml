@@ -354,4 +354,15 @@
         </foreach>
         AND is_deleted = 0
     </select>
+
+    <!-- 批量查询标签的名称和颜色 -->
+    <select id="selectNamesAndColorsByIds" resultType="java.util.Map">
+        select id, name, color
+        from t_tag
+        where id in
+        <foreach collection="tagIds" item="tagId" open="(" separator="," close=")">
+            #{tagId}
+        </foreach>
+        and is_deleted = 0
+    </select>
 </mapper>

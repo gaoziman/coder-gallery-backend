@@ -3,6 +3,7 @@ package org.leocoder.picture.service.impl;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.leocoder.picture.domain.pojo.CategoryRelation;
@@ -15,13 +16,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author : 程序员Leo
- * @date  2025-04-08 13:59
  * @version 1.0
+ * @date 2025-04-08 13:59
  * @description : 分类关系服务实现类
  */
 @Slf4j
@@ -36,9 +36,9 @@ public class CategoryRelationServiceImpl implements CategoryRelationService {
     /**
      * 创建分类关系
      *
-     * @param categoryId 分类ID
+     * @param categoryId  分类ID
      * @param contentType 内容类型
-     * @param contentId 内容ID
+     * @param contentId   内容ID
      * @return 是否成功
      */
     @Override
@@ -84,7 +84,7 @@ public class CategoryRelationServiceImpl implements CategoryRelationService {
      *
      * @param categoryIds 分类ID列表
      * @param contentType 内容类型
-     * @param contentId 内容ID
+     * @param contentId   内容ID
      * @return 是否成功
      */
     @Override
@@ -141,9 +141,9 @@ public class CategoryRelationServiceImpl implements CategoryRelationService {
     /**
      * 删除分类关系
      *
-     * @param categoryId 分类ID
+     * @param categoryId  分类ID
      * @param contentType 内容类型
-     * @param contentId 内容ID
+     * @param contentId   内容ID
      * @return 是否成功
      */
     @Override
@@ -174,7 +174,7 @@ public class CategoryRelationServiceImpl implements CategoryRelationService {
      * 删除指定内容的所有分类关系
      *
      * @param contentType 内容类型
-     * @param contentId 内容ID
+     * @param contentId   内容ID
      * @return 是否成功
      */
     @Override
@@ -237,7 +237,7 @@ public class CategoryRelationServiceImpl implements CategoryRelationService {
      * 根据内容获取关联的分类ID列表
      *
      * @param contentType 内容类型
-     * @param contentId 内容ID
+     * @param contentId   内容ID
      * @return 分类ID列表
      */
     @Override
@@ -254,7 +254,7 @@ public class CategoryRelationServiceImpl implements CategoryRelationService {
     /**
      * 查询分类下有多少内容
      *
-     * @param categoryId 分类ID
+     * @param categoryId  分类ID
      * @param contentType 内容类型
      * @return 内容数量
      */
@@ -274,7 +274,7 @@ public class CategoryRelationServiceImpl implements CategoryRelationService {
      *
      * @param categoryIds 新的分类ID列表
      * @param contentType 内容类型
-     * @param contentId 内容ID
+     * @param contentId   内容ID
      * @return 是否成功
      */
     @Override
@@ -294,5 +294,36 @@ public class CategoryRelationServiceImpl implements CategoryRelationService {
         }
 
         return true;
+    }
+
+
+    /**
+     * 批量获取内容的分类关系
+     *
+     * @param contentType 内容类型
+     * @param contentIds  内容ID列表
+     * @return 分类关系列表
+     */
+    @Override
+    public Map<String, List<Long>> batchGetCategoryIdsByContents(String contentType, List<Long> contentIds) {
+        if (StrUtil.isBlank(contentType) || CollUtil.isEmpty(contentIds)) {
+            return Collections.emptyMap();
+        }
+
+        Map<String, List<Long>> result = new HashMap<>();
+
+        try {
+            // todo 当前实现使用多次单条查询，后面可优化为一次批量查询
+            for (Long contentId : contentIds) {
+                List<Long> categoryIds = categoryRelationMapper.selectCategoryIdsByContent(contentType, contentId);
+                if (CollUtil.isNotEmpty(categoryIds)) {
+                    result.put(contentId.toString(), categoryIds);
+                }
+            }
+        } catch (Exception e) {
+            log.error("批量获取内容分类关系失败: contentType={}, contentIds={}", contentType, contentIds, e);
+        }
+
+        return result;
     }
 }

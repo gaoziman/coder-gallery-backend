@@ -1,452 +1,481 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.leocoder.picture.mapper.CategoryMapper">
-  <resultMap id="BaseResultMap" type="org.leocoder.picture.domain.pojo.Category">
-    <id column="id" jdbcType="BIGINT" property="id" />
-    <result column="name" jdbcType="VARCHAR" property="name" />
-    <result column="parent_id" jdbcType="BIGINT" property="parentId" />
-    <result column="type" jdbcType="VARCHAR" property="type" />
-    <result column="level" jdbcType="INTEGER" property="level" />
-    <result column="path" jdbcType="VARCHAR" property="path" />
-    <result column="description" jdbcType="VARCHAR" property="description" />
-    <result column="icon" jdbcType="VARCHAR" property="icon" />
-    <result column="url_name" jdbcType="VARCHAR" property="urlName" />
-    <result column="sort_order" jdbcType="INTEGER" property="sortOrder" />
-    <result column="content_count" jdbcType="INTEGER" property="contentCount" />
-    <result column="status" jdbcType="VARCHAR" property="status" />
-    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
-    <result column="create_user" jdbcType="BIGINT" property="createUser" />
-    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
-    <result column="update_user" jdbcType="BIGINT" property="updateUser" />
-    <result column="is_deleted" jdbcType="BOOLEAN" property="isDeleted" />
-  </resultMap>
+    <resultMap id="BaseResultMap" type="org.leocoder.picture.domain.pojo.Category">
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="name" jdbcType="VARCHAR" property="name"/>
+        <result column="parent_id" jdbcType="BIGINT" property="parentId"/>
+        <result column="type" jdbcType="VARCHAR" property="type"/>
+        <result column="level" jdbcType="INTEGER" property="level"/>
+        <result column="path" jdbcType="VARCHAR" property="path"/>
+        <result column="description" jdbcType="VARCHAR" property="description"/>
+        <result column="icon" jdbcType="VARCHAR" property="icon"/>
+        <result column="url_name" jdbcType="VARCHAR" property="urlName"/>
+        <result column="sort_order" jdbcType="INTEGER" property="sortOrder"/>
+        <result column="content_count" jdbcType="INTEGER" property="contentCount"/>
+        <result column="status" jdbcType="VARCHAR" property="status"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="create_user" jdbcType="BIGINT" property="createUser"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="update_user" jdbcType="BIGINT" property="updateUser"/>
+        <result column="is_deleted" jdbcType="BOOLEAN" property="isDeleted"/>
+    </resultMap>
 
-  <sql id="Base_Column_List">
-    id, `name`, parent_id, `type`, `level`, `path`, description, icon, url_name, sort_order,
-    content_count, `status`, create_time, create_user, update_time, update_user, is_deleted
-  </sql>
-
-  <!-- 条件查询公共部分 -->
-  <sql id="Query_Where_Clause">
-    <where>
-      is_deleted = 0
-      <if test="queryRequest != null">
-        <if test="queryRequest.name != null and queryRequest.name != ''">
-          AND name LIKE CONCAT('%', #{queryRequest.name}, '%')
-        </if>
-        <if test="queryRequest.parentId != null">
-          AND parent_id = #{queryRequest.parentId}
-        </if>
-        <if test="queryRequest.type != null and queryRequest.type != ''">
-          AND type = #{queryRequest.type}
-        </if>
-        <if test="queryRequest.level != null">
-          AND level = #{queryRequest.level}
-        </if>
-        <if test="queryRequest.status != null and queryRequest.status != ''">
-          AND status = #{queryRequest.status}
-        </if>
-      </if>
-      <if test="createTimeStart != null">
-        AND create_time >= #{createTimeStart}
-      </if>
-      <if test="createTimeEnd != null">
-        AND create_time &lt;= #{createTimeEnd}
-      </if>
-    </where>
-  </sql>
-
-  <!-- 根据ID查询分类 -->
-  <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
-    select
-    <include refid="Base_Column_List" />
-    from t_category
-    where id = #{id,jdbcType=BIGINT}
-  </select>
-
-  <!-- 根据名称和父ID查询分类 -->
-  <select id="selectByNameAndParent" resultMap="BaseResultMap">
-    select
-    <include refid="Base_Column_List" />
-    from t_category
-    where name = #{name,jdbcType=VARCHAR}
-    and parent_id = #{parentId,jdbcType=BIGINT}
-    <if test="type != null and type != ''">
-      and type = #{type,jdbcType=VARCHAR}
-    </if>
-    and is_deleted = 0
-  </select>
-
-  <!-- 根据父ID查询子分类列表 -->
-  <select id="selectByParentId" resultMap="BaseResultMap">
-    select
-    <include refid="Base_Column_List" />
-    from t_category
-    where parent_id = #{parentId,jdbcType=BIGINT}
-    and is_deleted = 0
-    order by sort_order asc, create_time asc
-  </select>
-
-  <!-- 根据类型查询分类列表 -->
-  <select id="selectByType" resultMap="BaseResultMap">
-    select
-    <include refid="Base_Column_List" />
-    from t_category
-    where is_deleted = 0
-    <if test="type != null and type != ''">
-      and type = #{type,jdbcType=VARCHAR}
-    </if>
-    order by sort_order asc, create_time asc
-  </select>
-
-  <!-- 根据条件查询分类数量 -->
-  <select id="countCategories" resultType="java.lang.Long">
-    select count(*)
-    from t_category
-    <include refid="Query_Where_Clause" />
-  </select>
-
-  <!-- 分页查询分类列表 -->
-  <select id="listCategoriesByPage" resultMap="BaseResultMap">
-    select
-    <include refid="Base_Column_List" />
-    from t_category
-    <include refid="Query_Where_Clause" />
-    order by sort_order asc, create_time desc
-  </select>
-
-  <!-- 插入分类 -->
-  <insert id="insert" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.Category" useGeneratedKeys="true">
-    insert into t_category (`name`, parent_id, `type`,
-    `level`, `path`, description,
-    icon, url_name, sort_order,
-    content_count, `status`, create_time,
-    create_user, update_time, update_user,
-    is_deleted)
-    values (#{name,jdbcType=VARCHAR}, #{parentId,jdbcType=BIGINT}, #{type,jdbcType=VARCHAR},
-    #{level,jdbcType=INTEGER}, #{path,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR},
-    #{icon,jdbcType=VARCHAR}, #{urlName,jdbcType=VARCHAR}, #{sortOrder,jdbcType=INTEGER},
-    #{contentCount,jdbcType=INTEGER}, #{status,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP},
-    #{createUser,jdbcType=BIGINT}, #{updateTime,jdbcType=TIMESTAMP}, #{updateUser,jdbcType=BIGINT},
-    #{isDeleted,jdbcType=BOOLEAN})
-  </insert>
-
-  <!-- 使用指定ID插入分类 -->
-  <insert id="insertWithId" parameterType="org.leocoder.picture.domain.pojo.Category">
-    insert into t_category (id, `name`, parent_id, `type`,
-    `level`, `path`, description,
-    icon, url_name, sort_order,
-    content_count, `status`, create_time,
-    create_user, update_time, update_user,
-    is_deleted)
-    values (#{id,jdbcType=BIGINT}, #{name,jdbcType=VARCHAR}, #{parentId,jdbcType=BIGINT}, #{type,jdbcType=VARCHAR},
-    #{level,jdbcType=INTEGER}, #{path,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR},
-    #{icon,jdbcType=VARCHAR}, #{urlName,jdbcType=VARCHAR}, #{sortOrder,jdbcType=INTEGER},
-    #{contentCount,jdbcType=INTEGER}, #{status,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP},
-    #{createUser,jdbcType=BIGINT}, #{updateTime,jdbcType=TIMESTAMP}, #{updateUser,jdbcType=BIGINT},
-    #{isDeleted,jdbcType=BOOLEAN})
-  </insert>
-
-  <!-- 选择性插入分类 -->
-  <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.Category" useGeneratedKeys="true">
-    insert into t_category
-    <trim prefix="(" suffix=")" suffixOverrides=",">
-      <if test="name != null">
+    <sql id="Base_Column_List">
+        id,
         `name`,
-      </if>
-      <if test="parentId != null">
         parent_id,
-      </if>
-      <if test="type != null">
         `type`,
-      </if>
-      <if test="level != null">
         `level`,
-      </if>
-      <if test="path != null">
         `path`,
-      </if>
-      <if test="description != null">
         description,
-      </if>
-      <if test="icon != null">
         icon,
-      </if>
-      <if test="urlName != null">
         url_name,
-      </if>
-      <if test="sortOrder != null">
         sort_order,
-      </if>
-      <if test="contentCount != null">
         content_count,
-      </if>
-      <if test="status != null">
         `status`,
-      </if>
-      <if test="createTime != null">
         create_time,
-      </if>
-      <if test="createUser != null">
         create_user,
-      </if>
-      <if test="updateTime != null">
         update_time,
-      </if>
-      <if test="updateUser != null">
         update_user,
-      </if>
-      <if test="isDeleted != null">
-        is_deleted,
-      </if>
-    </trim>
-    <trim prefix="values (" suffix=")" suffixOverrides=",">
-      <if test="name != null">
-        #{name,jdbcType=VARCHAR},
-      </if>
-      <if test="parentId != null">
-        #{parentId,jdbcType=BIGINT},
-      </if>
-      <if test="type != null">
-        #{type,jdbcType=VARCHAR},
-      </if>
-      <if test="level != null">
-        #{level,jdbcType=INTEGER},
-      </if>
-      <if test="path != null">
-        #{path,jdbcType=VARCHAR},
-      </if>
-      <if test="description != null">
-        #{description,jdbcType=VARCHAR},
-      </if>
-      <if test="icon != null">
-        #{icon,jdbcType=VARCHAR},
-      </if>
-      <if test="urlName != null">
-        #{urlName,jdbcType=VARCHAR},
-      </if>
-      <if test="sortOrder != null">
-        #{sortOrder,jdbcType=INTEGER},
-      </if>
-      <if test="contentCount != null">
-        #{contentCount,jdbcType=INTEGER},
-      </if>
-      <if test="status != null">
-        #{status,jdbcType=VARCHAR},
-      </if>
-      <if test="createTime != null">
-        #{createTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="createUser != null">
-        #{createUser,jdbcType=BIGINT},
-      </if>
-      <if test="updateTime != null">
-        #{updateTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="updateUser != null">
-        #{updateUser,jdbcType=BIGINT},
-      </if>
-      <if test="isDeleted != null">
-        #{isDeleted,jdbcType=BOOLEAN},
-      </if>
-    </trim>
-  </insert>
+        is_deleted
+    </sql>
 
-  <!-- 选择性更新分类 -->
-  <update id="updateByPrimaryKeySelective" parameterType="org.leocoder.picture.domain.pojo.Category">
-    update t_category
-    <set>
-      <if test="name != null">
-        `name` = #{name,jdbcType=VARCHAR},
-      </if>
-      <if test="parentId != null">
-        parent_id = #{parentId,jdbcType=BIGINT},
-      </if>
-      <if test="type != null">
-        `type` = #{type,jdbcType=VARCHAR},
-      </if>
-      <if test="level != null">
-        `level` = #{level,jdbcType=INTEGER},
-      </if>
-      <if test="path != null">
-        `path` = #{path,jdbcType=VARCHAR},
-      </if>
-      <if test="description != null">
-        description = #{description,jdbcType=VARCHAR},
-      </if>
-      <if test="icon != null">
-        icon = #{icon,jdbcType=VARCHAR},
-      </if>
-      <if test="urlName != null">
-        url_name = #{urlName,jdbcType=VARCHAR},
-      </if>
-      <if test="sortOrder != null">
-        sort_order = #{sortOrder,jdbcType=INTEGER},
-      </if>
-      <if test="contentCount != null">
-        content_count = #{contentCount,jdbcType=INTEGER},
-      </if>
-      <if test="status != null">
-        `status` = #{status,jdbcType=VARCHAR},
-      </if>
-      <if test="createTime != null">
-        create_time = #{createTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="createUser != null">
-        create_user = #{createUser,jdbcType=BIGINT},
-      </if>
-      <if test="updateTime != null">
-        update_time = #{updateTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="updateUser != null">
-        update_user = #{updateUser,jdbcType=BIGINT},
-      </if>
-      <if test="isDeleted != null">
-        is_deleted = #{isDeleted,jdbcType=BOOLEAN},
-      </if>
-    </set>
-    where id = #{id,jdbcType=BIGINT}
-  </update>
+    <!-- 条件查询公共部分 -->
+    <sql id="Query_Where_Clause">
+        <where>
+            is_deleted = 0
+            <if test="queryRequest != null">
+                <if test="queryRequest.name != null and queryRequest.name != ''">
+                    AND name LIKE CONCAT('%', #{queryRequest.name}, '%')
+                </if>
+                <if test="queryRequest.parentId != null">
+                    AND parent_id = #{queryRequest.parentId}
+                </if>
+                <if test="queryRequest.type != null and queryRequest.type != ''">
+                    AND type = #{queryRequest.type}
+                </if>
+                <if test="queryRequest.level != null">
+                    AND level = #{queryRequest.level}
+                </if>
+                <if test="queryRequest.status != null and queryRequest.status != ''">
+                    AND status = #{queryRequest.status}
+                </if>
+            </if>
+            <if test="createTimeStart != null">
+                AND create_time >= #{createTimeStart}
+            </if>
+            <if test="createTimeEnd != null">
+                AND create_time &lt;= #{createTimeEnd}
+            </if>
+        </where>
+    </sql>
 
-  <!-- 更新分类 -->
-  <update id="updateById" parameterType="org.leocoder.picture.domain.pojo.Category">
-    update t_category
-    set `name` = #{name,jdbcType=VARCHAR},
-    parent_id = #{parentId,jdbcType=BIGINT},
-    `type` = #{type,jdbcType=VARCHAR},
-    `level` = #{level,jdbcType=INTEGER},
-    `path` = #{path,jdbcType=VARCHAR},
-    description = #{description,jdbcType=VARCHAR},
-    icon = #{icon,jdbcType=VARCHAR},
-    url_name = #{urlName,jdbcType=VARCHAR},
-    sort_order = #{sortOrder,jdbcType=INTEGER},
-    content_count = #{contentCount,jdbcType=INTEGER},
-    `status` = #{status,jdbcType=VARCHAR},
-    create_time = #{createTime,jdbcType=TIMESTAMP},
-    create_user = #{createUser,jdbcType=BIGINT},
-    update_time = #{updateTime,jdbcType=TIMESTAMP},
-    update_user = #{updateUser,jdbcType=BIGINT},
-    is_deleted = #{isDeleted,jdbcType=BOOLEAN}
-    where id = #{id,jdbcType=BIGINT}
-  </update>
+    <!-- 根据ID查询分类 -->
+    <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_category
+        where id = #{id,jdbcType=BIGINT}
+    </select>
 
-  <!-- 逻辑删除分类 -->
-  <update id="logicDeleteCategory">
-    update t_category
-    set is_deleted = 1,
-    update_time = #{updateTime,jdbcType=TIMESTAMP},
-    update_user = #{updateUser,jdbcType=BIGINT}
-    where id = #{id,jdbcType=BIGINT}
-    and is_deleted = 0
-  </update>
+    <!-- 根据名称和父ID查询分类 -->
+    <select id="selectByNameAndParent" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_category
+        where name = #{name,jdbcType=VARCHAR}
+          and parent_id = #{parentId,jdbcType=BIGINT}
+        <if test="type != null and type != ''">
+            and type = #{type,jdbcType=VARCHAR}
+        </if>
+        and is_deleted = 0
+    </select>
 
-  <!-- 批量逻辑删除分类 -->
-  <update id="batchLogicDeleteCategories">
-    update t_category
-    set is_deleted = 1,
-    update_time = #{updateTime,jdbcType=TIMESTAMP},
-    update_user = #{updateUser,jdbcType=BIGINT}
-    where id in
-    <foreach collection="ids" item="id" open="(" separator="," close=")">
-      #{id}
-    </foreach>
-    and is_deleted = 0
-  </update>
+    <!-- 根据父ID查询子分类列表 -->
+    <select id="selectByParentId" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_category
+        where parent_id = #{parentId,jdbcType=BIGINT}
+          and is_deleted = 0
+        order by sort_order asc, create_time asc
+    </select>
 
-  <!-- 更新分类路径 -->
-  <update id="updateCategoryPath">
-    update t_category
-    set `path` = #{path,jdbcType=VARCHAR},
-    update_time = #{updateTime,jdbcType=TIMESTAMP},
-    update_user = #{updateUser,jdbcType=BIGINT}
-    where id = #{id,jdbcType=BIGINT}
-    and is_deleted = 0
-  </update>
+    <!-- 根据类型查询分类列表 -->
+    <select id="selectByType" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_category
+        where is_deleted = 0
+        <if test="type != null and type != ''">
+            and type = #{type,jdbcType=VARCHAR}
+        </if>
+        order by sort_order asc, create_time asc
+    </select>
 
-  <!-- 更新分类内容数量 -->
-  <update id="updateContentCount">
-    update t_category
-    set content_count = content_count + #{increment,jdbcType=INTEGER},
-    update_time = #{updateTime,jdbcType=TIMESTAMP}
-    where id = #{id,jdbcType=BIGINT}
-    and is_deleted = 0
-  </update>
+    <!-- 根据条件查询分类数量 -->
+    <select id="countCategories" resultType="java.lang.Long">
+        select count(*)
+        from t_category
+        <include refid="Query_Where_Clause"/>
+    </select>
 
-  <!-- 统计顶级分类数量 -->
-  <select id="countTopLevelCategories" resultType="java.lang.Long">
-    select count(*)
-    from t_category
-    where parent_id = 0
-    and is_deleted = 0
-    <if test="type != null and type != ''">
-      and type = #{type,jdbcType=VARCHAR}
-    </if>
-  </select>
+    <!-- 分页查询分类列表 -->
+    <select id="listCategoriesByPage" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_category
+        <include refid="Query_Where_Clause"/>
+        order by sort_order asc, create_time desc
+    </select>
 
-  <!-- 获取最大分类层级 -->
-  <select id="getMaxCategoryLevel" resultType="java.lang.Integer">
-    select IFNULL(max(level), 0)
-    from t_category
-    where is_deleted = 0
-  </select>
+    <!-- 插入分类 -->
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="org.leocoder.picture.domain.pojo.Category"
+            useGeneratedKeys="true">
+        insert into t_category (`name`, parent_id, `type`,
+                                `level`, `path`, description,
+                                icon, url_name, sort_order,
+                                content_count, `status`, create_time,
+                                create_user, update_time, update_user,
+                                is_deleted)
+        values (#{name,jdbcType=VARCHAR}, #{parentId,jdbcType=BIGINT}, #{type,jdbcType=VARCHAR},
+                #{level,jdbcType=INTEGER}, #{path,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR},
+                #{icon,jdbcType=VARCHAR}, #{urlName,jdbcType=VARCHAR}, #{sortOrder,jdbcType=INTEGER},
+                #{contentCount,jdbcType=INTEGER}, #{status,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP},
+                #{createUser,jdbcType=BIGINT}, #{updateTime,jdbcType=TIMESTAMP}, #{updateUser,jdbcType=BIGINT},
+                #{isDeleted,jdbcType=BOOLEAN})
+    </insert>
 
-  <!-- 统计今日新增分类数 -->
-  <select id="countNewCategoriesOfToday" resultType="java.lang.Long">
-    select count(*)
-    from t_category
-    where DATE(create_time) = CURDATE()
-      and is_deleted = 0
-  </select>
+    <!-- 使用指定ID插入分类 -->
+    <insert id="insertWithId" parameterType="org.leocoder.picture.domain.pojo.Category">
+        insert into t_category (id, `name`, parent_id, `type`,
+                                `level`, `path`, description,
+                                icon, url_name, sort_order,
+                                content_count, `status`, create_time,
+                                create_user, update_time, update_user,
+                                is_deleted)
+        values (#{id,jdbcType=BIGINT}, #{name,jdbcType=VARCHAR}, #{parentId,jdbcType=BIGINT}, #{type,jdbcType=VARCHAR},
+                #{level,jdbcType=INTEGER}, #{path,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR},
+                #{icon,jdbcType=VARCHAR}, #{urlName,jdbcType=VARCHAR}, #{sortOrder,jdbcType=INTEGER},
+                #{contentCount,jdbcType=INTEGER}, #{status,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP},
+                #{createUser,jdbcType=BIGINT}, #{updateTime,jdbcType=TIMESTAMP}, #{updateUser,jdbcType=BIGINT},
+                #{isDeleted,jdbcType=BOOLEAN})
+    </insert>
 
-  <!-- 统计本月新增分类数 -->
-  <select id="countNewCategoriesOfMonth" resultType="java.lang.Long">
-    select count(*)
-    from t_category
-    where DATE_FORMAT(create_time, '%Y%m') = DATE_FORMAT(CURDATE(), '%Y%m')
-      and is_deleted = 0
-  </select>
+    <!-- 选择性插入分类 -->
+    <insert id="insertSelective" keyColumn="id" keyProperty="id"
+            parameterType="org.leocoder.picture.domain.pojo.Category" useGeneratedKeys="true">
+        insert into t_category
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null">
+                `name`,
+            </if>
+            <if test="parentId != null">
+                parent_id,
+            </if>
+            <if test="type != null">
+                `type`,
+            </if>
+            <if test="level != null">
+                `level`,
+            </if>
+            <if test="path != null">
+                `path`,
+            </if>
+            <if test="description != null">
+                description,
+            </if>
+            <if test="icon != null">
+                icon,
+            </if>
+            <if test="urlName != null">
+                url_name,
+            </if>
+            <if test="sortOrder != null">
+                sort_order,
+            </if>
+            <if test="contentCount != null">
+                content_count,
+            </if>
+            <if test="status != null">
+                `status`,
+            </if>
+            <if test="createTime != null">
+                create_time,
+            </if>
+            <if test="createUser != null">
+                create_user,
+            </if>
+            <if test="updateTime != null">
+                update_time,
+            </if>
+            <if test="updateUser != null">
+                update_user,
+            </if>
+            <if test="isDeleted != null">
+                is_deleted,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null">
+                #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="parentId != null">
+                #{parentId,jdbcType=BIGINT},
+            </if>
+            <if test="type != null">
+                #{type,jdbcType=VARCHAR},
+            </if>
+            <if test="level != null">
+                #{level,jdbcType=INTEGER},
+            </if>
+            <if test="path != null">
+                #{path,jdbcType=VARCHAR},
+            </if>
+            <if test="description != null">
+                #{description,jdbcType=VARCHAR},
+            </if>
+            <if test="icon != null">
+                #{icon,jdbcType=VARCHAR},
+            </if>
+            <if test="urlName != null">
+                #{urlName,jdbcType=VARCHAR},
+            </if>
+            <if test="sortOrder != null">
+                #{sortOrder,jdbcType=INTEGER},
+            </if>
+            <if test="contentCount != null">
+                #{contentCount,jdbcType=INTEGER},
+            </if>
+            <if test="status != null">
+                #{status,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createUser != null">
+                #{createUser,jdbcType=BIGINT},
+            </if>
+            <if test="updateTime != null">
+                #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateUser != null">
+                #{updateUser,jdbcType=BIGINT},
+            </if>
+            <if test="isDeleted != null">
+                #{isDeleted,jdbcType=BOOLEAN},
+            </if>
+        </trim>
+    </insert>
 
-  <!-- 统计上月分类总数 -->
-  <select id="countLastMonthTotalCategories" resultType="java.lang.Long">
-    select count(*)
-    from t_category
-    where create_time &lt; DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL DAY(CURDATE())-1 DAY), '%Y-%m-01')
-      and is_deleted = 0
-  </select>
+    <!-- 选择性更新分类 -->
+    <update id="updateByPrimaryKeySelective" parameterType="org.leocoder.picture.domain.pojo.Category">
+        update t_category
+        <set>
+            <if test="name != null">
+                `name` = #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="parentId != null">
+                parent_id = #{parentId,jdbcType=BIGINT},
+            </if>
+            <if test="type != null">
+                `type` = #{type,jdbcType=VARCHAR},
+            </if>
+            <if test="level != null">
+                `level` = #{level,jdbcType=INTEGER},
+            </if>
+            <if test="path != null">
+                `path` = #{path,jdbcType=VARCHAR},
+            </if>
+            <if test="description != null">
+                description = #{description,jdbcType=VARCHAR},
+            </if>
+            <if test="icon != null">
+                icon = #{icon,jdbcType=VARCHAR},
+            </if>
+            <if test="urlName != null">
+                url_name = #{urlName,jdbcType=VARCHAR},
+            </if>
+            <if test="sortOrder != null">
+                sort_order = #{sortOrder,jdbcType=INTEGER},
+            </if>
+            <if test="contentCount != null">
+                content_count = #{contentCount,jdbcType=INTEGER},
+            </if>
+            <if test="status != null">
+                `status` = #{status,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createUser != null">
+                create_user = #{createUser,jdbcType=BIGINT},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateUser != null">
+                update_user = #{updateUser,jdbcType=BIGINT},
+            </if>
+            <if test="isDeleted != null">
+                is_deleted = #{isDeleted,jdbcType=BOOLEAN},
+            </if>
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+    </update>
 
-  <!-- 获取内容数量最多的分类 -->
-  <select id="getMostContentsCategory" resultMap="BaseResultMap">
-    select
-    <include refid="Base_Column_List" />
-    from t_category
-    where is_deleted = 0
-    order by content_count desc
-    limit 1
-  </select>
+    <!-- 更新分类 -->
+    <update id="updateById" parameterType="org.leocoder.picture.domain.pojo.Category">
+        update t_category
+        set `name`        = #{name,jdbcType=VARCHAR},
+            parent_id     = #{parentId,jdbcType=BIGINT},
+            `type`        = #{type,jdbcType=VARCHAR},
+            `level`       = #{level,jdbcType=INTEGER},
+            `path`        = #{path,jdbcType=VARCHAR},
+            description   = #{description,jdbcType=VARCHAR},
+            icon          = #{icon,jdbcType=VARCHAR},
+            url_name      = #{urlName,jdbcType=VARCHAR},
+            sort_order    = #{sortOrder,jdbcType=INTEGER},
+            content_count = #{contentCount,jdbcType=INTEGER},
+            `status`      = #{status,jdbcType=VARCHAR},
+            create_time   = #{createTime,jdbcType=TIMESTAMP},
+            create_user   = #{createUser,jdbcType=BIGINT},
+            update_time   = #{updateTime,jdbcType=TIMESTAMP},
+            update_user   = #{updateUser,jdbcType=BIGINT},
+            is_deleted    = #{isDeleted,jdbcType=BOOLEAN}
+        where id = #{id,jdbcType=BIGINT}
+    </update>
 
-  <!-- 统计激活状态的分类数量 -->
-  <select id="countActiveCategories" resultType="java.lang.Long">
-    select count(*)
-    from t_category
-    where status = 'active'
-      and is_deleted = 0
-  </select>
+    <!-- 逻辑删除分类 -->
+    <update id="logicDeleteCategory">
+        update t_category
+        set is_deleted  = 1,
+            update_time = #{updateTime,jdbcType=TIMESTAMP},
+            update_user = #{updateUser,jdbcType=BIGINT}
+        where id = #{id,jdbcType=BIGINT}
+          and is_deleted = 0
+    </update>
 
-  <!-- 统计禁用状态的分类数量 -->
-  <select id="countDisabledCategories" resultType="java.lang.Long">
-    select count(*)
-    from t_category
-    where status = 'disabled'
-      and is_deleted = 0
-  </select>
+    <!-- 批量逻辑删除分类 -->
+    <update id="batchLogicDeleteCategories">
+        update t_category
+        set is_deleted  = 1,
+            update_time = #{updateTime,jdbcType=TIMESTAMP},
+            update_user = #{updateUser,jdbcType=BIGINT}
+        where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        and is_deleted = 0
+    </update>
 
-  <!-- 检查urlName是否存在 -->
-  <select id="countByUrlName" parameterType="java.util.Map" resultType="java.lang.Integer">
-    SELECT COUNT(1) FROM t_category
-    WHERE url_name = #{urlName}
-    AND is_deleted = 0
-    <if test="excludeId != null">
-      AND id != #{excludeId}
-    </if>
-  </select>
+    <!-- 更新分类路径 -->
+    <update id="updateCategoryPath">
+        update t_category
+        set `path`      = #{path,jdbcType=VARCHAR},
+            update_time = #{updateTime,jdbcType=TIMESTAMP},
+            update_user = #{updateUser,jdbcType=BIGINT}
+        where id = #{id,jdbcType=BIGINT}
+          and is_deleted = 0
+    </update>
+
+    <!-- 更新分类内容数量 -->
+    <update id="updateContentCount">
+        update t_category
+        set content_count = content_count + #{increment,jdbcType=INTEGER},
+            update_time   = #{updateTime,jdbcType=TIMESTAMP}
+        where id = #{id,jdbcType=BIGINT}
+          and is_deleted = 0
+    </update>
+
+    <!-- 统计顶级分类数量 -->
+    <select id="countTopLevelCategories" resultType="java.lang.Long">
+        select count(*)
+        from t_category
+        where parent_id = 0
+          and is_deleted = 0
+        <if test="type != null and type != ''">
+            and type = #{type,jdbcType=VARCHAR}
+        </if>
+    </select>
+
+    <!-- 获取最大分类层级 -->
+    <select id="getMaxCategoryLevel" resultType="java.lang.Integer">
+        select IFNULL(max(level), 0)
+        from t_category
+        where is_deleted = 0
+    </select>
+
+    <!-- 统计今日新增分类数 -->
+    <select id="countNewCategoriesOfToday" resultType="java.lang.Long">
+        select count(*)
+        from t_category
+        where DATE(create_time) = CURDATE()
+          and is_deleted = 0
+    </select>
+
+    <!-- 统计本月新增分类数 -->
+    <select id="countNewCategoriesOfMonth" resultType="java.lang.Long">
+        select count(*)
+        from t_category
+        where DATE_FORMAT(create_time, '%Y%m') = DATE_FORMAT(CURDATE(), '%Y%m')
+          and is_deleted = 0
+    </select>
+
+    <!-- 统计上月分类总数 -->
+    <select id="countLastMonthTotalCategories" resultType="java.lang.Long">
+        select count(*)
+        from t_category
+        where create_time &lt; DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL DAY(CURDATE()) - 1 DAY), '%Y-%m-01')
+          and is_deleted = 0
+    </select>
+
+    <!-- 获取内容数量最多的分类 -->
+    <select id="getMostContentsCategory" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_category
+        where is_deleted = 0
+        order by content_count desc
+        limit 1
+    </select>
+
+    <!-- 统计激活状态的分类数量 -->
+    <select id="countActiveCategories" resultType="java.lang.Long">
+        select count(*)
+        from t_category
+        where status = 'active'
+          and is_deleted = 0
+    </select>
+
+    <!-- 统计禁用状态的分类数量 -->
+    <select id="countDisabledCategories" resultType="java.lang.Long">
+        select count(*)
+        from t_category
+        where status = 'disabled'
+          and is_deleted = 0
+    </select>
+
+    <!-- 检查urlName是否存在 -->
+    <select id="countByUrlName" parameterType="java.util.Map" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM t_category
+        WHERE url_name = #{urlName}
+          AND is_deleted = 0
+        <if test="excludeId != null">
+            AND id != #{excludeId}
+        </if>
+    </select>
+
+    <select id="selectBatchIds" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_category
+        where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        and is_deleted = 0
+    </select>
 </mapper>

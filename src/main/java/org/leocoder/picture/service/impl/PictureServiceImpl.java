@@ -4,15 +4,20 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.leocoder.picture.cache.PictureCacheManager;
+import org.leocoder.picture.constant.RedisKeyConstants;
 import org.leocoder.picture.constants.RedisConstants;
 import org.leocoder.picture.domain.dto.picture.PictureEditRequest;
 import org.leocoder.picture.domain.dto.picture.PictureUploadByBatchRequest;
 import org.leocoder.picture.domain.dto.picture.PictureUploadRequest;
 import org.leocoder.picture.domain.dto.picture.PictureWaterfallRequest;
 import org.leocoder.picture.domain.dto.upload.UploadPictureResult;
+import org.leocoder.picture.domain.mapstruct.PictureConvert;
+import org.leocoder.picture.domain.mapstruct.UserConvert;
 import org.leocoder.picture.domain.message.PictureReactionMessage;
 import org.leocoder.picture.domain.pojo.Category;
 import org.leocoder.picture.domain.pojo.Picture;
@@ -29,10 +34,7 @@ import org.leocoder.picture.manager.crawler.PictureCrawlerManager;
 import org.leocoder.picture.manager.upload.FilePictureUpload;
 import org.leocoder.picture.manager.upload.PictureUploadTemplate;
 import org.leocoder.picture.manager.upload.UrlPictureUpload;
-import org.leocoder.picture.mapper.CategoryMapper;
-import org.leocoder.picture.mapper.PictureHashMapper;
-import org.leocoder.picture.mapper.PictureMapper;
-import org.leocoder.picture.mapper.TagMapper;
+import org.leocoder.picture.mapper.*;
 import org.leocoder.picture.service.*;
 import org.leocoder.picture.service.mq.MessageProducerService;
 import org.leocoder.picture.utils.SnowflakeIdGenerator;
@@ -58,6 +60,8 @@ import java.util.stream.Collectors;
 public class PictureServiceImpl implements PictureService {
 
     private final UserService userService;
+
+    private final UserMapper userMapper;
 
     private final PictureMapper pictureMapper;
 
@@ -88,6 +92,8 @@ public class PictureServiceImpl implements PictureService {
     private final RedisTemplate<String, Object> redisTemplate;
 
     private final MessageProducerService messageProducerService;
+
+    private final PictureCacheManager pictureCacheManager;
 
     /**
      * 填充审核参数
@@ -155,7 +161,6 @@ public class PictureServiceImpl implements PictureService {
                 picture.setUpdateUser(loginUser.getId());
                 result = pictureMapper.updateByPrimaryKeySelective(picture) > 0;
             } else {
-                // 新增操作 - 使用雪花算法生成ID
                 // 生成雪花算法ID
                 Long snowflakeId = snowflakeIdGenerator.nextId();
                 picture.setId(snowflakeId);
@@ -182,6 +187,9 @@ public class PictureServiceImpl implements PictureService {
             PictureVO pictureVO = PictureVO.objToVo(picture);
             log.info("转换为VO后的图片信息: id={}, format={}, size={}",
                     pictureVO.getId(), pictureVO.getFormat(), pictureVO.getSize());
+
+            // 上传完成后清除相关缓存
+            pictureCacheManager.invalidateAfterPictureUpload(loginUser.getId());
 
             return pictureVO;
         } catch (Exception e) {
@@ -801,6 +809,8 @@ public class PictureServiceImpl implements PictureService {
 
             log.info("批量抓取上传完成，成功: {}/{}, 过滤掉重复图片: {}",
                     successCount, uploadCount, pictureList.size() - filteredList.size());
+            // 批量上传完成后清除所有缓存
+            pictureCacheManager.invalidateAllCaches();
             return successCount;
         } catch (Exception e) {
             log.error("批量抓取图片失败", e);
@@ -874,131 +884,97 @@ public class PictureServiceImpl implements PictureService {
 
     /**
      * 获取首页瀑布流图片列表
-     *
      * @param requestParam 请求参数（排序方式、筛选条件等）
-     * @param loginUser    当前登录用户
+     * @param loginUser 当前登录用户
      * @return 瀑布流图片列表包装对象
      */
     @Override
     public PictureWaterfallVO getWaterfallPictures(PictureWaterfallRequest requestParam, User loginUser) {
-        // 参数校验与默认值设置
-        if (ObjectUtil.isNull(requestParam)) {
-            requestParam = new PictureWaterfallRequest();
-        }
-
-        Integer pageSize = requestParam.getPageSize();
-        if (ObjectUtil.isNull(pageSize) || pageSize <= 0 || pageSize > 100) {
-            // 默认每页30条
-            pageSize = 30;
-        }
-
-        String sortBy = requestParam.getSortBy();
-        if (StrUtil.isBlank(sortBy)) {
-            // 默认按最新发布排序
-            sortBy = "newest";
-        }
+        // 参数规范化处理
+        PictureWaterfallRequest normalizedRequest = normalizeRequest(requestParam);
 
         try {
-            // 查询审核通过的图片
             String reviewStatus = String.valueOf(PictureReviewStatusEnum.PASS.getValue());
+            String cacheKey = RedisKeyConstants.buildWaterfallKey(
+                    "initial",
+                    normalizedRequest.getSortBy(),
+                    normalizedRequest.getPageSize(),
+                    normalizedRequest.getCategoryId(),
+                    normalizedRequest.getTagIds(),
+                    normalizedRequest.getFormat(),
+                    normalizedRequest.getMinWidth(),
+                    normalizedRequest.getMinHeight(),
+                    normalizedRequest.getUserId(),
+                    normalizedRequest.getKeyword()
+            );
+
+            // 尝试从缓存获取结果
+            PictureWaterfallVO cachedResult = getCachedResult(cacheKey);
+            if (cachedResult != null) {
+                // 只需要填充用户交互状态，其他数据从缓存获取
+                if (ObjectUtil.isNotNull(loginUser)) {
+                    fillUserReactions(cachedResult.getRecords(), loginUser.getId());
+                }
+                return cachedResult;
+            }
+
+            // 缓存未命中，执行数据库查询
+            long startTime = System.currentTimeMillis();
 
             // 查询图片列表
             List<Picture> pictureList = pictureMapper.selectWaterfallPictures(
                     reviewStatus,
-                    requestParam.getFormat(),
-                    requestParam.getMinWidth(),
-                    requestParam.getMinHeight(),
-                    requestParam.getUserId(),
-                    requestParam.getCategoryId(),
-                    requestParam.getTagIds(),
-                    requestParam.getKeyword(),
-                    sortBy,
-                    pageSize
+                    normalizedRequest.getFormat(),
+                    normalizedRequest.getMinWidth(),
+                    normalizedRequest.getMinHeight(),
+                    normalizedRequest.getUserId(),
+                    normalizedRequest.getCategoryId(),
+                    normalizedRequest.getTagIds(),
+                    normalizedRequest.getKeyword(),
+                    normalizedRequest.getSortBy(),
+                    normalizedRequest.getPageSize()
             );
 
-            // 获取总数（用于前端显示总数）
-            Long total = pictureMapper.countWaterfallPictures(
+            // 获取总数（使用单独方法，可缓存结果）
+            Long total = getWaterfallPicturesTotal(
                     reviewStatus,
-                    requestParam.getFormat(),
-                    requestParam.getMinWidth(),
-                    requestParam.getMinHeight(),
-                    requestParam.getUserId(),
-                    requestParam.getCategoryId(),
-                    requestParam.getTagIds(),
-                    requestParam.getKeyword()
+                    normalizedRequest.getFormat(),
+                    normalizedRequest.getMinWidth(),
+                    normalizedRequest.getMinHeight(),
+                    normalizedRequest.getUserId(),
+                    normalizedRequest.getCategoryId(),
+                    normalizedRequest.getTagIds(),
+                    normalizedRequest.getKeyword()
             );
 
-            // 转换为VO列表并填充标签
-            List<PictureVO> pictureVOList = new ArrayList<>();
-            if (CollUtil.isNotEmpty(pictureList)) {
-                pictureVOList = convertAndEnrichPictureList(pictureList);
-            }
+            // 构建结果对象
+            PictureWaterfallVO result = buildWaterfallResult(pictureList, total, normalizedRequest.getPageSize(), normalizedRequest.getSortBy());
 
-            // 构建返回对象
-            Long lastId = null;
-            Object lastValue = null;
-            boolean hasMore = false;
-            if (CollUtil.isNotEmpty(pictureVOList)) {
-                // 获取最后一张图片的ID作为下一页的游标
-                PictureVO lastPicture = pictureVOList.get(pictureVOList.size() - 1);
-                lastId = lastPicture.getId();
-
-                // 根据排序方式获取对应的排序值
-                switch (sortBy) {
-                    case "newest":
-                        lastValue = lastPicture.getCreateTime();
-                        break;
-                    case "popular":
-                    case "mostViewed":
-                        lastValue = lastPicture.getViewCount();
-                        break;
-                    case "mostLiked":
-                        lastValue = lastPicture.getLikeCount();
-                        break;
-                    case "mostCollected":
-                        lastValue = lastPicture.getCollectionCount();
-                        break;
-                    default:
-                        lastValue = lastPicture.getCreateTime();
-                }
-
-                // 判断是否还有更多数据
-                hasMore = pictureVOList.size() >= pageSize && total > pageSize;
-            }
-
+            // 填充用户交互状态
             if (ObjectUtil.isNotNull(loginUser)) {
-                try {
-                    userReactionService.batchFillPictureUserReactionStatus(pictureVOList, loginUser.getId());
-                } catch (Exception e) {
-                    log.warn("批量填充图片互动信息失败: {}", e.getMessage());
-                }
+                fillUserReactions(result.getRecords(), loginUser.getId());
             }
 
-            log.info("获取瀑布流图片成功: 返回{}条记录, 排序方式={}, 总数={}",
-                    pictureVOList.size(), sortBy, total);
+            // 将结果缓存（不包含用户交互状态）
+            cacheWaterfallResult(cacheKey, result, RedisKeyConstants.WATERFALL_CACHE_EXPIRE_MINUTES);
 
-            return PictureWaterfallVO.builder()
-                    .records(pictureVOList)
-                    .hasMore(hasMore)
-                    .lastId(lastId)
-                    .lastValue(lastValue)
-                    .total(total)
-                    .build();
+            long endTime = System.currentTimeMillis();
+            log.info("获取瀑布流图片成功: 返回{}条记录, 排序方式={}, 总数={}, 耗时={}ms",
+                    result.getRecords().size(), normalizedRequest.getSortBy(), total, (endTime - startTime));
 
+            return result;
         } catch (Exception e) {
             log.error("获取瀑布流图片列表失败", e);
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "获取瀑布流图片列表失败: " + e.getMessage());
         }
     }
 
-
     /**
      * 加载更多瀑布流图片
-     *
-     * @param lastId       最后一张图片ID（游标）
-     * @param lastValue    最后一张图片的排序值
-     * @param requestParam 请求参数（与初始请求一致，确保条件统一）
-     * @param loginUser    当前登录用户
+     * @param lastId 最后一张图片ID（游标）
+     * @param lastValue 最后一张图片的排序值
+     * @param requestParam 请求参数
+     * @param loginUser 当前登录用户
      * @return 更多的瀑布流图片列表包装对象
      */
     @Override
@@ -1009,6 +985,91 @@ public class PictureServiceImpl implements PictureService {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "lastId不能为空");
         }
 
+        // 参数规范化处理
+        PictureWaterfallRequest normalizedRequest = normalizeRequest(requestParam);
+
+        try {
+            String reviewStatus = String.valueOf(PictureReviewStatusEnum.PASS.getValue());
+            String cacheKey = RedisKeyConstants.buildWaterfallKey(
+                    "more-" + lastId,
+                    normalizedRequest.getSortBy(),
+                    normalizedRequest.getPageSize(),
+                    normalizedRequest.getCategoryId(),
+                    normalizedRequest.getTagIds(),
+                    normalizedRequest.getFormat(),
+                    normalizedRequest.getMinWidth(),
+                    normalizedRequest.getMinHeight(),
+                    normalizedRequest.getUserId(),
+                    normalizedRequest.getKeyword()
+            );
+
+            // 尝试从缓存获取结果
+            PictureWaterfallVO cachedResult = getCachedResult(cacheKey);
+            if (cachedResult != null) {
+                // 只需要填充用户交互状态，其他数据从缓存获取
+                if (ObjectUtil.isNotNull(loginUser)) {
+                    fillUserReactions(cachedResult.getRecords(), loginUser.getId());
+                }
+                return cachedResult;
+            }
+
+            // 缓存未命中，执行数据库查询
+            long startTime = System.currentTimeMillis();
+
+            // 查询更多图片列表
+            List<Picture> pictureList = pictureMapper.selectMoreWaterfallPictures(
+                    lastId,
+                    lastValue,
+                    reviewStatus,
+                    normalizedRequest.getFormat(),
+                    normalizedRequest.getMinWidth(),
+                    normalizedRequest.getMinHeight(),
+                    normalizedRequest.getUserId(),
+                    normalizedRequest.getCategoryId(),
+                    normalizedRequest.getTagIds(),
+                    normalizedRequest.getKeyword(),
+                    normalizedRequest.getSortBy(),
+                    normalizedRequest.getPageSize()
+            );
+
+            // 获取总数（优化：可以复用前一次的总数）
+            Long total = getWaterfallPicturesTotal(
+                    reviewStatus,
+                    normalizedRequest.getFormat(),
+                    normalizedRequest.getMinWidth(),
+                    normalizedRequest.getMinHeight(),
+                    normalizedRequest.getUserId(),
+                    normalizedRequest.getCategoryId(),
+                    normalizedRequest.getTagIds(),
+                    normalizedRequest.getKeyword()
+            );
+
+            // 构建结果对象
+            PictureWaterfallVO result = buildWaterfallResult(pictureList, total, normalizedRequest.getPageSize(), normalizedRequest.getSortBy());
+
+            // 填充用户交互状态
+            if (ObjectUtil.isNotNull(loginUser)) {
+                fillUserReactions(result.getRecords(), loginUser.getId());
+            }
+
+            // 将结果缓存（较短时间）
+            cacheWaterfallResult(cacheKey, result, RedisKeyConstants.WATERFALL_MORE_CACHE_EXPIRE_MINUTES);
+
+            long endTime = System.currentTimeMillis();
+            log.info("加载更多瀑布流图片成功: 返回{}条记录, 排序方式={}, 耗时={}ms",
+                    result.getRecords().size(), normalizedRequest.getSortBy(), (endTime - startTime));
+
+            return result;
+        } catch (Exception e) {
+            log.error("加载更多瀑布流图片失败", e);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "加载更多瀑布流图片失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 规范化请求参数
+     */
+    private PictureWaterfallRequest normalizeRequest(PictureWaterfallRequest requestParam) {
         if (ObjectUtil.isNull(requestParam)) {
             requestParam = new PictureWaterfallRequest();
         }
@@ -1016,111 +1077,431 @@ public class PictureServiceImpl implements PictureService {
         Integer pageSize = requestParam.getPageSize();
         if (ObjectUtil.isNull(pageSize) || pageSize <= 0 || pageSize > 100) {
             // 默认每页30条
-            pageSize = 30;
+            requestParam.setPageSize(30);
         }
 
         String sortBy = requestParam.getSortBy();
         if (StrUtil.isBlank(sortBy)) {
             // 默认按最新发布排序
-            sortBy = "newest";
+            requestParam.setSortBy("newest");
         }
 
+        return requestParam;
+    }
+
+    /**
+     * 从缓存获取结果
+     */
+    private PictureWaterfallVO getCachedResult(String cacheKey) {
         try {
-            // 查询审核通过的图片
-            String reviewStatus = String.valueOf(PictureReviewStatusEnum.PASS.getValue());
-
-            // 查询更多图片列表
-            List<Picture> pictureList = pictureMapper.selectMoreWaterfallPictures(
-                    lastId,
-                    lastValue,
-                    reviewStatus,
-                    requestParam.getFormat(),
-                    requestParam.getMinWidth(),
-                    requestParam.getMinHeight(),
-                    requestParam.getUserId(),
-                    requestParam.getCategoryId(),
-                    requestParam.getTagIds(),
-                    requestParam.getKeyword(),
-                    sortBy,
-                    pageSize
-            );
-
-            // 获取总数（用于前端显示总数）
-            Long total = pictureMapper.countWaterfallPictures(
-                    reviewStatus,
-                    requestParam.getFormat(),
-                    requestParam.getMinWidth(),
-                    requestParam.getMinHeight(),
-                    requestParam.getUserId(),
-                    requestParam.getCategoryId(),
-                    requestParam.getTagIds(),
-                    requestParam.getKeyword()
-            );
-
-            // 转换为VO列表并填充标签
-            List<PictureVO> pictureVOList = new ArrayList<>();
-            if (CollUtil.isNotEmpty(pictureList)) {
-                pictureVOList = convertAndEnrichPictureList(pictureList);
+            Object cachedObject = redisTemplate.opsForValue().get(cacheKey);
+            if (cachedObject != null) {
+                log.debug("从缓存获取瀑布流数据: {}", cacheKey);
+                return (PictureWaterfallVO) cachedObject;
             }
-
-            // 构建返回对象
-            Long newLastId = null;
-            Object newLastValue = null;
-            boolean hasMore = false;
-            if (CollUtil.isNotEmpty(pictureVOList)) {
-                // 获取最后一张图片的ID和排序值作为下一页的游标
-                PictureVO lastPicture = pictureVOList.get(pictureVOList.size() - 1);
-                newLastId = lastPicture.getId();
-
-                // 根据排序方式获取对应的排序值
-                switch (sortBy) {
-                    case "newest":
-                        newLastValue = lastPicture.getCreateTime();
-                        break;
-                    case "popular":
-                    case "mostViewed":
-                        newLastValue = lastPicture.getViewCount();
-                        break;
-                    case "mostLiked":
-                        newLastValue = lastPicture.getLikeCount();
-                        break;
-                    case "mostCollected":
-                        newLastValue = lastPicture.getCollectionCount();
-                        break;
-                    default:
-                        newLastValue = lastPicture.getCreateTime();
-                }
-
-                // 判断是否还有更多数据（简单判断，如果返回的数量等于请求的数量，认为还有更多）
-                hasMore = pictureVOList.size() >= pageSize;
-            }
-
-            log.info("加载更多瀑布流图片成功: 返回{}条记录, 排序方式={}, 总数={}",
-                    pictureVOList.size(), sortBy, total);
-
-            if(ObjectUtil.isNotNull(loginUser)){
-                try {
-                    userReactionService.batchFillPictureUserReactionStatus(pictureVOList, loginUser.getId());
-                } catch (Exception e) {
-                    log.warn("批量填充图片互动信息失败: {}", e.getMessage());
-                }
-            }
-
-            return PictureWaterfallVO.builder()
-                    .records(pictureVOList)
-                    .hasMore(hasMore)
-                    .lastId(newLastId)
-                    .lastValue(newLastValue)
-                    // 添加total属性
-                    .total(total)
-                    .build();
-
         } catch (Exception e) {
-            log.error("加载更多瀑布流图片失败", e);
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "加载更多瀑布流图片失败: " + e.getMessage());
+            log.warn("从缓存获取瀑布流数据失败: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * 缓存瀑布流结果
+     */
+    private void cacheWaterfallResult(String cacheKey, PictureWaterfallVO result, int expireMinutes) {
+        try {
+            redisTemplate.opsForValue().set(cacheKey, result, expireMinutes, TimeUnit.MINUTES);
+            log.debug("瀑布流数据已缓存: {}, 过期时间: {}分钟", cacheKey, expireMinutes);
+        } catch (Exception e) {
+            log.warn("缓存瀑布流数据失败: {}", e.getMessage());
         }
     }
 
+    /**
+     * 获取瀑布流图片总数（带缓存）
+     */
+    private Long getWaterfallPicturesTotal(String reviewStatus, String format, Integer minWidth,
+                                           Integer minHeight, Long userId, Long categoryId,
+                                           List<Long> tagIds, String keyword) {
+        // 构建缓存键
+        String cacheKey = RedisKeyConstants.buildCountKey(
+                format, minWidth, minHeight, userId, categoryId, tagIds, keyword
+        );
+
+        try {
+            // 尝试从缓存获取总数
+            Object cachedCount = redisTemplate.opsForValue().get(cacheKey);
+            if (cachedCount != null) {
+                return (Long) cachedCount;
+            }
+        } catch (Exception e) {
+            log.warn("从缓存获取图片总数失败: {}", e.getMessage());
+        }
+
+        // 缓存未命中，查询数据库
+        Long total = pictureMapper.countWaterfallPictures(
+                reviewStatus, format, minWidth, minHeight, userId, categoryId, tagIds, keyword
+        );
+
+        try {
+            // 将总数缓存5分钟，避免频繁查询数据库
+            redisTemplate.opsForValue().set(cacheKey, total, RedisKeyConstants.COUNT_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES);
+        } catch (Exception e) {
+            log.warn("缓存图片总数失败: {}", e.getMessage());
+        }
+
+        return total;
+    }
+
+    /**
+     * 构建瀑布流结果对象
+     */
+    private PictureWaterfallVO buildWaterfallResult(List<Picture> pictureList, Long total,
+                                                    Integer pageSize, String sortBy) {
+        // 使用MapStruct进行基础转换
+        List<PictureVO> pictureVOList = new ArrayList<>();
+        if (CollUtil.isNotEmpty(pictureList)) {
+            // 先进行基本转换
+            pictureVOList = PictureConvert.INSTANCE.toPictureVOList(pictureList);
+            // 再进行数据丰富
+            enrichPictureVOList(pictureList, pictureVOList);
+        }
+
+        // 构建返回对象
+        Long lastId = null;
+        Object lastValue = null;
+        boolean hasMore = false;
+
+        if (CollUtil.isNotEmpty(pictureVOList)) {
+            // 获取最后一张图片的ID和排序值作为下一页的游标
+            PictureVO lastPicture = pictureVOList.get(pictureVOList.size() - 1);
+            lastId = lastPicture.getId();
+
+            // 根据排序方式获取对应的排序值
+            switch (sortBy) {
+                case "newest":
+                    lastValue = lastPicture.getCreateTime();
+                    break;
+                case "popular":
+                case "mostViewed":
+                    lastValue = lastPicture.getViewCount();
+                    break;
+                case "mostLiked":
+                    lastValue = lastPicture.getLikeCount();
+                    break;
+                case "mostCollected":
+                    lastValue = lastPicture.getCollectionCount();
+                    break;
+                default:
+                    lastValue = lastPicture.getCreateTime();
+            }
+
+            // 判断是否还有更多数据
+            hasMore = pictureVOList.size() >= pageSize;
+
+            // 如果提供了total，则更精确地判断是否还有更多
+            if (total != null) {
+                hasMore = hasMore && pictureVOList.size() < total;
+            }
+        }
+
+        return PictureWaterfallVO.builder()
+                .records(pictureVOList)
+                .hasMore(hasMore)
+                .lastId(lastId)
+                .lastValue(lastValue)
+                .total(total)
+                .build();
+    }
+
+    /**
+     * 填充用户交互状态（点赞、收藏等）
+     */
+    private void fillUserReactions(List<PictureVO> pictureVOList, Long userId) {
+        if (CollUtil.isEmpty(pictureVOList) || userId == null) {
+            return;
+        }
+
+        try {
+            userReactionService.batchFillPictureUserReactionStatus(pictureVOList, userId);
+        } catch (Exception e) {
+            log.warn("批量填充图片互动信息失败: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 使用MapStruct后的数据丰富方法
+     */
+    private void enrichPictureVOList(List<Picture> sourceList, List<PictureVO> targetList) {
+        if (CollUtil.isEmpty(sourceList) || CollUtil.isEmpty(targetList) || sourceList.size() != targetList.size()) {
+            return;
+        }
+
+        // 1. 收集所有需要查询的ID
+        List<Long> pictureIds = sourceList.stream()
+                .map(Picture::getId)
+                .collect(Collectors.toList());
+
+        List<Long> userIds = sourceList.stream()
+                .map(Picture::getCreateUser)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // 2. 批量查询图片的分类关系
+        Map<Long, List<Long>> pictureCategoryMap = batchGetPictureCategoryIds(pictureIds);
+
+        // 3. 批量查询所有相关的分类信息
+        Set<Long> allCategoryIds = pictureCategoryMap.values().stream()
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+
+        Map<Long, Category> categoryMap = batchGetCategories(allCategoryIds);
+
+        // 4. 批量查询图片的标签关系
+        Map<Long, List<Long>> pictureTagMap = batchGetPictureTagIds(pictureIds);
+
+        // 5. 批量查询所有相关的标签信息
+        Set<Long> allTagIds = pictureTagMap.values().stream()
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+
+        // 获取标签名称和颜色
+        Map<Long, TagInfo> tagInfoMap = batchGetTagInfo(allTagIds);
+
+        // 6. 批量查询用户信息
+        Map<Long, User> userMap = batchGetUsers(userIds);
+
+        // 7. 填充VO对象
+        for (int i = 0; i < sourceList.size(); i++) {
+            Picture picture = sourceList.get(i);
+            PictureVO pictureVO = targetList.get(i);
+            Long pictureId = picture.getId();
+
+            // 填充用户信息
+            User user = userMap.get(picture.getCreateUser());
+            UserConvert.INSTANCE.toUserVO(user);
+            if (ObjectUtil.isNotNull(user)) {
+                pictureVO.setUser( UserConvert.INSTANCE.toUserVO(user));
+            }
+
+            // 填充分类信息
+            List<Long> categoryIds = pictureCategoryMap.getOrDefault(pictureId, Collections.emptyList());
+            if (!categoryIds.isEmpty()) {
+                Long categoryId = categoryIds.get(0);
+                pictureVO.setCategoryId(String.valueOf(categoryId));
+
+                Category category = categoryMap.get(categoryId);
+                if (category != null) {
+                    pictureVO.setCategory(category.getName());
+                }
+            }
+
+            // 填充标签信息
+            List<Long> tagIds = pictureTagMap.getOrDefault(pictureId, Collections.emptyList());
+            if (!tagIds.isEmpty()) {
+                // 设置标签ID
+                List<String> tagIdStrings = tagIds.stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.toList());
+                pictureVO.setTagIds(tagIdStrings);
+
+                // 设置标签名称和颜色
+                List<String> tagNames = new ArrayList<>();
+                List<String> tagColors = new ArrayList<>();
+
+                for (Long tagId : tagIds) {
+                    TagInfo tagInfo = tagInfoMap.get(tagId);
+                    if (tagInfo != null) {
+                        if (tagInfo.getName() != null) {
+                            tagNames.add(tagInfo.getName());
+                        }
+                        if (tagInfo.getColor() != null) {
+                            tagColors.add(tagInfo.getColor());
+                        }
+                    }
+                }
+
+                pictureVO.setTags(tagNames);
+                pictureVO.setTagColors(tagColors);
+            }
+        }
+    }
+
+    /**
+     * 批量获取图片分类ID
+     */
+    private Map<Long, List<Long>> batchGetPictureCategoryIds(List<Long> pictureIds) {
+        Map<Long, List<Long>> result = new HashMap<>();
+        if (CollUtil.isEmpty(pictureIds)) {
+            return result;
+        }
+
+        try {
+            Map<String, List<Long>> contentCategoryMap =
+                    categoryRelationService.batchGetCategoryIdsByContents("picture", pictureIds);
+
+            if (contentCategoryMap != null) {
+                // 转换key类型从String到Long
+                for (Map.Entry<String, List<Long>> entry : contentCategoryMap.entrySet()) {
+                    try {
+                        Long pictureId = Long.valueOf(entry.getKey());
+                        result.put(pictureId, entry.getValue());
+                    } catch (NumberFormatException e) {
+                        log.warn("解析图片ID失败: {}", entry.getKey());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("批量查询图片分类关系失败", e);
+
+            // 降级：单个查询
+            for (Long pictureId : pictureIds) {
+                try {
+                    List<Long> categoryIds = categoryRelationService.getCategoryIdsByContent("picture", pictureId);
+                    if (categoryIds != null && !categoryIds.isEmpty()) {
+                        result.put(pictureId, categoryIds);
+                    }
+                } catch (Exception ex) {
+                    log.warn("查询图片分类关系失败: pictureId={}", pictureId);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * 批量获取分类信息
+     */
+    private Map<Long, Category> batchGetCategories(Set<Long> categoryIds) {
+        Map<Long, Category> result = new HashMap<>();
+        if (categoryIds == null || categoryIds.isEmpty()) {
+            return result;
+        }
+
+        try {
+            List<Category> categories = categoryMapper.selectBatchIds(new ArrayList<>(categoryIds));
+            if (ObjectUtil.isNotNull(categories)) {
+                for (Category category : categories) {
+                    result.put(category.getId(), category);
+                }
+            }
+        } catch (Exception e) {
+            log.error("批量查询分类信息失败", e);
+
+            // 降级：单个查询
+            for (Long categoryId : categoryIds) {
+                try {
+                    Category category = categoryMapper.selectById(categoryId);
+                    if (category != null) {
+                        result.put(categoryId, category);
+                    }
+                } catch (Exception ex) {
+                    log.warn("查询分类信息失败: categoryId={}", categoryId);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * 批量获取图片标签ID
+     */
+    private Map<Long, List<Long>> batchGetPictureTagIds(List<Long> pictureIds) {
+        Map<Long, List<Long>> result = new HashMap<>();
+        if (CollUtil.isEmpty(pictureIds)) {
+            return result;
+        }
+
+        try {
+            Map<String, List<Long>> contentTagMap =
+                    tagRelationService.batchGetTagIdsByContents("picture", pictureIds);
+
+            if (contentTagMap != null) {
+                // 转换key类型从String到Long
+                for (Map.Entry<String, List<Long>> entry : contentTagMap.entrySet()) {
+                    try {
+                        Long pictureId = Long.valueOf(entry.getKey());
+                        result.put(pictureId, entry.getValue());
+                    } catch (NumberFormatException e) {
+                        log.warn("解析图片ID失败: {}", entry.getKey());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("批量查询图片标签关系失败", e);
+
+            // 降级：单个查询
+            for (Long pictureId : pictureIds) {
+                try {
+                    List<Long> tagIds = tagRelationService.getTagIdsByContent("picture", pictureId);
+                    if (tagIds != null && !tagIds.isEmpty()) {
+                        result.put(pictureId, tagIds);
+                    }
+                } catch (Exception ex) {
+                    log.warn("查询图片标签关系失败: pictureId={}", pictureId);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * 批量获取标签信息
+     */
+    private Map<Long, TagInfo> batchGetTagInfo(Set<Long> tagIds) {
+        Map<Long, TagInfo> result = new HashMap<>();
+        if (tagIds == null || tagIds.isEmpty()) {
+            return result;
+        }
+
+        try {
+            // 获取标签名称和颜色
+            List<Map<String, Object>> tagInfos = tagMapper.selectNamesAndColorsByIds(new ArrayList<>(tagIds));
+            if (tagInfos != null) {
+                for (Map<String, Object> info : tagInfos) {
+                    Long tagId = (Long) info.get("id");
+                    String name = (String) info.get("name");
+                    String color = (String) info.get("color");
+
+                    TagInfo tagInfo = new TagInfo();
+                    tagInfo.setName(name);
+                    tagInfo.setColor(color);
+
+                    result.put(tagId, tagInfo);
+                }
+            }
+        } catch (Exception e) {
+            log.error("批量查询标签信息失败", e);
+        }
+
+        return result;
+    }
+
+    /**
+     * 批量获取用户信息
+     */
+    private Map<Long, User> batchGetUsers(List<Long> userIds) {
+        Map<Long, User> result = new HashMap<>();
+        if (userIds == null || userIds.isEmpty()) {
+            return result;
+        }
+
+        try {
+            for (Long userId : userIds) {
+                User user = userMapper.selectById(userId);
+                if (Objects.isNull(user)) {
+                    result.put(userId, user);
+                }
+            }
+        } catch (Exception e) {
+            log.error("批量查询用户信息失败", e);
+        }
+
+        return result;
+    }
     /**
      * 校验图片信息
      *
@@ -1205,10 +1586,11 @@ public class PictureServiceImpl implements PictureService {
         ThrowUtils.throwIf(!updateResult, ErrorCode.OPERATION_ERROR, "更新图片信息失败");
 
         try {
+            List<Long> oldCategoryIds = null;
             // 2. 更新分类关联
             if (requestParam.getCategoryId() != null && requestParam.getCategoryId() > 0) {
                 // 获取原分类关联
-                List<Long> oldCategoryIds = categoryRelationService.getCategoryIdsByContent("picture", pictureId);
+                oldCategoryIds = categoryRelationService.getCategoryIdsByContent("picture", pictureId);
                 // 准备新分类ID列表
                 List<Long> newCategoryIds = List.of(requestParam.getCategoryId().longValue());
 
@@ -1288,11 +1670,25 @@ public class PictureServiceImpl implements PictureService {
 
             log.info("更新图片成功: pictureId={}, categoryId={}, tagIds={}",
                     pictureId, requestParam.getCategoryId(), requestParam.getTagIds());
-
+            // 清除缓存
+            pictureCacheManager.invalidateAfterPictureEdit(
+                    pictureId,
+                    CollUtil.isNotEmpty(oldCategoryIds) ? oldCategoryIds.get(0) : null,
+                    requestParam.getCategoryId() != null ? requestParam.getCategoryId().longValue() : null,
+                    oldTagIds,
+                    newTagIds
+            );
+            log.info("已清除图片编辑后的相关缓存: pictureId={}", pictureId);
             return true;
         } catch (Exception e) {
             log.error("更新图片关联关系失败", e);
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "更新图片关联关系失败: " + e.getMessage());
         }
+    }
+
+    @Data
+    private static class TagInfo {
+        private String name;
+        private String color;
     }
 }

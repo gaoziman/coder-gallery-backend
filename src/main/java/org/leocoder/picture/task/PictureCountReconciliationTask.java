@@ -2,6 +2,7 @@ package org.leocoder.picture.task;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.leocoder.picture.cache.PictureCacheManager;
 import org.leocoder.picture.constants.RedisConstants;
 import org.leocoder.picture.domain.pojo.Picture;
 import org.leocoder.picture.mapper.PictureMapper;
@@ -26,7 +27,10 @@ import java.util.List;
 public class PictureCountReconciliationTask {
 
     private final PictureMapper pictureMapper;
+
     private final UserReactionMapper userReactionMapper;
+
+    private final PictureCacheManager pictureCacheManager;
     
     /**
      * 每天凌晨2点执行计数校准任务
@@ -90,7 +94,12 @@ public class PictureCountReconciliationTask {
                 
                 log.info("批次处理完成，已处理{}张图片，更新{}张图片", pictures.size(), totalUpdated);
             }
-            
+
+            if (totalUpdated > 0) {
+                log.info("由于校准了{}张图片的计数，正在清除相关缓存...", totalUpdated);
+                pictureCacheManager.invalidateCountRelatedCaches();
+            }
+
             log.info("图片计数校准任务完成，共处理{}张图片，更新{}张图片", totalProcessed, totalUpdated);
         } catch (Exception e) {
             log.error("图片计数校准任务执行异常: {}", e.getMessage(), e);
