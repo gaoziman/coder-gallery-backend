@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -21,7 +22,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @ApiModel(value = "UserVO", description = "用户信息视图对象")
-public class UserVO {
+public class UserVO implements Serializable {
+    private static final long serialVersionUID = 4388903113721497948L;
 
     @ApiModelProperty(value = "用户ID")
     private Long id;

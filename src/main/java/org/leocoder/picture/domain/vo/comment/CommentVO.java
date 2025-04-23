@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.leocoder.picture.domain.vo.user.UserVO;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +18,8 @@ import java.util.List;
  */
 @Data
 @ApiModel(value = "CommentVO", description = "评论返回VO")
-public class CommentVO {
+public class CommentVO implements Serializable {
+    private static final long serialVersionUID = -4638140809410237368L;
 
     @ApiModelProperty(value = "评论ID")
     private Long id;

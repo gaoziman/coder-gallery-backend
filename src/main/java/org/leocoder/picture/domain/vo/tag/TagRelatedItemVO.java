@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -14,8 +15,10 @@ import java.time.LocalDateTime;
  */
 @Data
 @ApiModel(description = "关联内容视图对象")
-public class TagRelatedItemVO {
-    
+public class TagRelatedItemVO  implements Serializable {
+
+    private static final long serialVersionUID = 1866928681722513578L;
+
     @ApiModelProperty(value = "内容ID", example = "1")
     private Long id;
     

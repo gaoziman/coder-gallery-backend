@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 /**
  * @author : 程序员Leo
  * @version 1.0
@@ -18,7 +20,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @ApiModel(value = "OperationLogStatisticsVO", description = "操作日志统计VO")
-public class OperationLogStatisticsVO {
+public class OperationLogStatisticsVO implements Serializable {
+
+    private static final long serialVersionUID = 3366098390405610515L;
 
     @ApiModelProperty(value = "总操作次数")
     private Long totalOperations;

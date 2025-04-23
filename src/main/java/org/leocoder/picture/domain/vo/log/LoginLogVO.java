@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -15,7 +16,9 @@ import java.time.LocalDateTime;
  */
 @Data
 @ApiModel(description = "登录日志视图对象")
-public class LoginLogVO {
+public class LoginLogVO implements Serializable {
+
+    private static final long serialVersionUID = -3243081038219240376L;
 
     @ApiModelProperty(value = "日志ID")
     private Long id;

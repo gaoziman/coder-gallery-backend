@@ -4,6 +4,8 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.io.Serializable;
+
 /**
  * @author : 程序员Leo
  * @version 1.0
@@ -12,7 +14,9 @@ import lombok.Data;
  */
 @Data
 @ApiModel(description = "标签统计信息视图对象")
-public class TagStatisticsVO {
+public class TagStatisticsVO implements Serializable {
+
+    private static final long serialVersionUID = -4675952066997625820L;
 
     @ApiModelProperty(value = "标签总数", example = "100")
     private Integer totalCount;

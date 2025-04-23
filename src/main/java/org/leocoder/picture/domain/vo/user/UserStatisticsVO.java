@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 /**
  * @author : 程序员Leo
  * @version 1.0
@@ -18,7 +20,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @ApiModel(description = "用户统计信息VO")
-public class UserStatisticsVO {
+public class UserStatisticsVO implements Serializable {
+    private static final long serialVersionUID = 4388905113722497948L;
+
     @ApiModelProperty
     private Long totalUsers;
 

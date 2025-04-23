@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -17,8 +18,10 @@ import java.util.List;
 @Data
 @Builder
 @ApiModel(description = "分类树形结构VO")
-public class CategoryTreeVO {
-    
+public class CategoryTreeVO  implements Serializable {
+    private static final long serialVersionUID = 878039675493665235L;
+
+
     @ApiModelProperty(value = "分类ID")
     private Long id;
     

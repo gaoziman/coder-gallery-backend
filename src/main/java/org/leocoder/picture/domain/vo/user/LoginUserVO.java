@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 @Builder
 @ApiModel(description = "脱敏后登录用户信息")
 public class LoginUserVO implements Serializable {
+    private static final long serialVersionUID = 6885794651651821457L;
 
     @ApiModelProperty(value = "用户 id")
     private Long id;

@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -20,7 +21,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @ApiModel(value = "PictureWaterfallVO", description = "瀑布流图片响应对象")
-public class PictureWaterfallVO {
+public class PictureWaterfallVO implements Serializable {
+    private static final long serialVersionUID = 4328905113721497948L;
 
     @ApiModelProperty(value = "图片列表")
     private List<PictureVO> records;

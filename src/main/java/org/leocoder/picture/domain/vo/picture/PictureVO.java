@@ -21,6 +21,8 @@ import java.util.List;
 @ApiModel(value = "PictureVO", description = "图片对象返回VO")
 public class PictureVO implements Serializable {
 
+    private static final long serialVersionUID = 4388905113721497948L;
+
     @ApiModelProperty(value = "id", name = "id")
     private Long id;
 
@@ -110,7 +112,6 @@ public class PictureVO implements Serializable {
     private UserVO user;
 
 
-    private static final long serialVersionUID = 1L;
 
     /**
      * 封装类转对象
