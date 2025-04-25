@@ -5,12 +5,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.leocoder.picture.common.PageResult;
 import org.leocoder.picture.common.Result;
 import org.leocoder.picture.common.ResultUtils;
-import org.leocoder.picture.domain.dto.picture.PictureEditRequest;
-import org.leocoder.picture.domain.dto.picture.PictureUploadByBatchRequest;
-import org.leocoder.picture.domain.dto.picture.PictureUploadRequest;
-import org.leocoder.picture.domain.dto.picture.PictureWaterfallRequest;
+import org.leocoder.picture.domain.dto.picture.*;
 import org.leocoder.picture.domain.pojo.User;
 import org.leocoder.picture.domain.vo.picture.PictureVO;
 import org.leocoder.picture.domain.vo.picture.PictureWaterfallVO;
@@ -39,6 +37,8 @@ import java.time.format.DateTimeFormatter;
 public class PictureController {
 
     private final PictureService pictureService;
+
+
 
 
     @ApiOperation(value = "上传图片（可重新上传）")
@@ -161,6 +161,40 @@ public class PictureController {
         Boolean result = pictureService.editPicture(requestParam);
 
         // 返回实际的操作结果
+        return ResultUtils.success(result);
+    }
+
+    @ApiOperation(value = "获取相似图片列表")
+    @PostMapping("/similar")
+    public Result<PageResult<PictureVO>> findSimilarPictures(@RequestBody SimilarPictureRequest request) {
+        // 获取登录用户
+        User loginUser = UserContext.getUser();
+        ThrowUtils.throwIf(ObjectUtil.isNull(loginUser), ErrorCode.NO_AUTH_ERROR);
+
+        // 参数校验
+        ThrowUtils.throwIf(ObjectUtil.isNull(request) || ObjectUtil.isNull(request.getPictureId()),
+                ErrorCode.PARAMS_ERROR, "参数不能为空");
+
+        // 调用服务
+        PageResult<PictureVO> result = pictureService.findSimilarPictures(request, loginUser);
+
+        return ResultUtils.success(result);
+    }
+
+    @ApiOperation(value = "以图搜图功能")
+    @PostMapping("/search/image")
+    public Result<PageResult<PictureVO>> searchByImage(@RequestBody ImageSearchRequest request) {
+        // 获取登录用户
+        User loginUser = UserContext.getUser();
+        ThrowUtils.throwIf(ObjectUtil.isNull(loginUser), ErrorCode.NO_AUTH_ERROR);
+
+        // 参数校验
+        ThrowUtils.throwIf(ObjectUtil.isNull(request) || ObjectUtil.isNull(request.getPictureId()),
+                ErrorCode.PARAMS_ERROR, "参数不能为空");
+
+        // 调用服务
+        PageResult<PictureVO> result = pictureService.searchByImage(request, loginUser);
+
         return ResultUtils.success(result);
     }
 }

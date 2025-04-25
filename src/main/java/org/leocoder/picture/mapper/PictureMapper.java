@@ -203,4 +203,29 @@ public interface PictureMapper {
      * @param favoriteCount 收藏数
      */
     void updateCounters(@Param("pictureId") Long pictureId, @Param("likeCount") Long likeCount,@Param("favoriteCount") Long favoriteCount);
+
+
+    /**
+     * 查询相似图片列表
+     *
+     * @param pictureId       原图片ID
+     * @param categoryId      原图片分类
+     * @param tagIds          原图片标签列表
+     * @param picScale        原图片宽高比
+     * @param mainColor       原图片主色调
+     * @param excludeUserId   排除的用户ID(当不包含同用户图片时)
+     * @param matchType       匹配类型
+     * @param relatedCategoryIds 相关分类ID列表
+     * @return 相似图片列表
+     */
+    List<Picture> selectSimilarPictures(
+            @Param("pictureId") Long pictureId,
+            @Param("categoryId") Long categoryId,
+            @Param("tagIds") List<Long> tagIds,
+            @Param("picScale") Double picScale,
+            @Param("mainColor") String mainColor,
+            @Param("excludeUserId") Long excludeUserId,
+            @Param("matchType") Integer matchType,
+            @Param("relatedCategoryIds") List<Long> relatedCategoryIds
+    );
 }

@@ -31,7 +31,7 @@ public class UrlPictureUpload extends PictureUploadTemplate {
     private final UploadProperties uploadProperties;
 
     @Override
-    protected void validPicture(Object inputSource) {
+    public void validPicture(Object inputSource) {
         String fileUrl = (String) inputSource;
         ThrowUtils.throwIf(StrUtil.isBlank(fileUrl), ErrorCode.FILE_NOT_NULL);
         // 跟之前的校验逻辑保持一致

@@ -1,13 +1,14 @@
 package org.leocoder.picture.service;
 
-import org.leocoder.picture.domain.dto.picture.PictureEditRequest;
-import org.leocoder.picture.domain.dto.picture.PictureUploadByBatchRequest;
-import org.leocoder.picture.domain.dto.picture.PictureUploadRequest;
-import org.leocoder.picture.domain.dto.picture.PictureWaterfallRequest;
+import org.leocoder.picture.common.PageResult;
+import org.leocoder.picture.domain.dto.picture.*;
 import org.leocoder.picture.domain.pojo.Picture;
 import org.leocoder.picture.domain.pojo.User;
 import org.leocoder.picture.domain.vo.picture.PictureVO;
 import org.leocoder.picture.domain.vo.picture.PictureWaterfallVO;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * @author : 程序员Leo
@@ -122,4 +123,23 @@ public interface PictureService {
      */
     Boolean editPicture(PictureEditRequest requestParam);
 
+    /**
+     * 查找相似图片
+     * @param request 查询参数
+     * @param loginUser 当前登录用户
+     * @return 分页结果
+     */
+    PageResult<PictureVO> findSimilarPictures(SimilarPictureRequest request, User loginUser);
+
+
+    /**
+     * 以图搜图功能
+     * @param request 请求参数
+     * @param loginUser 当前登录用户
+     * @return 分页结果
+     */
+    PageResult<PictureVO> searchByImage(ImageSearchRequest request, User loginUser);
+
+    @Transactional(rollbackFor = Exception.class)
+    Boolean saveSearchResults(Long sourceId, List<Long> targetIds);
 }

@@ -20,6 +20,7 @@ import org.leocoder.picture.manager.CosManager;
 import javax.annotation.Resource;
 import java.awt.*;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -224,5 +225,31 @@ public abstract class PictureUploadTemplate {
         if (!deleteResult) {
             log.error("file delete error, filepath = {}", file.getAbsolutePath());
         }
+    }
+
+    /**
+     * 批量验证和上传图片URL
+     * @param imageUrls 图片URL列表
+     * @param uploadPathPrefix 上传路径前缀
+     * @return 上传成功的结果列表
+     */
+    public List<UploadPictureResult> batchValidateAndUpload(List<String> imageUrls, String uploadPathPrefix) {
+        List<UploadPictureResult> results = new ArrayList<>();
+
+        for (String imageUrl : imageUrls) {
+            try {
+                // 验证URL
+                validPicture(imageUrl);
+
+                // 上传图片
+                UploadPictureResult result = uploadPicture(imageUrl, uploadPathPrefix);
+                results.add(result);
+                log.info("成功验证并上传图片: {}", imageUrl);
+            } catch (Exception e) {
+                log.warn("图片URL验证或上传失败: {}, 错误: {}", imageUrl, e.getMessage());
+            }
+        }
+
+        return results;
     }
 }

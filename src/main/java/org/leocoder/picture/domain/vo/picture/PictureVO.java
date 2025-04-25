@@ -78,6 +78,10 @@ public class PictureVO implements Serializable {
     @ApiModelProperty(value = "分类名称", name = "category")
     private String category;
 
+    @ApiModelProperty(value = "与源图片的相似度", name = "similarity")
+    private Integer similarity;
+
+
     @ApiModelProperty(value = "审核状态", name = "reviewStatus")
     private Integer reviewStatus;
 

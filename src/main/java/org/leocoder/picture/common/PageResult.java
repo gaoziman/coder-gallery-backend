@@ -2,6 +2,7 @@ package org.leocoder.picture.common;
 
 import lombok.Data;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -48,6 +49,27 @@ public class PageResult<T> {
      * 是否有下一页
      */
     private Boolean hasNext;
+
+
+    /**
+     * 创建空结果集
+     *
+     * @param pageNum  当前页码
+     * @param pageSize 每页记录数
+     * @return 空的分页结果对象
+     */
+    public static <T> PageResult<T> empty(Integer pageNum, Integer pageSize) {
+        return build(0L, Collections.emptyList(), pageNum, pageSize);
+    }
+
+    /**
+     * 兼容性方法，用于支持同时使用getList()和getRecords()
+     *
+     * @return 当前页数据
+     */
+    public List<T> getList() {
+        return this.records;
+    }
 
     /**
      * 创建分页结果对象

@@ -478,4 +478,10 @@
         </foreach>
         and is_deleted = 0
     </select>
+
+    <delete id="deleteById">
+        update t_category
+        set is_deleted = 1
+        where id = #{id,jdbcType=BIGINT}
+    </delete>
 </mapper>

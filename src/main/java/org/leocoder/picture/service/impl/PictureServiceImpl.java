@@ -4,17 +4,20 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpResponse;
+import cn.hutool.http.HttpStatus;
+import cn.hutool.http.HttpUtil;
+import cn.hutool.http.Method;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.leocoder.picture.cache.PictureCacheManager;
+import org.leocoder.picture.common.PageResult;
+import org.leocoder.picture.common.PageUtils;
 import org.leocoder.picture.constant.RedisKeyConstants;
 import org.leocoder.picture.constants.RedisConstants;
-import org.leocoder.picture.domain.dto.picture.PictureEditRequest;
-import org.leocoder.picture.domain.dto.picture.PictureUploadByBatchRequest;
-import org.leocoder.picture.domain.dto.picture.PictureUploadRequest;
-import org.leocoder.picture.domain.dto.picture.PictureWaterfallRequest;
+import org.leocoder.picture.domain.dto.picture.*;
 import org.leocoder.picture.domain.dto.upload.UploadPictureResult;
 import org.leocoder.picture.domain.mapstruct.PictureConvert;
 import org.leocoder.picture.domain.mapstruct.UserConvert;
@@ -87,7 +90,7 @@ public class PictureServiceImpl implements PictureService {
 
     private final PictureHashMapper pictureHashMapper;
 
-    private final  UserReactionService userReactionService;
+    private final UserReactionService userReactionService;
 
     private final RedisTemplate<String, Object> redisTemplate;
 
@@ -237,6 +240,7 @@ public class PictureServiceImpl implements PictureService {
 
     /**
      * 根据ID获取图片详情
+     *
      * @param id        图片ID
      * @param loginUser 当前登录用户
      * @return 图片详情
@@ -331,6 +335,7 @@ public class PictureServiceImpl implements PictureService {
 
     /**
      * 获取上一张图片
+     *
      * @param currentPictureId 当前图片ID
      * @param loginUser        当前登录用户
      * @return 上一张图片详情，如果没有则返回null
@@ -424,6 +429,7 @@ public class PictureServiceImpl implements PictureService {
 
     /**
      * 获取下一张图片
+     *
      * @param currentPictureId 当前图片ID
      * @param loginUser        当前登录用户
      * @return 下一张图片详情，如果没有则返回null
@@ -884,8 +890,9 @@ public class PictureServiceImpl implements PictureService {
 
     /**
      * 获取首页瀑布流图片列表
+     *
      * @param requestParam 请求参数（排序方式、筛选条件等）
-     * @param loginUser 当前登录用户
+     * @param loginUser    当前登录用户
      * @return 瀑布流图片列表包装对象
      */
     @Override
@@ -971,10 +978,11 @@ public class PictureServiceImpl implements PictureService {
 
     /**
      * 加载更多瀑布流图片
-     * @param lastId 最后一张图片ID（游标）
-     * @param lastValue 最后一张图片的排序值
+     *
+     * @param lastId       最后一张图片ID（游标）
+     * @param lastValue    最后一张图片的排序值
      * @param requestParam 请求参数
-     * @param loginUser 当前登录用户
+     * @param loginUser    当前登录用户
      * @return 更多的瀑布流图片列表包装对象
      */
     @Override
@@ -1281,7 +1289,7 @@ public class PictureServiceImpl implements PictureService {
             User user = userMap.get(picture.getCreateUser());
             UserConvert.INSTANCE.toUserVO(user);
             if (ObjectUtil.isNotNull(user)) {
-                pictureVO.setUser( UserConvert.INSTANCE.toUserVO(user));
+                pictureVO.setUser(UserConvert.INSTANCE.toUserVO(user));
             }
 
             // 填充分类信息
@@ -1492,7 +1500,7 @@ public class PictureServiceImpl implements PictureService {
         try {
             for (Long userId : userIds) {
                 User user = userMapper.selectById(userId);
-                if (Objects.isNull(user)) {
+                if (Objects.nonNull(user)) {
                     result.put(userId, user);
                 }
             }
@@ -1502,6 +1510,7 @@ public class PictureServiceImpl implements PictureService {
 
         return result;
     }
+
     /**
      * 校验图片信息
      *
@@ -1685,6 +1694,599 @@ public class PictureServiceImpl implements PictureService {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "更新图片关联关系失败: " + e.getMessage());
         }
     }
+
+
+    /**
+     * 查找相似图片
+     *
+     * @param request   查询参数
+     * @param loginUser 当前登录用户
+     * @return 分页结果
+     */
+    @Override
+    public PageResult<PictureVO> findSimilarPictures(SimilarPictureRequest request, User loginUser) {
+        if (request == null || request.getPictureId() == null || request.getPictureId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "图片ID不能为空");
+        }
+
+        // 查询原图片信息
+        final Long pictureId = request.getPictureId();
+        Picture originalPicture = pictureMapper.selectById(pictureId);
+        if (originalPicture == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "原图片不存在");
+        }
+
+        // 获取原图片分类
+        List<Long> originalCategoryIds = categoryRelationService.getCategoryIdsByContent("picture", pictureId);
+        if (CollUtil.isEmpty(originalCategoryIds)) {
+            log.warn("图片 {} 未关联任何分类", pictureId);
+            // 如果原图片没有分类，返回空结果
+            return PageResult.empty(request.getPageNum(), request.getPageSize());
+        }
+
+        // 获取原图片的分类ID
+        final Long originalCategoryId = originalCategoryIds.get(0);
+
+        // 获取该分类的相关分类（父分类、子分类和同级分类）
+        Set<Long> relatedCategoryIds = getRelatedCategoryIds(originalCategoryId);
+        if (relatedCategoryIds.isEmpty()) {
+            relatedCategoryIds.add(originalCategoryId);
+        }
+
+        log.info("图片 {} 的相关分类IDs: {}", pictureId, relatedCategoryIds);
+
+        // 获取原图片标签
+        final List<Long> tagIds = tagRelationService.getTagIdsByContent("picture", pictureId);
+
+        // 宽高比
+        final Double picScale = originalPicture.getPicScale() != null
+                ? originalPicture.getPicScale().doubleValue()
+                : null;
+
+        // 主色调
+        final String mainColor = originalPicture.getMainColor();
+
+        // 是否排除同一用户
+        final Long finalExcludeUserId;
+        if (request.getIncludeSameUser() != null && !request.getIncludeSameUser()) {
+            finalExcludeUserId = originalPicture.getCreateUser();
+        } else {
+            finalExcludeUserId = null;
+        }
+
+        // 使用PageHelper进行分页查询，注意这里不再传入minSimilarity参数
+        return PageUtils.doPage(request, () ->
+                        pictureMapper.selectSimilarPictures(
+                                pictureId,
+                                originalCategoryId,
+                                tagIds,
+                                picScale,
+                                mainColor,
+                                finalExcludeUserId,
+                                request.getMatchType(),
+                                new ArrayList<>(relatedCategoryIds)
+                        ),
+                this::convertAndEnrichPicture
+        );
+    }
+
+
+    /**
+     * 获取指定分类的相关分类ID（包括父分类、子分类和同级分类）
+     *
+     * @param categoryId 分类ID
+     * @return 相关分类ID集合
+     */
+    private Set<Long> getRelatedCategoryIds(Long categoryId) {
+        Set<Long> relatedCategoryIds = new HashSet<>();
+        try {
+            // 添加当前分类
+            relatedCategoryIds.add(categoryId);
+
+            // 获取当前分类信息
+            Category category = categoryMapper.selectById(categoryId);
+            if (category == null) {
+                return relatedCategoryIds;
+            }
+
+            // 添加父分类
+            if (category.getParentId() != null && category.getParentId() > 0) {
+                relatedCategoryIds.add(category.getParentId());
+
+                // 获取同级分类（兄弟分类）
+                List<Category> siblingCategories = categoryMapper.selectByParentId(category.getParentId());
+                if (CollUtil.isNotEmpty(siblingCategories)) {
+                    for (Category sibling : siblingCategories) {
+                        relatedCategoryIds.add(sibling.getId());
+                    }
+                }
+            }
+
+            // 获取子分类
+            List<Category> childCategories = categoryMapper.selectByParentId(categoryId);
+            if (CollUtil.isNotEmpty(childCategories)) {
+                for (Category child : childCategories) {
+                    relatedCategoryIds.add(child.getId());
+                }
+            }
+
+            log.info("分类 {} 的相关分类数量: {}", categoryId, relatedCategoryIds.size());
+        } catch (Exception e) {
+            log.error("获取相关分类失败", e);
+        }
+        return relatedCategoryIds;
+    }
+
+    /**
+     * 转换并丰富单个图片对象
+     */
+    private PictureVO convertAndEnrichPicture(Picture picture) {
+        // 基本转换
+        PictureVO pictureVO = PictureConvert.INSTANCE.toPictureVO(picture);
+
+        try {
+            // 设置图片创建的用户信息
+            pictureVO.setUser(userService.getUserById(picture.getCreateUser()));
+
+            // 获取并设置图片关联的分类信息
+            List<Long> categoryIds = categoryRelationService.getCategoryIdsByContent("picture", picture.getId());
+            if (CollUtil.isNotEmpty(categoryIds)) {
+                Long categoryId = categoryIds.get(0);
+                pictureVO.setCategoryId(String.valueOf(categoryId));
+                Category category = categoryMapper.selectById(categoryId);
+                if (category != null) {
+                    pictureVO.setCategory(category.getName());
+                }
+            }
+
+            // 获取并设置图片关联的标签信息
+            List<Long> tagIds = tagRelationService.getTagIdsByContent("picture", picture.getId());
+            if (CollUtil.isNotEmpty(tagIds)) {
+                List<String> tagIdStrings = tagIds.stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.toList());
+                pictureVO.setTagIds(tagIdStrings);
+
+                List<String> tagNames = tagMapper.selectNamesByIds(tagIds);
+                pictureVO.setTags(tagNames);
+
+                // 获取标签颜色
+                List<Map<String, Object>> tagColorMaps = tagMapper.selectColorsByIds(tagIds);
+                if (CollUtil.isNotEmpty(tagColorMaps)) {
+                    List<String> tagColors = tagColorMaps.stream()
+                            .map(map -> (String) map.get("color"))
+                            .collect(Collectors.toList());
+                    pictureVO.setTagColors(tagColors);
+                }
+            }
+        } catch (Exception e) {
+            log.error("填充图片附加信息失败: pictureId={}", picture.getId(), e);
+        }
+
+        return pictureVO;
+    }
+
+    /**
+     * 以图搜图功能
+     *
+     * @param request   请求参数
+     * @param loginUser 当前登录用户
+     * @return 分页结果
+     */
+    @Override
+    public PageResult<PictureVO> searchByImage(ImageSearchRequest request, User loginUser) {
+        if (request == null || request.getPictureId() == null || request.getPictureId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "图片ID不能为空");
+        }
+
+        // 获取页大小 - 这个就是我们要限制的总记录数
+        int pageSize = request.getPageSize();
+
+        try {
+            // 步骤1: 查询原图片信息
+            Picture sourcePicture = pictureMapper.selectById(request.getPictureId());
+            if (sourcePicture == null) {
+                throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "原图片不存在");
+            }
+
+            // 步骤2: 构建搜索关键词 - 优化后的逻辑
+            List<String> searchKeywords = new ArrayList<>();
+
+            // 优先级1: 使用自定义关键词
+            if (StrUtil.isNotBlank(request.getCustomKeyword())) {
+                searchKeywords.add(request.getCustomKeyword());
+                log.info("使用自定义关键词: {}", request.getCustomKeyword());
+            }
+            // 优先级2: 首次搜索且图片名称不为空，使用图片名称
+            else if (!request.getIsResearch() && StrUtil.isNotBlank(sourcePicture.getName())) {
+                searchKeywords.add(sourcePicture.getName());
+                log.info("优先使用图片名称作为关键词: {}", sourcePicture.getName());
+            }
+            // 优先级3: 再次搜索或图片名称为空时
+            else {
+                // 3a. 先尝试获取标签信息
+                List<Long> tagIds = tagRelationService.getTagIdsByContent("picture", request.getPictureId());
+                if (!tagIds.isEmpty()) {
+                    List<String> tagNames = tagMapper.selectNamesByIds(tagIds);
+                    if (!tagNames.isEmpty()) {
+                        // 只取前3个标签，避免搜索过于复杂
+                        searchKeywords.addAll(tagNames.subList(0, Math.min(tagNames.size(), 3)));
+                        log.info("使用标签关键词: {}", String.join(", ", tagNames.subList(0, Math.min(tagNames.size(), 3))));
+                    }
+                }
+                // 3b. 标签为空时，使用分类信息
+                else {
+                    // 获取分类信息
+                    List<Long> categoryIds = categoryRelationService.getCategoryIdsByContent("picture", request.getPictureId());
+                    if (!categoryIds.isEmpty()) {
+                        Long categoryId = categoryIds.get(0);
+                        Category category = categoryMapper.selectById(categoryId);
+                        if (category != null) {
+                            searchKeywords.add(category.getName());
+                            log.info("使用分类关键词: {}", category.getName());
+                        }
+                    }
+                }
+
+                // 优先级4: 如果分类和标签都为空，且图片名称不为空，则仍使用图片名称
+                if (searchKeywords.isEmpty() && StrUtil.isNotBlank(sourcePicture.getName())) {
+                    searchKeywords.add(sourcePicture.getName());
+                    log.info("回退使用图片名称作为关键词: {}", sourcePicture.getName());
+                }
+
+                // 优先级5: 如果所有信息都为空，使用默认关键词
+                if (searchKeywords.isEmpty()) {
+                    searchKeywords.add("dog");
+                    log.info("使用默认关键词: dog");
+                }
+            }
+
+            // 步骤3: 将多个关键词合并为一个搜索词，以空格分隔
+            String searchText = String.join(" ", searchKeywords);
+            log.info("最终生成的搜索关键词: {}", searchText);
+
+            // 步骤4: 使用PictureCrawlerManager搜索图片
+            PictureCrawler crawler = pictureCrawlerManager.getCrawler(request.getSource());
+
+            List<Map<String, Object>> crawledPictures = crawler.crawlPictures(searchText, pageSize * 2);
+            log.info("爬取到{}张图片，开始验证URL", crawledPictures.size());
+
+            // 步骤5: 验证图片URL是否可访问
+            List<Map<String, Object>> validPictures = validateImageUrls(crawledPictures);
+            log.info("验证后有{}张有效图片", validPictures.size());
+
+            // 重要修改: 如果有效图片超过pageSize，限制为pageSize数量
+            if (validPictures.size() > pageSize) {
+                validPictures = validPictures.subList(0, pageSize);
+                log.info("限制结果为请求的{}条记录", pageSize);
+            }
+
+            // 步骤6: 将验证通过的搜索结果上传到腾讯云并转换为PictureVO对象
+            List<PictureVO> pictureVOList = uploadAndConvertSearchResults(validPictures, sourcePicture, searchText, crawler.getSourceName(), loginUser);
+
+            // 最终再次确保不超过pageSize
+            if (pictureVOList.size() > pageSize) {
+                pictureVOList = pictureVOList.subList(0, pageSize);
+            }
+
+            // 创建分页结果 - 因为总数现在等于展示数量，所以都是pageSize
+            long total = pictureVOList.size();
+
+            // 只需返回单页结果，不需要分页
+            return PageResult.build(total, pictureVOList, 1, pageSize);
+
+        } catch (Exception e) {
+            log.error("以图搜图过程中发生错误", e);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "搜索图片失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 验证图片URL是否可访问
+     *
+     * @param pictures 待验证的图片数据列表
+     * @return 验证通过的图片数据列表
+     */
+    private List<Map<String, Object>> validateImageUrls(List<Map<String, Object>> pictures) {
+        List<Map<String, Object>> validPictures = new ArrayList<>();
+
+        for (Map<String, Object> picture : pictures) {
+            String imageUrl = (String) picture.get("url");
+            if (StrUtil.isBlank(imageUrl)) {
+                continue;
+            }
+
+            try {
+                // 发送HEAD请求检查URL是否可访问
+                HttpResponse response = HttpUtil.createRequest(Method.HEAD, imageUrl)
+                        .setConnectionTimeout(3000)
+                        .setReadTimeout(3000)
+                        .execute();
+
+                if (response.getStatus() == HttpStatus.HTTP_OK) {
+                    // 检查Content-Type确保是图片类型
+                    String contentType = response.header("Content-Type");
+                    if (StrUtil.isNotBlank(contentType) && contentType.startsWith("image/")) {
+                        validPictures.add(picture);
+                        log.debug("URL验证通过: {}", imageUrl);
+                    } else {
+                        log.warn("非图片类型资源，Content-Type: {}, URL: {}", contentType, imageUrl);
+                    }
+                } else {
+                    log.warn("图片URL不可访问，状态码: {}, URL: {}", response.getStatus(), imageUrl);
+                }
+            } catch (Exception e) {
+                log.warn("验证图片URL失败: {}, 错误: {}", imageUrl, e.getMessage());
+            }
+        }
+
+        log.info("URL验证结果: {}张有效/{}张总数", validPictures.size(), pictures.size());
+        return validPictures;
+    }
+
+    /**
+     * 将搜索结果上传到腾讯云并转换为PictureVO对象
+     * 修改后的方法，确保每个图片都先上传到腾讯云再返回
+     */
+    private List<PictureVO> uploadAndConvertSearchResults(List<Map<String, Object>> crawledPictures,
+                                                          Picture sourcePicture, String searchText, String sourceName, User loginUser) {
+        List<PictureVO> pictureVOList = new ArrayList<>();
+
+        // 获取源图片的分类和标签信息（用于填充搜索结果）
+        List<Long> categoryIds = categoryRelationService.getCategoryIdsByContent("picture", sourcePicture.getId());
+        List<Long> tagIds = tagRelationService.getTagIdsByContent("picture", sourcePicture.getId());
+
+        for (Map<String, Object> pictureData : crawledPictures) {
+            String imageUrl = (String) pictureData.get("url");
+            if (StrUtil.isBlank(imageUrl)) {
+                continue;
+            }
+
+            try {
+                // 将图片上传到腾讯云
+                UploadPictureResult uploadResult = uploadSearchResultImage(imageUrl, sourcePicture.getId(), loginUser);
+
+                String title = (String) pictureData.getOrDefault("title", "搜索结果");
+                if (StrUtil.isBlank(title)) {
+                    title = "搜索: " + searchText;
+                }
+
+                // 创建并填充PictureVO对象
+                PictureVO pictureVO = new PictureVO();
+                // 使用腾讯云返回的URL，而不是原始URL
+                pictureVO.setUrl(uploadResult.getUrl());
+                pictureVO.setThumbnailUrl(uploadResult.getThumbnailUrl() != null ?
+                        uploadResult.getThumbnailUrl() : uploadResult.getUrl());
+                pictureVO.setName(title);
+
+                // 设置尺寸信息，优先使用上传结果中的尺寸信息
+                pictureVO.setPicWidth(uploadResult.getPicWidth());
+                pictureVO.setPicHeight(uploadResult.getPicHeight());
+                pictureVO.setPicScale(uploadResult.getPicScale());
+
+                // 设置图片格式
+                pictureVO.setFormat(uploadResult.getPicFormat());
+
+                // 设置图片大小
+                pictureVO.setSize(uploadResult.getPicSize());
+
+                // 设置主色调
+                pictureVO.setMainColor(uploadResult.getPicColor());
+
+                // 设置时间和描述
+                pictureVO.setCreateTime(LocalDateTime.now());
+                pictureVO.setDescription("从" + sourceName + "搜索: " + searchText);
+
+                // 生成临时ID（负数，表示未保存到数据库）
+                pictureVO.setId(-System.currentTimeMillis() - new Random().nextInt(1000));
+
+                // 填充分类信息
+                if (!categoryIds.isEmpty()) {
+                    pictureVO.setCategoryId(categoryIds.get(0).toString());
+                    Category category = categoryMapper.selectById(categoryIds.get(0));
+                    if (category != null) {
+                        pictureVO.setCategory(category.getName());
+                    }
+                }
+
+                // 填充标签信息
+                if (!tagIds.isEmpty()) {
+                    List<String> tagNames = tagMapper.selectNamesByIds(tagIds);
+                    pictureVO.setTags(tagNames);
+
+                    List<String> tagIdStrings = tagIds.stream()
+                            .map(String::valueOf)
+                            .collect(Collectors.toList());
+                    pictureVO.setTagIds(tagIdStrings);
+
+                    // 处理标签颜色
+                    List<Map<String, Object>> tagColorMaps = tagMapper.selectColorsByIds(tagIds);
+                    if (CollUtil.isNotEmpty(tagColorMaps)) {
+                        List<String> tagColors = tagColorMaps.stream()
+                                .map(map -> (String) map.get("color"))
+                                .collect(Collectors.toList());
+                        pictureVO.setTagColors(tagColors);
+                    }
+                }
+
+                // 设置用户信息（原始图片的上传者）
+                pictureVO.setUser(userService.getUserById(sourcePicture.getCreateUser()));
+
+                pictureVOList.add(pictureVO);
+                log.info("成功将搜索结果图片上传至腾讯云: 原URL={}, 新URL={}", imageUrl, uploadResult.getUrl());
+            } catch (Exception e) {
+                log.error("处理搜索结果图片失败: {}", e.getMessage(), e);
+                // 如果单张图片处理失败，继续处理其他图片
+            }
+        }
+
+        return pictureVOList;
+    }
+
+
+    /**
+     * 上传搜索结果图片到腾讯云（不保存到数据库）
+     *
+     * @param imageUrl      图片URL
+     * @param sourceImageId 源图片ID（用于构建上传路径）
+     * @param loginUser     当前登录用户
+     * @return 上传结果
+     */
+    private UploadPictureResult uploadSearchResultImage(String imageUrl, Long sourceImageId, User loginUser) {
+        try {
+            // 校验图片URL有效性
+            urlPictureUpload.validPicture(imageUrl);
+
+            // 使用特定的路径前缀，防止和普通上传图片混淆
+            String uploadPathPrefix = String.format("search-results/%s/%s", loginUser.getId(), sourceImageId);
+
+            // 调用URL图片上传模板方法上传图片到腾讯云
+            UploadPictureResult result = urlPictureUpload.uploadPicture(imageUrl, uploadPathPrefix);
+
+            log.info("搜索结果图片上传成功: 原URL={}, 腾讯云URL={}", imageUrl, result.getUrl());
+            return result;
+        } catch (Exception e) {
+            log.error("搜索结果图片上传失败: {}", e.getMessage(), e);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "图片上传失败: " + e.getMessage());
+        }
+    }
+
+
+    /**
+     * 处理分页
+     */
+    private PageResult<PictureVO> handlePagination(List<PictureVO> pictureVOList, int pageNum, int pageSize) {
+        // 计算总数
+        long total = pictureVOList.size();
+
+        // 分页处理
+        int startIndex = (pageNum - 1) * pageSize;
+        int endIndex = Math.min(startIndex + pageSize, pictureVOList.size());
+
+        // 如果起始索引超出范围，返回空结果
+        if (startIndex >= total) {
+            return PageResult.empty(pageNum, pageSize);
+        }
+
+        // 截取当前页的数据
+        List<PictureVO> pageData = pictureVOList.subList(startIndex, endIndex);
+
+        // 返回分页结果
+        return PageResult.build(total, pageData, pageNum, pageSize);
+    }
+
+    /**
+     * 将搜索结果转换为PictureVO对象
+     */
+    private List<PictureVO> convertSearchResults(List<Map<String, Object>> crawledPictures,
+                                                 Picture sourcePicture, String searchText, String sourceName) {
+        List<PictureVO> pictureVOList = new ArrayList<>();
+
+        // 获取源图片的分类和标签信息（用于填充搜索结果）
+        List<Long> categoryIds = categoryRelationService.getCategoryIdsByContent("picture", sourcePicture.getId());
+        List<Long> tagIds = tagRelationService.getTagIdsByContent("picture", sourcePicture.getId());
+
+        for (Map<String, Object> pictureData : crawledPictures) {
+            String imageUrl = (String) pictureData.get("url");
+            if (StrUtil.isBlank(imageUrl)) {
+                continue;
+            }
+
+            String thumbnailUrl = (String) pictureData.getOrDefault("thumbnailUrl", imageUrl);
+            String title = (String) pictureData.getOrDefault("title", "搜索结果");
+
+            // 创建并填充PictureVO对象
+            PictureVO pictureVO = new PictureVO();
+            pictureVO.setUrl(imageUrl);
+            pictureVO.setThumbnailUrl(thumbnailUrl);
+            pictureVO.setName(title);
+
+            // 设置尺寸信息
+            Integer width = (Integer) pictureData.getOrDefault("width", 0);
+            Integer height = (Integer) pictureData.getOrDefault("height", 0);
+            pictureVO.setPicWidth(width);
+            pictureVO.setPicHeight(height);
+
+            // 计算宽高比
+            if (width > 0 && height > 0) {
+                Double scale = width * 1.0 / height;
+                pictureVO.setPicScale(scale);
+            }
+
+            // 设置图片格式
+            String format = (String) pictureData.getOrDefault("format", "jpg");
+            pictureVO.setFormat(format);
+
+            // 设置时间和描述
+            pictureVO.setCreateTime(LocalDateTime.now());
+            pictureVO.setDescription("从" + sourceName + "搜索: " + searchText);
+
+            // 生成临时ID（负数，表示未保存到数据库）
+            pictureVO.setId(-System.currentTimeMillis() - new Random().nextInt(1000));
+
+            // 填充分类信息
+            if (!categoryIds.isEmpty()) {
+                pictureVO.setCategoryId(categoryIds.get(0).toString());
+                Category category = categoryMapper.selectById(categoryIds.get(0));
+                if (category != null) {
+                    pictureVO.setCategory(category.getName());
+                }
+            }
+
+            // 填充标签信息
+            if (!tagIds.isEmpty()) {
+                List<String> tagNames = tagMapper.selectNamesByIds(tagIds);
+                pictureVO.setTags(tagNames);
+
+                List<String> tagIdStrings = tagIds.stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.toList());
+                pictureVO.setTagIds(tagIdStrings);
+
+                // 处理标签颜色
+                List<Map<String, Object>> tagColorMaps = tagMapper.selectColorsByIds(tagIds);
+                if (CollUtil.isNotEmpty(tagColorMaps)) {
+                    List<String> tagColors = tagColorMaps.stream()
+                            .map(map -> (String) map.get("color"))
+                            .collect(Collectors.toList());
+                    pictureVO.setTagColors(tagColors);
+                }
+            }
+
+            // 设置用户信息（原始图片的上传者）
+            pictureVO.setUser(userService.getUserById(sourcePicture.getCreateUser()));
+
+            pictureVOList.add(pictureVO);
+        }
+
+        return pictureVOList;
+    }
+
+    /**
+     * 保存搜索结果关系
+     *
+     * @param sourceId  源图片ID
+     * @param targetIds 目标图片ID列表（临时ID）
+     * @return 是否成功
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public Boolean saveSearchResults(Long sourceId, List<Long> targetIds) {
+        if (sourceId == null || CollUtil.isEmpty(targetIds)) {
+            return false;
+        }
+
+        try {
+            // 这里实现搜索结果关系的记录逻辑
+            // 可以保存到专门的搜索历史表中，记录源图片ID和搜索结果
+            log.info("保存搜索结果关系: sourceId={}, targetCount={}", sourceId, targetIds.size());
+            return true;
+        } catch (Exception e) {
+            log.error("保存搜索结果关系失败: sourceId={}", sourceId, e);
+            return false;
+        }
+    }
+
 
     @Data
     private static class TagInfo {
