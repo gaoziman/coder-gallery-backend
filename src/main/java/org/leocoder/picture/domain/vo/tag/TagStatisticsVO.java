@@ -30,15 +30,27 @@ public class TagStatisticsVO implements Serializable {
     @ApiModelProperty(value = "今日创建标签数", example = "5")
     private Integer todayCount;
 
-    @ApiModelProperty(value = "本月新增标签数", example = "15")
-    private Integer monthCount;
-
     @ApiModelProperty(value = "本周新增标签数", example = "15")
     private Integer weekCount;
 
+    @ApiModelProperty(value = "本周新增标签环比增长率", example = "5.2")
+    private Double weekGrowthRate;
+
+    @ApiModelProperty(value = "本月新增标签数", example = "30")
+    private Integer monthCount;
+
+    @ApiModelProperty(value = "本月新增标签环比增长率", example = "12.5")
+    private Double monthGrowthRate;
+
     @ApiModelProperty(value = "未使用的标签数", example = "10")
-    private  Integer unusedTag;
+    private Integer unusedTag;
+
+    @ApiModelProperty(value = "未使用标签环比增长率", example = "-8.3")
+    private Double unusedTagGrowthRate;
 
     @ApiModelProperty(value = "引用总数", example = "200")
     private Integer totalReferenceCount;
+
+    @ApiModelProperty(value = "引用总数环比增长率", example = "15.7")
+    private Double referenceCountGrowthRate;
 }

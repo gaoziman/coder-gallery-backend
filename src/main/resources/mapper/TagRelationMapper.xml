@@ -257,4 +257,21 @@
         WHERE content_type = #{contentType}
         AND content_id = #{contentId}
     </delete>
+
+    <!-- 统计所有标签的引用次数 -->
+    <select id="countAllTagReferences" resultType="java.util.Map">
+        select tag_id, count(*) as ref_count
+        from t_tag_relation
+        where is_deleted = 0
+        group by tag_id
+    </select>
+
+    <!-- 直接设置标签引用次数 -->
+    <update id="updateReferenceCountDirect">
+        update t_tag
+        set reference_count = #{count},
+        update_time = now()
+        where id = #{tagId}
+        and is_deleted = 0
+    </update>
 </mapper>

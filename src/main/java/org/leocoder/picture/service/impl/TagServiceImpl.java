@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
@@ -207,7 +208,6 @@ public class TagServiceImpl implements TagService {
      */
     @Override
     public PageResult<TagVO> listTagByPage(TagQueryRequest requestParam) {
-        // 使用 PageUtils 和 MapStruct 进行分页查询和对象转换
         return PageUtils.doPage(
                 requestParam,
                 () -> tagMapper.selectByCondition(
@@ -216,24 +216,7 @@ public class TagServiceImpl implements TagService {
                         requestParam.getCreateTimeStart(),
                         requestParam.getCreateTimeEnd()
                 ),
-                tag -> {
-                    // 使用 MapStruct 转换基本属性
-                    TagVO tagVO = TagConvert.INSTANCE.toTagVO(tag);
-
-                    // // 设置创建人信息
-                    // if (tag.getCreateUser() != null) {
-                    //     try {
-                    //         User user = userService.getUsernameById(tag.getCreateUser());
-                    //         if (user != null) {
-                    //             tagVO.setCreateUser(user.getId());
-                    //         }
-                    //     } catch (Exception e) {
-                    //         log.warn("获取用户名失败: {}", tag.getCreateUser(), e);
-                    //     }
-                    // }
-
-                    return tagVO;
-                }
+                TagConvert.INSTANCE::toTagVO
         );
     }
 
@@ -298,6 +281,7 @@ public class TagServiceImpl implements TagService {
     public TagStatisticsVO getTagStatistics() {
         TagStatisticsVO vo = new TagStatisticsVO();
 
+        // 获取当前数据
         // 获取总标签数
         vo.setTotalCount(tagMapper.countTags(null));
 
@@ -311,20 +295,120 @@ public class TagServiceImpl implements TagService {
         vo.setTodayCount(tagMapper.countTodayTags());
 
         // 获取本周新增的标签数
-        vo.setWeekCount(tagMapper.countWeekTags());
+        Integer weekCount = tagMapper.countWeekTags();
+        vo.setWeekCount(weekCount != null ? weekCount : 0);
 
         // 获取本月新增的标签数
-        vo.setMonthCount(tagMapper.countMonthTags());
+        Integer monthCount = tagMapper.countMonthTags();
+        vo.setMonthCount(monthCount != null ? monthCount : 0);
 
         // 获取未使用的标签数（引用计数为0）
-        vo.setUnusedTag(tagMapper.countUnusedTags());
+        Integer unusedTags = tagMapper.countUnusedTags();
+        vo.setUnusedTag(unusedTags != null ? unusedTags : 0);
 
         // 获取所有标签的引用总数
-        vo.setTotalReferenceCount(tagMapper.sumTagReferenceCount());
+        Integer totalReferenceCount = tagMapper.sumTagReferenceCount();
+        vo.setTotalReferenceCount(totalReferenceCount != null ? totalReferenceCount : 0);
+
+        // 获取上月数据并计算环比增长率
+        try {
+            // 获取上周和上月数据
+            Integer lastWeekCount = tagMapper.countLastWeekTags();
+            Integer lastMonthCount = tagMapper.countLastMonthTags();
+            Integer lastMonthUnusedTags = tagMapper.countLastMonthUnusedTags();
+            Integer lastMonthReferenceCount = tagMapper.getLastMonthReferenceCount();
+
+            // 在获取本周/本月数据时添加条件判断
+            Calendar cal = Calendar.getInstance();
+            boolean isStartOfMonth = cal.get(Calendar.DAY_OF_MONTH) <= 3; // 月初3天内
+            boolean isStartOfWeek = cal.get(Calendar.DAY_OF_WEEK) == Calendar.MONDAY || cal.get(Calendar.DAY_OF_WEEK) == Calendar.TUESDAY; // 周一或周二
+
+            // 计算周增长率
+            if (isStartOfWeek && lastWeekCount != null && lastWeekCount > 0) {
+                // 如果在周初，使用估算方法
+                int daysInWeek = 7;
+                int currentDayOfWeek = cal.get(Calendar.DAY_OF_WEEK) - 1; // 星期日是1，星期一是2
+                if (currentDayOfWeek == 0) currentDayOfWeek = 7; // 处理星期日是1的情况
+
+                // 上周每日平均新增
+                double avgDailyLastWeek = lastWeekCount / (double) daysInWeek;
+                // 本周预估总量（基于当前增长趋势）
+                double estimatedWeekTotal = weekCount / (double) currentDayOfWeek * daysInWeek;
+
+                double weekGrowthRate = calculateGrowthRate((int)Math.round(estimatedWeekTotal), lastWeekCount);
+                vo.setWeekGrowthRate(weekGrowthRate);
+            } else if (lastWeekCount != null && lastWeekCount > 0) {
+                // 常规计算
+                double weekGrowthRate = calculateGrowthRate(weekCount, lastWeekCount);
+                vo.setWeekGrowthRate(weekGrowthRate);
+            } else {
+                vo.setWeekGrowthRate(weekCount > 0 ? 100.0 : 0.0); // 上周无数据但本周有则视为100%增长
+            }
+
+            // 计算月增长率
+            if (isStartOfMonth && lastMonthCount != null && lastMonthCount > 0) {
+                // 如果在月初，可以考虑使用平均每日数量进行估算
+                int daysInLastMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+                int currentDay = cal.get(Calendar.DAY_OF_MONTH);
+
+                // 上月每日平均新增
+                double avgDailyLastMonth = lastMonthCount / (double) daysInLastMonth;
+                // 本月预估总量（基于当前增长趋势）
+                double estimatedMonthTotal = monthCount / (double) currentDay * daysInLastMonth;
+
+                double monthGrowthRate = calculateGrowthRate((int)Math.round(estimatedMonthTotal), lastMonthCount);
+                vo.setMonthGrowthRate(monthGrowthRate);
+            } else if (lastMonthCount != null && lastMonthCount > 0) {
+                // 常规计算
+                double monthGrowthRate = calculateGrowthRate(monthCount, lastMonthCount);
+                vo.setMonthGrowthRate(monthGrowthRate);
+            } else {
+                vo.setMonthGrowthRate(monthCount > 0 ? 100.0 : 0.0); // 上月无数据但本月有则视为100%增长
+            }
+
+            // 计算未使用标签增长率
+            if (lastMonthUnusedTags != null) {
+                double unusedTagGrowthRate = calculateGrowthRate(unusedTags, lastMonthUnusedTags);
+                vo.setUnusedTagGrowthRate(unusedTagGrowthRate);
+            } else {
+                vo.setUnusedTagGrowthRate(0.0);
+            }
+
+            // 计算引用总数增长率
+            if (lastMonthReferenceCount != null) {
+                double referenceCountGrowthRate = calculateGrowthRate(totalReferenceCount, lastMonthReferenceCount);
+                vo.setReferenceCountGrowthRate(referenceCountGrowthRate);
+            } else {
+                vo.setReferenceCountGrowthRate(totalReferenceCount > 0 ? 100.0 : 0.0);
+            }
+        } catch (Exception e) {
+            log.error("计算标签统计增长率时发生错误", e);
+            // 出错时设置默认值0.0
+            vo.setWeekGrowthRate(0.0);
+            vo.setMonthGrowthRate(0.0);
+            vo.setUnusedTagGrowthRate(0.0);
+            vo.setReferenceCountGrowthRate(0.0);
+        }
 
         return vo;
     }
 
+    /**
+     * 计算环比增长率
+     * @param current 当前值
+     * @param previous 上期值
+     * @return 增长率(%)，保留一位小数
+     */
+    private double calculateGrowthRate(Integer current, Integer previous) {
+        if (current == null) current = 0;
+        if (previous == null || previous == 0) {
+            return current > 0 ? 100.0 : 0.0;
+        }
+
+        double rate = ((double) current - previous) / previous * 100;
+        // 保留一位小数
+        return Math.round(rate * 10) / 10.0;
+    }
     /**
      * 获取标签关联的内容列表
      *
@@ -354,15 +438,11 @@ public class TagServiceImpl implements TagService {
                 ? contentIds.subList(startIndex, endIndex)
                 : new ArrayList<>();
 
-        // 根据内容ID查询详细信息（需要根据contentType调用不同的服务）
-        // 这里简化处理，实际应用中需要根据contentType调用不同的服务获取详细信息
         List<TagRelatedItemVO> relatedItems = new ArrayList<>();
         for (Long contentId : pageContentIds) {
             TagRelatedItemVO item = new TagRelatedItemVO();
             item.setId(contentId);
             item.setType(contentType);
-            // 设置其他属性...
-
             relatedItems.add(item);
         }
 

@@ -143,4 +143,22 @@ public interface TagRelationMapper {
      */
     int deleteByContentTypeAndContentId(@Param("contentType") String contentType, @Param("contentId") Long contentId);
 
+
+    /**
+     * 统计所有标签的引用次数（增量方式）
+     *
+     * @return 标签ID和引用次数的映射列表
+     */
+    List<Map<String, Object>> countAllTagReferences();
+
+
+    /**
+     * 直接设置标签引用计数（非增量方式）
+     *
+     * @param tagId 标签ID
+     * @param count 引用计数值
+     * @return 影响的行数
+     */
+    int updateReferenceCountDirect(@Param("tagId") Long tagId, @Param("count") Integer count);
+
 }

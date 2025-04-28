@@ -831,52 +831,130 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     public CategoryStatisticsVO getCategoryStatistics() {
-        // 1. 获取基础统计数据
+        // 获取当前数据
         Long totalCategories = categoryMapper.countCategories(null, null, null);
         Long newCategoriesOfToday = categoryMapper.countNewCategoriesOfToday();
+        Long newCategoriesOfWeek = categoryMapper.countNewCategoriesOfWeek();
         Long newCategoriesOfMonth = categoryMapper.countNewCategoriesOfMonth();
         Long topLevelCategories = categoryMapper.countTopLevelCategories(null);
-        Integer maxCategoryLevel = categoryMapper.getMaxCategoryLevel();
+        Long emptyCategoriesCount = categoryMapper.countEmptyCategories();
+        Long totalItems = categoryMapper.countTotalItems();
 
-        // 2. 计算增长率
-        Long lastMonthTotalCategories = categoryMapper.countLastMonthTotalCategories();
-        Double categoryGrowthRate = 0.0;
-        if (ObjectUtil.isNotNull(lastMonthTotalCategories) && lastMonthTotalCategories > 0) {
-            categoryGrowthRate = ((totalCategories - lastMonthTotalCategories) * 100.0) / lastMonthTotalCategories;
-            // 保留两位小数
-            categoryGrowthRate = Math.round(categoryGrowthRate * 100.0) / 100.0;
+        // 计算增长率
+        Double weekGrowthRate = 0.0;
+        Double monthGrowthRate = 0.0;
+        Double topLevelGrowthRate = 0.0;
+        Double emptyCategoriesGrowthRate = 0.0;
+        Double totalItemsGrowthRate = 0.0;
+
+        try {
+            // 获取上期数据
+            Long lastWeekCategories = categoryMapper.countLastWeekCategoriesOfWeek();
+            Long lastMonthCategories = categoryMapper.countLastMonthCategoriesOfMonth();
+            Long lastMonthTopLevelCategories = categoryMapper.countLastMonthTopLevelCategories(null);
+            Long lastMonthEmptyCategories = categoryMapper.countLastMonthEmptyCategories();
+            Long lastMonthTotalItems = categoryMapper.countLastMonthTotalItems();
+
+            // 在获取本周/本月数据时添加条件判断
+            Calendar cal = Calendar.getInstance();
+            boolean isStartOfMonth = cal.get(Calendar.DAY_OF_MONTH) <= 3; // 月初3天内
+            boolean isStartOfWeek = cal.get(Calendar.DAY_OF_WEEK) == Calendar.MONDAY || cal.get(Calendar.DAY_OF_WEEK) == Calendar.TUESDAY; // 周一或周二
+
+            // 计算周增长率
+            if (isStartOfWeek && lastWeekCategories != null && lastWeekCategories > 0) {
+                // 如果在周初，使用估算方法
+                int daysInWeek = 7;
+                int currentDayOfWeek = cal.get(Calendar.DAY_OF_WEEK) - 1; // 星期日是1，星期一是2
+                if (currentDayOfWeek == 0) currentDayOfWeek = 7; // 处理星期日是1的情况
+
+                // 上周每日平均新增
+                double avgDailyLastWeek = lastWeekCategories / (double) daysInWeek;
+                // 本周预估总量（基于当前增长趋势）
+                double estimatedWeekTotal = newCategoriesOfWeek / (double) currentDayOfWeek * daysInWeek;
+
+                weekGrowthRate = calculateGrowthRate((int)Math.round(estimatedWeekTotal), lastWeekCategories.intValue());
+            } else if (lastWeekCategories != null && lastWeekCategories > 0) {
+                // 常规计算
+                weekGrowthRate = calculateGrowthRate(newCategoriesOfWeek.intValue(), lastWeekCategories.intValue());
+            } else {
+                weekGrowthRate = newCategoriesOfWeek > 0 ? 100.0 : 0.0; // 上周无数据但本周有则视为100%增长
+            }
+
+            // 计算月增长率
+            if (isStartOfMonth && lastMonthCategories != null && lastMonthCategories > 0) {
+                // 如果在月初，可以考虑使用平均每日数量进行估算
+                int daysInLastMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+                int currentDay = cal.get(Calendar.DAY_OF_MONTH);
+
+                // 上月每日平均新增
+                double avgDailyLastMonth = lastMonthCategories / (double) daysInLastMonth;
+                // 本月预估总量（基于当前增长趋势）
+                double estimatedMonthTotal = newCategoriesOfMonth / (double) currentDay * daysInLastMonth;
+
+                monthGrowthRate = calculateGrowthRate((int)Math.round(estimatedMonthTotal), lastMonthCategories.intValue());
+            } else if (lastMonthCategories != null && lastMonthCategories > 0) {
+                // 常规计算
+                monthGrowthRate = calculateGrowthRate(newCategoriesOfMonth.intValue(), lastMonthCategories.intValue());
+            } else {
+                monthGrowthRate = newCategoriesOfMonth > 0 ? 100.0 : 0.0; // 上月无数据但本月有则视为100%增长
+            }
+
+            // 计算顶级分类增长率
+            if (lastMonthTopLevelCategories != null && lastMonthTopLevelCategories > 0) {
+                topLevelGrowthRate = calculateGrowthRate(topLevelCategories.intValue(), lastMonthTopLevelCategories.intValue());
+            } else {
+                topLevelGrowthRate = topLevelCategories > 0 ? 100.0 : 0.0;
+            }
+
+            // 计算空分类增长率
+            if (lastMonthEmptyCategories != null && lastMonthEmptyCategories > 0) {
+                emptyCategoriesGrowthRate = calculateGrowthRate(emptyCategoriesCount.intValue(), lastMonthEmptyCategories.intValue());
+            } else {
+                emptyCategoriesGrowthRate = emptyCategoriesCount > 0 ? 100.0 : 0.0;
+            }
+
+            // 计算总项目增长率
+            if (lastMonthTotalItems != null && lastMonthTotalItems > 0) {
+                totalItemsGrowthRate = calculateGrowthRate(totalItems.intValue(), lastMonthTotalItems.intValue());
+            } else {
+                totalItemsGrowthRate = totalItems > 0 ? 100.0 : 0.0;
+            }
+        } catch (Exception e) {
+            log.error("计算分类统计增长率时发生错误", e);
         }
 
-        // 3. 获取内容最多的分类
-        Category mostContentsCategory = categoryMapper.getMostContentsCategory();
-        Long mostContentsCategoryId = null;
-        String mostContentsCategoryName = "";
-        Integer mostContentsCount = 0;
-
-        if (ObjectUtil.isNotNull(mostContentsCategory)) {
-            mostContentsCategoryId = mostContentsCategory.getId();
-            mostContentsCategoryName = mostContentsCategory.getName();
-            mostContentsCount = mostContentsCategory.getContentCount();
-        }
-
-        // 4. 获取激活和禁用分类数量
-        Long activeCategories = categoryMapper.countActiveCategories();
-        Long disabledCategories = categoryMapper.countDisabledCategories();
-
-        // 5. 构建并返回统计VO
+        // 构建并返回统计VO
         return CategoryStatisticsVO.builder()
                 .totalCategories(totalCategories)
                 .newCategoriesOfToday(newCategoriesOfToday)
+                .newCategoriesOfWeek(newCategoriesOfWeek)
+                .weekGrowthRate(weekGrowthRate)
                 .newCategoriesOfMonth(newCategoriesOfMonth)
+                .monthGrowthRate(monthGrowthRate)
                 .topLevelCategories(topLevelCategories)
-                .maxCategoryLevel(maxCategoryLevel)
-                .categoryGrowthRate(categoryGrowthRate)
-                .mostContentsCategory(mostContentsCategoryId)
-                .mostContentsCategoryName(mostContentsCategoryName)
-                .mostContentsCount(mostContentsCount)
-                .activeCategories(activeCategories)
-                .disabledCategories(disabledCategories)
+                .topLevelGrowthRate(topLevelGrowthRate)
+                .emptyCategoriesCount(emptyCategoriesCount)
+                .emptyCategoriesGrowthRate(emptyCategoriesGrowthRate)
+                .totalItems(totalItems)
+                .totalItemsGrowthRate(totalItemsGrowthRate)
                 .build();
+    }
+
+    /**
+     * 计算环比增长率
+     * @param current 当前值
+     * @param previous 上期值
+     * @return 增长率(%)，保留一位小数
+     */
+    private double calculateGrowthRate(Integer current, Integer previous) {
+        if (current == null) current = 0;
+        if (previous == null || previous == 0) {
+            return current > 0 ? 100.0 : 0.0;
+        }
+
+        double rate = ((double) current - previous) / previous * 100;
+        // 保留一位小数
+        return Math.round(rate * 10) / 10.0;
     }
 
     /**

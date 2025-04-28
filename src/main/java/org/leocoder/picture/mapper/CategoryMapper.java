@@ -214,6 +214,63 @@ public interface CategoryMapper {
     Long countDisabledCategories();
 
     /**
+     * 统计本周新增分类数
+     *
+     * @return 本周新增分类数
+     */
+    Long countNewCategoriesOfWeek();
+
+    /**
+     * 统计空分类数量(不包含任何内容)
+     *
+     * @return 空分类数量
+     */
+    Long countEmptyCategories();
+
+    /**
+     * 统计所有内容总数
+     *
+     * @return 内容总数
+     */
+    Long countTotalItems();
+
+
+    /**
+     * 统计上周新增分类数
+     *
+     * @return 上周新增分类数
+     */
+    Long countLastWeekCategoriesOfWeek();
+
+    /**
+     * 统计上月新增分类数
+     *
+     * @return 上月新增分类数
+     */
+    Long countLastMonthCategoriesOfMonth();
+
+    /**
+     * 统计上月底顶级分类数
+     *
+     * @return 上月底顶级分类数
+     */
+    Long countLastMonthTopLevelCategories(@Param("type") String type);
+
+    /**
+     * 统计上月底空分类数量
+     *
+     * @return 上月底空分类数量
+     */
+    Long countLastMonthEmptyCategories();
+
+    /**
+     * 统计上月底内容总数
+     *
+     * @return 上月底内容总数
+     */
+    Long countLastMonthTotalItems();
+
+    /**
      * 更新分类内容数量
      *
      * @param id         分类ID

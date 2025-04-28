@@ -223,7 +223,7 @@ public class CategoryController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "每页条数必须在1-100之间");
         }
 
-        // 校验时间范围（可选）
+        // 校验时间范围
         String createTimeStart = categoryQueryRequest.getCreateTimeStart();
         String createTimeEnd = categoryQueryRequest.getCreateTimeEnd();
         if (StrUtil.isNotBlank(createTimeStart) && StrUtil.isNotBlank(createTimeEnd)

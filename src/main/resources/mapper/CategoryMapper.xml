@@ -457,6 +457,74 @@
           and is_deleted = 0
     </select>
 
+    <!-- 统计本周新增分类数 -->
+    <select id="countNewCategoriesOfWeek" resultType="java.lang.Long">
+        select count(*)
+        from t_category
+        where YEARWEEK(create_time, 1) = YEARWEEK(CURDATE(), 1)
+          and is_deleted = 0
+    </select>
+
+    <!-- 统计空分类数量(内容数为0的分类) -->
+    <select id="countEmptyCategories" resultType="java.lang.Long">
+        select count(*)
+        from t_category
+        where (content_count = 0 OR content_count IS NULL)
+          and is_deleted = 0
+    </select>
+
+    <!-- 统计所有内容总数 -->
+    <select id="countTotalItems" resultType="java.lang.Long">
+        select IFNULL(SUM(content_count), 0)
+        from t_category
+        where is_deleted = 0
+    </select>
+
+    <!-- 统计上周新增分类数 -->
+    <select id="countLastWeekCategoriesOfWeek" resultType="java.lang.Long">
+        select count(*)
+        from t_category
+        where YEARWEEK(date_format(create_time,'%Y-%m-%d'), 1) = YEARWEEK(DATE_SUB(CURDATE(), INTERVAL 1 WEEK), 1)
+          and is_deleted = 0
+    </select>
+
+    <!-- 统计上月新增分类数 -->
+    <select id="countLastMonthCategoriesOfMonth" resultType="java.lang.Long">
+        select count(*)
+        from t_category
+        where DATE_FORMAT(create_time, '%Y%m') = DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH), '%Y%m')
+          and is_deleted = 0
+    </select>
+
+    <!-- 统计上月底顶级分类数 -->
+    <select id="countLastMonthTopLevelCategories" resultType="java.lang.Long">
+        select count(*)
+        from t_category
+        where parent_id = 0
+        and create_time &lt; DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL DAY(CURDATE())-1 DAY), '%Y-%m-01')
+        and is_deleted = 0
+        <if test="type != null and type != ''">
+            and type = #{type,jdbcType=VARCHAR}
+        </if>
+    </select>
+
+    <!-- 统计上月底空分类数量 -->
+    <select id="countLastMonthEmptyCategories" resultType="java.lang.Long">
+        select count(*)
+        from t_category
+        where (content_count = 0 OR content_count IS NULL)
+          and create_time &lt; DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL DAY(CURDATE())-1 DAY), '%Y-%m-01')
+          and is_deleted = 0
+    </select>
+
+    <!-- 统计上月底内容总数 -->
+    <select id="countLastMonthTotalItems" resultType="java.lang.Long">
+        select IFNULL(SUM(content_count), 0)
+        from t_category
+        where create_time &lt; DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL DAY(CURDATE())-1 DAY), '%Y-%m-01')
+          and is_deleted = 0
+    </select>
+
     <!-- 检查urlName是否存在 -->
     <select id="countByUrlName" parameterType="java.util.Map" resultType="java.lang.Integer">
         SELECT COUNT(1)

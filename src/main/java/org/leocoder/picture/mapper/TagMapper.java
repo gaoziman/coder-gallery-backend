@@ -156,6 +156,33 @@ public interface TagMapper {
      */
     Integer sumTagReferenceCount();
 
+    /**
+     * 统计上月新增的标签数量
+     *
+     * @return 标签数量
+     */
+    Integer countLastMonthTags();
+
+    /**
+     * 统计上周新增的标签数量
+     *
+     * @return 标签数量
+     */
+    Integer countLastWeekTags();
+
+    /**
+     * 统计上月底的未使用标签数量（引用计数为0）
+     *
+     * @return 标签数量
+     */
+    Integer countLastMonthUnusedTags();
+
+    /**
+     * 获取上月底的标签引用总数
+     *
+     * @return 引用总数
+     */
+    Integer getLastMonthReferenceCount();
 
     /**
      * 查询标签列表

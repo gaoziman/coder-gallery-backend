@@ -40,6 +40,9 @@ public class TagVO {
     
     @ApiModelProperty(value = "创建时间")
     private LocalDateTime createTime;
+
+    @ApiModelProperty(value = "更新时间")
+    private LocalDateTime updateTime;
     
     @ApiModelProperty(value = "创建人", example = "admin")
     private Long createUser;

@@ -323,6 +323,39 @@
         where is_deleted = 0
     </select>
 
+    <!-- 统计上月新增的标签数量 -->
+    <select id="countLastMonthTags" resultType="java.lang.Integer">
+        select count(*)
+        from t_tag
+        where is_deleted = 0
+          and DATE_FORMAT(create_time, '%Y%m') = DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH), '%Y%m')
+    </select>
+
+    <!-- 统计上周新增的标签数量 -->
+    <select id="countLastWeekTags" resultType="java.lang.Integer">
+        select count(*)
+        from t_tag
+        where is_deleted = 0
+          and YEARWEEK(date_format(create_time,'%Y-%m-%d'), 1) = YEARWEEK(DATE_SUB(CURDATE(), INTERVAL 1 WEEK), 1)
+    </select>
+
+    <!-- 统计上月底的未使用标签数量 -->
+    <select id="countLastMonthUnusedTags" resultType="java.lang.Integer">
+        select count(*)
+        from t_tag
+        where is_deleted = 0
+          and reference_count = 0
+          and create_time &lt; DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL DAY(CURDATE())-1 DAY), '%Y-%m-01')
+    </select>
+
+    <!-- 获取上月底的标签引用总数 -->
+    <select id="getLastMonthReferenceCount" resultType="java.lang.Integer">
+        select IFNULL(sum(reference_count), 0)
+        from t_tag
+        where is_deleted = 0
+          and create_time &lt;= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL DAY(CURDATE())-1 DAY), '%Y-%m-01')
+    </select>
+
     <!-- 查询标签列表 -->
     <select id="selectTagList" resultType="org.leocoder.picture.domain.vo.tag.TagVO">
         select

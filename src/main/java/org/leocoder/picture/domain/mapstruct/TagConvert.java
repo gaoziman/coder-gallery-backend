@@ -26,6 +26,7 @@ public interface TagConvert {
      * @param tag 标签实体
      * @return 标签VO
      */
+    @Mapping(target = "updateTime", source = "updateTime")
     TagVO toTagVO(Tag tag);
 
     /**
