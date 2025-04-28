@@ -204,4 +204,23 @@ public class PictureCacheManager {
             log.error("清除计数相关缓存失败: {}", e.getMessage(), e);
         }
     }
+
+    /**
+     * 图片删除后清除相关缓存
+     * @param pictureId 图片ID
+     */
+    public void invalidateAfterPictureDelete(Long pictureId) {
+        try {
+
+            // 清除瀑布流相关缓存
+            invalidateByPattern(RedisKeyConstants.WATERFALL_PREFIX + "*");
+
+            // 清除图片计数相关缓存
+            invalidateByPattern(RedisKeyConstants.COUNT_PREFIX + "*");
+
+            log.info("图片删除后已清除相关缓存: pictureId={}", pictureId);
+        } catch (Exception e) {
+            log.error("清除图片删除相关缓存失败: pictureId={}, error={}", pictureId, e.getMessage(), e);
+        }
+    }
 }

@@ -78,18 +78,17 @@ public class PictureVO implements Serializable {
     @ApiModelProperty(value = "分类名称", name = "category")
     private String category;
 
-    @ApiModelProperty(value = "与源图片的相似度", name = "similarity")
-    private Integer similarity;
-
-
     @ApiModelProperty(value = "审核状态", name = "reviewStatus")
     private Integer reviewStatus;
 
     @ApiModelProperty(value = "审核内容", name = "reviewMessage")
     private String reviewMessage;
 
-    @ApiModelProperty(value = "审核人 id", name = "reviewerId")
-    private Long reviewerId;
+    @ApiModelProperty(value = "审核人 id", name = "reviewUserId")
+    private Long reviewUserId;
+
+    @ApiModelProperty(value = "审核人名称", name = "reviewerUserName")
+    private String reviewerUserName;
 
     @ApiModelProperty(value = "审核时间", name = "reviewTime")
     private LocalDateTime reviewTime;

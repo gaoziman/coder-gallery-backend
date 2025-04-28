@@ -4,6 +4,7 @@ import org.leocoder.picture.common.PageResult;
 import org.leocoder.picture.domain.dto.picture.*;
 import org.leocoder.picture.domain.pojo.Picture;
 import org.leocoder.picture.domain.pojo.User;
+import org.leocoder.picture.domain.vo.picture.PictureStatisticsVO;
 import org.leocoder.picture.domain.vo.picture.PictureVO;
 import org.leocoder.picture.domain.vo.picture.PictureWaterfallVO;
 import org.springframework.transaction.annotation.Transactional;
@@ -142,4 +143,57 @@ public interface PictureService {
 
     @Transactional(rollbackFor = Exception.class)
     Boolean saveSearchResults(Long sourceId, List<Long> targetIds);
+
+
+    /**
+     * 管理员查询图片列表（分页）
+     *
+     * @param queryRequest 查询参数
+     * @return 分页结果
+     */
+    PageResult<PictureVO> adminListPicturesByPage(AdminPictureQueryRequest queryRequest);
+
+    /**
+     * 管理员删除图片
+     *
+     * @param pictureId 图片ID
+     * @param userId 操作用户ID
+     * @return 是否成功
+     */
+    Boolean adminDeletePicture(Long pictureId, Long userId);
+
+    /**
+     * 管理员批量删除图片
+     *
+     * @param pictureIds 图片ID列表
+     * @param userId 操作用户ID
+     * @return 是否成功
+     */
+    Boolean adminBatchDeletePictures(List<Long> pictureIds, Long userId);
+
+    /**
+     * 管理员审核图片
+     *
+     * @param reviewRequest 审核请求
+     * @param userId 操作用户ID
+     * @return 是否成功
+     */
+    Boolean adminReviewPicture(PictureReviewRequest reviewRequest, Long userId);
+
+    /**
+     * 管理员批量审核图片
+     *
+     * @param reviewRequest 审核请求
+     * @param userId 操作用户ID
+     * @return 是否成功
+     */
+    Boolean adminBatchReviewPictures(PictureReviewRequest reviewRequest, Long userId);
+
+
+    /**
+     * 获取图片统计数据
+     *
+     * @return 图片统计数据
+     */
+    PictureStatisticsVO getPictureStatistics();
 }

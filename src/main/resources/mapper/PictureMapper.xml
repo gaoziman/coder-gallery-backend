@@ -749,4 +749,187 @@
         similarity_score DESC,
         p.create_time DESC
     </select>
+
+
+
+    <!-- 管理员查询图片列表 -->
+    <select id="adminListPictures" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_picture p
+        <where>
+            p.is_deleted = 0
+            <if test="id != null">
+                and p.id = #{id}
+            </if>
+            <if test="name != null and name != ''">
+                and p.name like concat('%', #{name}, '%')
+            </if>
+            <if test="userId != null">
+                and p.create_user = #{userId}
+            </if>
+            <if test="originalName != null and originalName != ''">
+                and p.original_name like concat('%', #{originalName}, '%')
+            </if>
+            <if test="format != null and format != ''">
+                and p.format = #{format}
+            </if>
+            <if test="reviewStatus != null">
+                and p.review_status = #{reviewStatus}
+            </if>
+            <if test="createTimeStart != null">
+                and p.create_time >= #{createTimeStart}
+            </if>
+            <if test="createTimeEnd != null">
+                and p.create_time &lt;= #{createTimeEnd}
+            </if>
+            <if test="categoryId != null">
+                and exists (
+                select 1 from t_category_relation cr
+                where cr.content_type = 'picture'
+                and cr.content_id = p.id
+                and cr.category_id = #{categoryId}
+                and cr.is_deleted = 0
+                )
+            </if>
+            <if test="tagIds != null and tagIds.size() > 0">
+                and exists (
+                select 1 from t_tag_relation tr
+                where tr.content_type = 'picture'
+                and tr.content_id = p.id
+                and tr.tag_id in
+                <foreach collection="tagIds" item="tagId" open="(" separator="," close=")">
+                    #{tagId}
+                </foreach>
+                and tr.is_deleted = 0
+                )
+            </if>
+        </where>
+        order by
+        <choose>
+            <when test="sortField != null and sortField != '' and sortOrder != null and sortOrder != ''">
+                p.${sortField} ${sortOrder}
+            </when>
+            <otherwise>
+                p.create_time desc
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 批量逻辑删除图片 -->
+    <update id="batchLogicDelete">
+        update t_picture
+        set is_deleted = 1,
+        update_time = now(),
+        update_user = #{userId}
+        where id in
+        <foreach collection="pictureIds" item="pictureId" open="(" separator="," close=")">
+            #{pictureId}
+        </foreach>
+        and is_deleted = 0
+    </update>
+
+    <!-- 批量审核图片 -->
+    <update id="batchReview">
+        update t_picture
+        set review_status = #{reviewStatus},
+        review_message = #{reviewMessage},
+        review_user_id = #{reviewUserId},
+        review_time = #{reviewTime},
+        update_time = #{reviewTime},
+        update_user = #{reviewUserId}
+        where id in
+        <foreach collection="pictureIds" item="pictureId" open="(" separator="," close=")">
+            #{pictureId}
+        </foreach>
+        and is_deleted = 0
+    </update>
+
+    <!-- 统计数据相关方法 -->
+
+    <!-- 获取今日上传图片数量 -->
+    <select id="countTodayUploads" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_picture
+        WHERE DATE(create_time) = CURDATE()
+          AND is_deleted = 0
+    </select>
+
+    <!-- 获取本周上传图片数量 -->
+    <select id="countWeekUploads" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_picture
+        WHERE YEARWEEK(DATE_FORMAT(create_time,'%Y-%m-%d')) = YEARWEEK(NOW())
+          AND is_deleted = 0
+    </select>
+
+    <!-- 获取本月上传图片数量 -->
+    <select id="countMonthUploads" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_picture
+        WHERE DATE_FORMAT(create_time,'%Y-%m') = DATE_FORMAT(NOW(),'%Y-%m')
+          AND is_deleted = 0
+    </select>
+
+    <!-- 获取指定审核状态的图片数量 -->
+    <select id="countByReviewStatus" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_picture
+        WHERE review_status = #{reviewStatus}
+        AND is_deleted = 0
+    </select>
+
+    <!-- 获取图片总数 -->
+    <select id="countTotalPictures" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_picture
+        WHERE is_deleted = 0
+    </select>
+
+    <!-- 获取上周上传图片数量 -->
+    <select id="countLastWeekUploads" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_picture
+        WHERE YEARWEEK(DATE_FORMAT(create_time,'%Y-%m-%d'), 1) = YEARWEEK(DATE_SUB(NOW(), INTERVAL 1 WEEK), 1)
+          AND is_deleted = 0
+    </select>
+
+    <!-- 获取上月上传图片数量 -->
+    <select id="countLastMonthUploads" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM t_picture
+        WHERE DATE_FORMAT(create_time,'%Y-%m') = DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH),'%Y-%m')
+          AND is_deleted = 0
+    </select>
+
+    <!-- 获取当前总浏览量 -->
+    <select id="getTotalViewCount" resultType="java.lang.Long">
+        SELECT COALESCE(SUM(view_count), 0)
+        FROM t_picture
+        WHERE is_deleted = 0
+    </select>
+
+    <!-- 获取上月同期的总浏览量 -->
+    <select id="getLastPeriodViewCount" resultType="java.lang.Long">
+        SELECT COALESCE(SUM(view_count), 0)
+        FROM t_picture
+        WHERE is_deleted = 0
+          AND create_time &lt; DATE_SUB(NOW(), INTERVAL 1 MONTH)
+    </select>
+
+    <!-- 获取当前总点赞量 -->
+    <select id="getTotalLikeCount" resultType="java.lang.Long">
+        SELECT COALESCE(SUM(like_count), 0)
+        FROM t_picture
+        WHERE is_deleted = 0
+    </select>
+
+    <!-- 获取上月同期的总点赞量 -->
+    <select id="getLastPeriodLikeCount" resultType="java.lang.Long">
+        SELECT COALESCE(SUM(like_count), 0)
+        FROM t_picture
+        WHERE is_deleted = 0
+          AND create_time &lt; DATE_SUB(NOW(), INTERVAL 1 MONTH)
+    </select>
+
 </mapper>

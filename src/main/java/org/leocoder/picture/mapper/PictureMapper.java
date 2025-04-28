@@ -1,8 +1,10 @@
 package org.leocoder.picture.mapper;
 
 import org.apache.ibatis.annotations.Param;
+import org.leocoder.picture.domain.dto.picture.AdminPictureQueryRequest;
 import org.leocoder.picture.domain.pojo.Picture;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -228,4 +230,118 @@ public interface PictureMapper {
             @Param("matchType") Integer matchType,
             @Param("relatedCategoryIds") List<Long> relatedCategoryIds
     );
+
+    /**
+     * 管理员查询图片列表
+     *
+     * @param queryRequest 查询参数
+     * @return 图片列表
+     */
+    List<Picture> adminListPictures(AdminPictureQueryRequest queryRequest);
+
+    /**
+     * 批量逻辑删除图片
+     *
+     * @param pictureIds 图片ID列表
+     * @param userId 操作用户ID
+     * @return 影响的行数
+     */
+    int batchLogicDelete(@Param("pictureIds") List<Long> pictureIds, @Param("userId") Long userId);
+
+    /**
+     * 批量审核图片
+     *
+     * @param pictureIds 图片ID列表
+     * @param reviewStatus 审核状态
+     * @param reviewMessage 审核信息
+     * @param reviewUserId 审核用户ID
+     * @param reviewTime 审核时间
+     * @return 影响的行数
+     */
+    int batchReview(
+            @Param("pictureIds") List<Long> pictureIds,
+            @Param("reviewStatus") String reviewStatus,
+            @Param("reviewMessage") String reviewMessage,
+            @Param("reviewUserId") Long reviewUserId,
+            @Param("reviewTime") LocalDateTime reviewTime
+    );
+
+
+    /**
+     * 获取今日上传图片数量
+     *
+     * @return 今日上传图片数量
+     */
+    Long countTodayUploads();
+
+    /**
+     * 获取本周上传图片数量
+     *
+     * @return 本周上传图片数量
+     */
+    Long countWeekUploads();
+
+    /**
+     * 获取本月上传图片数量
+     *
+     * @return 本月上传图片数量
+     */
+    Long countMonthUploads();
+
+    /**
+     * 获取指定审核状态的图片数量
+     *
+     * @param reviewStatus 审核状态
+     * @return 指定状态的图片数量
+     */
+    Long countByReviewStatus(@Param("reviewStatus") String reviewStatus);
+
+    /**
+     * 获取图片总数
+     *
+     * @return 图片总数
+     */
+    Long countTotalPictures();
+
+    /**
+     * 获取上周上传图片数量
+     *
+     * @return 上周上传图片数量
+     */
+    Long countLastWeekUploads();
+
+    /**
+     * 获取上月上传图片数量
+     *
+     * @return 上月上传图片数量
+     */
+    Long countLastMonthUploads();
+
+    /**
+     * 获取当前总浏览量
+     *
+     * @return 当前总浏览量
+     */
+    Long getTotalViewCount();
+
+    /**
+     * 获取上周期总浏览量
+     *
+     * @return 上周期总浏览量
+     */
+    Long getLastPeriodViewCount();
+
+    /**
+     * 获取当前总点赞量
+     *
+     * @return 当前总点赞量
+     */
+    Long getTotalLikeCount();
+
+    /**
+     * 获取上周期总点赞量
+     *
+     * @return 上周期总点赞量
+     */
+    Long getLastPeriodLikeCount();
 }

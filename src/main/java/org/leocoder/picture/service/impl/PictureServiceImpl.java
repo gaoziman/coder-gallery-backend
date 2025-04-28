@@ -26,8 +26,10 @@ import org.leocoder.picture.domain.pojo.Category;
 import org.leocoder.picture.domain.pojo.Picture;
 import org.leocoder.picture.domain.pojo.PictureHash;
 import org.leocoder.picture.domain.pojo.User;
+import org.leocoder.picture.domain.vo.picture.PictureStatisticsVO;
 import org.leocoder.picture.domain.vo.picture.PictureVO;
 import org.leocoder.picture.domain.vo.picture.PictureWaterfallVO;
+import org.leocoder.picture.domain.vo.user.UserVO;
 import org.leocoder.picture.enums.PictureReviewStatusEnum;
 import org.leocoder.picture.exception.BusinessException;
 import org.leocoder.picture.exception.ErrorCode;
@@ -1955,7 +1957,7 @@ public class PictureServiceImpl implements PictureService {
             List<Map<String, Object>> validPictures = validateImageUrls(crawledPictures);
             log.info("验证后有{}张有效图片", validPictures.size());
 
-            // 重要修改: 如果有效图片超过pageSize，限制为pageSize数量
+            // 如果有效图片超过pageSize，限制为pageSize数量
             if (validPictures.size() > pageSize) {
                 validPictures = validPictures.subList(0, pageSize);
                 log.info("限制结果为请求的{}条记录", pageSize);
@@ -2151,117 +2153,6 @@ public class PictureServiceImpl implements PictureService {
         }
     }
 
-
-    /**
-     * 处理分页
-     */
-    private PageResult<PictureVO> handlePagination(List<PictureVO> pictureVOList, int pageNum, int pageSize) {
-        // 计算总数
-        long total = pictureVOList.size();
-
-        // 分页处理
-        int startIndex = (pageNum - 1) * pageSize;
-        int endIndex = Math.min(startIndex + pageSize, pictureVOList.size());
-
-        // 如果起始索引超出范围，返回空结果
-        if (startIndex >= total) {
-            return PageResult.empty(pageNum, pageSize);
-        }
-
-        // 截取当前页的数据
-        List<PictureVO> pageData = pictureVOList.subList(startIndex, endIndex);
-
-        // 返回分页结果
-        return PageResult.build(total, pageData, pageNum, pageSize);
-    }
-
-    /**
-     * 将搜索结果转换为PictureVO对象
-     */
-    private List<PictureVO> convertSearchResults(List<Map<String, Object>> crawledPictures,
-                                                 Picture sourcePicture, String searchText, String sourceName) {
-        List<PictureVO> pictureVOList = new ArrayList<>();
-
-        // 获取源图片的分类和标签信息（用于填充搜索结果）
-        List<Long> categoryIds = categoryRelationService.getCategoryIdsByContent("picture", sourcePicture.getId());
-        List<Long> tagIds = tagRelationService.getTagIdsByContent("picture", sourcePicture.getId());
-
-        for (Map<String, Object> pictureData : crawledPictures) {
-            String imageUrl = (String) pictureData.get("url");
-            if (StrUtil.isBlank(imageUrl)) {
-                continue;
-            }
-
-            String thumbnailUrl = (String) pictureData.getOrDefault("thumbnailUrl", imageUrl);
-            String title = (String) pictureData.getOrDefault("title", "搜索结果");
-
-            // 创建并填充PictureVO对象
-            PictureVO pictureVO = new PictureVO();
-            pictureVO.setUrl(imageUrl);
-            pictureVO.setThumbnailUrl(thumbnailUrl);
-            pictureVO.setName(title);
-
-            // 设置尺寸信息
-            Integer width = (Integer) pictureData.getOrDefault("width", 0);
-            Integer height = (Integer) pictureData.getOrDefault("height", 0);
-            pictureVO.setPicWidth(width);
-            pictureVO.setPicHeight(height);
-
-            // 计算宽高比
-            if (width > 0 && height > 0) {
-                Double scale = width * 1.0 / height;
-                pictureVO.setPicScale(scale);
-            }
-
-            // 设置图片格式
-            String format = (String) pictureData.getOrDefault("format", "jpg");
-            pictureVO.setFormat(format);
-
-            // 设置时间和描述
-            pictureVO.setCreateTime(LocalDateTime.now());
-            pictureVO.setDescription("从" + sourceName + "搜索: " + searchText);
-
-            // 生成临时ID（负数，表示未保存到数据库）
-            pictureVO.setId(-System.currentTimeMillis() - new Random().nextInt(1000));
-
-            // 填充分类信息
-            if (!categoryIds.isEmpty()) {
-                pictureVO.setCategoryId(categoryIds.get(0).toString());
-                Category category = categoryMapper.selectById(categoryIds.get(0));
-                if (category != null) {
-                    pictureVO.setCategory(category.getName());
-                }
-            }
-
-            // 填充标签信息
-            if (!tagIds.isEmpty()) {
-                List<String> tagNames = tagMapper.selectNamesByIds(tagIds);
-                pictureVO.setTags(tagNames);
-
-                List<String> tagIdStrings = tagIds.stream()
-                        .map(String::valueOf)
-                        .collect(Collectors.toList());
-                pictureVO.setTagIds(tagIdStrings);
-
-                // 处理标签颜色
-                List<Map<String, Object>> tagColorMaps = tagMapper.selectColorsByIds(tagIds);
-                if (CollUtil.isNotEmpty(tagColorMaps)) {
-                    List<String> tagColors = tagColorMaps.stream()
-                            .map(map -> (String) map.get("color"))
-                            .collect(Collectors.toList());
-                    pictureVO.setTagColors(tagColors);
-                }
-            }
-
-            // 设置用户信息（原始图片的上传者）
-            pictureVO.setUser(userService.getUserById(sourcePicture.getCreateUser()));
-
-            pictureVOList.add(pictureVO);
-        }
-
-        return pictureVOList;
-    }
-
     /**
      * 保存搜索结果关系
      *
@@ -2288,6 +2179,425 @@ public class PictureServiceImpl implements PictureService {
     }
 
 
+//==================== 下面是后台管理相关代码 ===============================
+
+
+    /**
+     * 管理员查询图片列表（分页）
+     *
+     * @param queryRequest 查询参数
+     * @return 分页结果
+     */
+    @Override
+    public PageResult<PictureVO> adminListPicturesByPage(AdminPictureQueryRequest queryRequest) {
+        // 使用PageUtils进行分页查询，适用于复杂条件的分页
+        return PageUtils.doPage(queryRequest,
+                // 数据查询
+                () -> pictureMapper.adminListPictures(queryRequest),
+                // 数据转换，使用MapStruct进行对象映射
+                picture -> {
+                    // 基本转换
+                    PictureVO pictureVO = PictureConvert.INSTANCE.toPictureVO(picture);
+
+                    try {
+                        // 设置图片创建的用户信息
+                        pictureVO.setUser(userService.getUserById(picture.getCreateUser()));
+
+                        // 添加审核人信息
+                        if (ObjectUtil.isNotNull(picture.getReviewUserId())) {
+                            // 查询审核人用户信息
+                            UserVO reviewerUser = userService.getUserById(picture.getReviewUserId());
+                            if (ObjectUtil.isNotNull(reviewerUser)) {
+                                pictureVO.setReviewerUserName(reviewerUser.getUsername());
+                            }
+                        }
+
+                        // 获取并设置图片关联的分类信息
+                        List<Long> categoryIds = categoryRelationService.getCategoryIdsByContent("picture", picture.getId());
+                        if (CollUtil.isNotEmpty(categoryIds)) {
+                            Long categoryId = categoryIds.get(0);
+                            pictureVO.setCategoryId(String.valueOf(categoryId));
+
+                            try {
+                                // 获取分类名称
+                                String categoryName = categoryMapper.selectById(categoryId).getName();
+                                pictureVO.setCategory(categoryName);
+                            } catch (Exception e) {
+                                log.warn("获取图片分类名称失败: pictureId={}, categoryId={}", picture.getId(), categoryId);
+                            }
+                        }
+
+                        // 获取并设置图片关联的标签信息
+                        List<Long> tagIds = tagRelationService.getTagIdsByContent("picture", picture.getId());
+                        if (CollUtil.isNotEmpty(tagIds)) {
+                            // 将所有标签ID转换为字符串列表
+                            List<String> tagIdStrings = tagIds.stream()
+                                    .map(String::valueOf)
+                                    .collect(java.util.stream.Collectors.toList());
+                            pictureVO.setTagIds(tagIdStrings);
+
+                            // 获取标签名称列表
+                            List<String> tagNames = tagMapper.selectNamesByIds(tagIds);
+                            pictureVO.setTags(tagNames);
+
+                            // 获取标签颜色
+                            List<Map<String, Object>> tagColorMaps = tagMapper.selectColorsByIds(tagIds);
+                            if (CollUtil.isNotEmpty(tagColorMaps)) {
+                                List<String> tagColors = tagColorMaps.stream()
+                                        .map(map -> (String) map.get("color"))
+                                        .collect(Collectors.toList());
+                                pictureVO.setTagColors(tagColors);
+                                log.debug("设置图片标签颜色: pictureId={}, 标签数量={}, 颜色数量={}",
+                                        picture.getId(), tagIds.size(), tagColors.size());
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.error("填充图片附加信息失败: pictureId={}", picture.getId(), e);
+                    }
+
+                    return pictureVO;
+                }
+        );
+    }
+
+    /**
+     * 管理员删除图片
+     *
+     * @param pictureId 图片ID
+     * @param userId    操作用户ID
+     * @return 是否成功
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean adminDeletePicture(Long pictureId, Long userId) {
+        // 参数校验
+        ThrowUtils.throwIf(ObjectUtil.isNull(pictureId) || pictureId <= 0,
+                ErrorCode.PARAMS_ERROR, "图片ID不合法");
+
+        // 查询图片是否存在
+        Picture picture = pictureMapper.selectById(pictureId);
+        ThrowUtils.throwIf(ObjectUtil.isNull(picture), ErrorCode.NOT_FOUND_ERROR, "图片不存在");
+        ThrowUtils.throwIf(picture.getIsDeleted() == 1, ErrorCode.OPERATION_ERROR, "图片已被删除");
+
+        try {
+            // 1. 处理图片与标签的关联关系
+            // 先获取图片关联的所有标签ID
+            List<Long> tagIds = tagRelationService.getTagIdsByContent("picture", pictureId);
+            if (CollUtil.isNotEmpty(tagIds)) {
+                // 遍历所有关联的标签，减少每个标签的引用计数
+                for (Long tagId : tagIds) {
+                    tagService.updateTagReferenceCount(tagId, -1);
+                    log.info("减少标签引用计数: tagId={}, pictureId={}", tagId, pictureId);
+                }
+
+                // 删除图片的所有标签关联关系，但不再重复更新引用计数
+                tagRelationService.deleteAllTagRelations("picture", pictureId);
+                log.info("删除图片的所有标签关系: pictureId={}, 标签数量={}", pictureId, tagIds.size());
+            }
+
+            // 2. 处理图片与分类的关联关系
+            // 获取图片关联的所有分类ID
+            List<Long> categoryIds = categoryRelationService.getCategoryIdsByContent("picture", pictureId);
+            if (CollUtil.isNotEmpty(categoryIds)) {
+                // 减少每个分类的内容计数
+                for (Long categoryId : categoryIds) {
+                    categoryService.updateCategoryContentCount(categoryId, -1);
+                    log.info("减少分类内容计数: categoryId={}, pictureId={}", categoryId, pictureId);
+                }
+
+                // 删除图片的所有分类关联关系
+                categoryRelationService.deleteAllRelationsByContent("picture", pictureId);
+                log.info("删除图片的所有分类关系: pictureId={}, 分类数量={}", pictureId, categoryIds.size());
+            }
+
+            // 3. 逻辑删除图片
+            Picture updatePicture = new Picture();
+            updatePicture.setId(pictureId);
+            updatePicture.setIsDeleted(1);
+            updatePicture.setUpdateTime(LocalDateTime.now());
+            updatePicture.setUpdateUser(userId);
+
+            int result = pictureMapper.updateByPrimaryKeySelective(updatePicture);
+            ThrowUtils.throwIf(result <= 0, ErrorCode.OPERATION_ERROR, "删除图片失败");
+
+            // 4. 清除所有相关缓存
+            pictureCacheManager.invalidateAfterPictureDelete(pictureId);
+
+            // 清除主页瀑布流相关缓存
+            pictureCacheManager.invalidateAllCaches();
+
+            log.info("管理员 {} 删除图片成功: pictureId={}", userId, pictureId);
+            return true;
+        } catch (Exception e) {
+            log.error("管理员删除图片失败", e);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "删除图片失败: " + e.getMessage());
+        }
+    }
+ˆ
+    /**
+     * 管理员批量删除图片
+     *
+     * @param pictureIds 图片ID列表
+     * @param userId     操作用户ID
+     * @return 是否成功
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean adminBatchDeletePictures(List<Long> pictureIds, Long userId) {
+        // 参数校验
+        ThrowUtils.throwIf(CollUtil.isEmpty(pictureIds), ErrorCode.PARAMS_ERROR, "图片ID列表不能为空");
+
+        try {
+            // 处理每张图片的关联关系和计数
+            for (Long pictureId : pictureIds) {
+                // 1. 处理图片与标签的关联关系
+                List<Long> tagIds = tagRelationService.getTagIdsByContent("picture", pictureId);
+                if (CollUtil.isNotEmpty(tagIds)) {
+                    // 减少每个标签的引用计数
+                    for (Long tagId : tagIds) {
+                        tagService.updateTagReferenceCount(tagId, -1);
+                        log.info("减少标签引用计数: tagId={}, pictureId={}", tagId, pictureId);
+                    }
+
+                    // 删除图片的所有标签关联关系
+                    tagRelationService.deleteAllTagRelations("picture", pictureId);
+                    log.info("删除图片的所有标签关系: pictureId={}, 标签数量={}", pictureId, tagIds.size());
+                }
+
+                // 2. 处理图片与分类的关联关系
+                List<Long> categoryIds = categoryRelationService.getCategoryIdsByContent("picture", pictureId);
+                if (CollUtil.isNotEmpty(categoryIds)) {
+                    // 减少每个分类的内容计数
+                    for (Long categoryId : categoryIds) {
+                        categoryService.updateCategoryContentCount(categoryId, -1);
+                    }
+
+                    // 删除图片的所有分类关联关系
+                    categoryRelationService.deleteAllRelationsByContent("picture", pictureId);
+                }
+            }
+
+            // 3. 批量逻辑删除图片
+            int result = pictureMapper.batchLogicDelete(pictureIds, userId);
+
+            // 4. 清除缓存
+            for (Long pictureId : pictureIds) {
+                pictureCacheManager.invalidateAfterPictureDelete(pictureId);
+            }
+
+            // 清除所有页面缓存（批量操作影响面广）
+            pictureCacheManager.invalidateAllCaches();
+
+            log.info("管理员 {} 批量删除图片成功: 影响行数={}, pictureIds={}", userId, result, pictureIds);
+            return true;
+        } catch (Exception e) {
+            log.error("管理员批量删除图片失败", e);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "批量删除图片失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 管理员审核图片
+     *
+     * @param reviewRequest 审核请求
+     * @param userId        操作用户ID
+     * @return 是否成功
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean adminReviewPicture(PictureReviewRequest reviewRequest, Long userId) {
+        // 参数校验
+        ThrowUtils.throwIf(ObjectUtil.isNull(reviewRequest), ErrorCode.PARAMS_ERROR, "审核参数不能为空");
+        Long pictureId = reviewRequest.getPictureId();
+        ThrowUtils.throwIf(ObjectUtil.isNull(pictureId) || pictureId <= 0,
+                ErrorCode.PARAMS_ERROR, "图片ID不合法");
+
+        // 查询图片是否存在
+        Picture picture = pictureMapper.selectById(pictureId);
+        ThrowUtils.throwIf(ObjectUtil.isNull(picture), ErrorCode.NOT_FOUND_ERROR, "图片不存在");
+        ThrowUtils.throwIf(picture.getIsDeleted() == 1, ErrorCode.OPERATION_ERROR, "图片已被删除");
+
+        try {
+            // 更新图片审核状态
+            Picture updatePicture = new Picture();
+            updatePicture.setId(pictureId);
+            updatePicture.setReviewStatus(reviewRequest.getReviewStatus());
+            updatePicture.setReviewMessage(reviewRequest.getReviewMessage());
+            updatePicture.setReviewUserId(userId);
+            updatePicture.setReviewTime(LocalDateTime.now());
+            updatePicture.setUpdateTime(LocalDateTime.now());
+            updatePicture.setUpdateUser(userId);
+
+            int result = pictureMapper.updateByPrimaryKeySelective(updatePicture);
+            ThrowUtils.throwIf(result <= 0, ErrorCode.OPERATION_ERROR, "审核图片失败");
+
+            pictureCacheManager.invalidateAfterReviewStatusChange();
+
+            log.info("管理员 {} 审核图片成功: pictureId={}, 审核状态={}, 审核意见={}",
+                    userId, pictureId, reviewRequest.getReviewStatus(), reviewRequest.getReviewMessage());
+            return true;
+        } catch (Exception e) {
+            log.error("管理员审核图片失败", e);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "审核图片失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 管理员批量审核图片
+     *
+     * @param reviewRequest 审核请求
+     * @param userId        操作用户ID
+     * @return 是否成功
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean adminBatchReviewPictures(PictureReviewRequest reviewRequest, Long userId) {
+        // 参数校验
+        ThrowUtils.throwIf(ObjectUtil.isNull(reviewRequest), ErrorCode.PARAMS_ERROR, "审核参数不能为空");
+        List<Long> pictureIds = reviewRequest.getPictureIds();
+        ThrowUtils.throwIf(CollUtil.isEmpty(pictureIds), ErrorCode.PARAMS_ERROR, "图片ID列表不能为空");
+
+        try {
+            // 实现批量审核更新，需要在PictureMapper中添加批量审核方法
+            int result = pictureMapper.batchReview(
+                    pictureIds,
+                    reviewRequest.getReviewStatus().toString(),
+                    reviewRequest.getReviewMessage(),
+                    userId,
+                    LocalDateTime.now()
+            );
+            pictureCacheManager.invalidateAfterReviewStatusChange();
+
+
+            log.info("管理员 {} 批量审核图片成功: 影响行数={}, 图片数量={}, 审核状态={}",
+                    userId, result, pictureIds.size(), reviewRequest.getReviewStatus());
+            return true;
+        } catch (Exception e) {
+            log.error("管理员批量审核图片失败", e);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "批量审核图片失败: " + e.getMessage());
+        }
+    }
+
+
+    /**
+     * 获取图片统计数据
+     *
+     * @return 图片统计数据
+     */
+    @Override
+    public PictureStatisticsVO getPictureStatistics() {
+        try {
+            // 查询当前期间统计数据
+            Long todayCount = pictureMapper.countTodayUploads();
+            Long weekCount = pictureMapper.countWeekUploads();
+            Long monthCount = pictureMapper.countMonthUploads();
+            Long pendingCount = pictureMapper.countByReviewStatus(String.valueOf(PictureReviewStatusEnum.REVIEWING.getValue()));
+            Long totalCount = pictureMapper.countTotalPictures();
+
+            // 获取浏览量和点赞量数据
+            Long totalViewCount = pictureMapper.getTotalViewCount();
+            Long totalLikeCount = pictureMapper.getTotalLikeCount();
+
+            // 获取上期数据，用于计算环比增长率
+            Long lastWeekCount = pictureMapper.countLastWeekUploads();
+            Long lastMonthCount = pictureMapper.countLastMonthUploads();
+            Long lastPeriodViewCount = pictureMapper.getLastPeriodViewCount();
+            Long lastPeriodLikeCount = pictureMapper.getLastPeriodLikeCount();
+
+            // 处理可能的空值
+            todayCount = todayCount != null ? todayCount : 0L;
+            weekCount = weekCount != null ? weekCount : 0L;
+            monthCount = monthCount != null ? monthCount : 0L;
+            pendingCount = pendingCount != null ? pendingCount : 0L;
+            totalCount = totalCount != null ? totalCount : 0L;
+            totalViewCount = totalViewCount != null ? totalViewCount : 0L;
+            totalLikeCount = totalLikeCount != null ? totalLikeCount : 0L;
+            lastWeekCount = lastWeekCount != null ? lastWeekCount : 0L;
+            lastMonthCount = lastMonthCount != null ? lastMonthCount : 0L;
+            lastPeriodViewCount = lastPeriodViewCount != null ? lastPeriodViewCount : 0L;
+            lastPeriodLikeCount = lastPeriodLikeCount != null ? lastPeriodLikeCount : 0L;
+
+            // 计算环比增长率
+            Double weekUploadGrowthRate = calculateGrowthRate(weekCount, lastWeekCount);
+            Double monthUploadGrowthRate = calculateGrowthRate(monthCount, lastMonthCount);
+
+            // 计算浏览量和点赞量的增长率
+            // 注意：这里计算的是当前总量与上月同期总量的差值相对于上月同期总量的增长率
+            Double viewCountGrowthRate = calculateGrowthRate(totalViewCount, lastPeriodViewCount);
+            Double likeCountGrowthRate = calculateGrowthRate(totalLikeCount, lastPeriodLikeCount);
+
+            // 构建并返回统计数据
+            PictureStatisticsVO statistics = PictureStatisticsVO.builder()
+                    .todayUploadCount(todayCount)
+                    .weekUploadCount(weekCount)
+                    .weekUploadGrowthRate(weekUploadGrowthRate)
+                    .monthUploadCount(monthCount)
+                    .monthUploadGrowthRate(monthUploadGrowthRate)
+                    .pendingReviewCount(pendingCount)
+                    .totalCount(totalCount)
+                    .totalViewCount(totalViewCount)
+                    .viewCountGrowthRate(viewCountGrowthRate)
+                    .totalLikeCount(totalLikeCount)
+                    .likeCountGrowthRate(likeCountGrowthRate)
+                    .build();
+
+            log.info("获取图片统计数据成功: 总数={}, 待审核={}, 浏览量={}, 点赞量={}",
+                    totalCount, pendingCount, totalViewCount, totalLikeCount);
+
+            return statistics;
+        } catch (Exception e) {
+            log.error("获取图片统计数据失败", e);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "获取图片统计数据失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 计算环比增长率
+     * @param current 当前值
+     * @param previous 上期值
+     * @return 增长率(%)，保留一位小数
+     */
+    private Double calculateGrowthRate(Long current, Long previous) {
+        if (current == null) current = 0L;
+        if (previous == null || previous == 0L) {
+            return current > 0 ? 100.0 : 0.0;
+        }
+
+        double rate = ((double) current - previous) / previous * 100;
+        // 保留一位小数
+        return Math.round(rate * 10) / 10.0;
+    }
+
+    /**
+     * 格式化文件大小
+     *
+     * @param size 文件大小(字节)
+     * @return 格式化后的文件大小
+     */
+    private String formatFileSize(Long size) {
+        if (size == null || size <= 0) {
+            return "0 B";
+        }
+
+        final String[] units = new String[]{"B", "KB", "MB", "GB", "TB"};
+        int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
+
+        // 限制最大单位为TB
+        digitGroups = Math.min(digitGroups, 4);
+
+        // 计算并格式化，保留两位小数
+        double formattedSize = size / Math.pow(1024, digitGroups);
+
+        // 创建格式化器
+        java.text.DecimalFormat df = new java.text.DecimalFormat("#.##");
+
+        return df.format(formattedSize) + " " + units[digitGroups];
+    }
+
+
+    /**
+     * 标签信息接口类
+     */
     @Data
     private static class TagInfo {
         private String name;
