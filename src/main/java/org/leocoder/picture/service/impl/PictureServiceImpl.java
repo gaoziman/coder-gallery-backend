@@ -2333,7 +2333,7 @@ public class PictureServiceImpl implements PictureService {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "删除图片失败: " + e.getMessage());
         }
     }
-ˆ
+
     /**
      * 管理员批量删除图片
      *
